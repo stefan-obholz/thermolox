@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
+import '../theme/app_theme.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/cart_icon_button.dart';
 import 'project_detail_page.dart';
@@ -74,6 +75,7 @@ class ProjectsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
 
     return Scaffold(
       appBar: AppBar(
@@ -154,7 +156,7 @@ class ProjectsPage extends StatelessWidget {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(tokens.radiusMd),
                           color: theme.colorScheme.surface,
                           boxShadow: [
                             BoxShadow(
@@ -165,7 +167,7 @@ class ProjectsPage extends StatelessWidget {
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(tokens.radiusMd),
                           child: Stack(
                             fit: StackFit.expand,
                             children: [

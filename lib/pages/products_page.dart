@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../services/shopify_service.dart';
+import '../theme/app_theme.dart';
 import '../utils/format_price.dart';
 import '../widgets/cart_icon_button.dart';
 import 'product_detail_page.dart';
@@ -31,6 +32,7 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
 
     return Scaffold(
       // ➜ AppBar MIT globalem Warenkorb (wie Referenz)
@@ -79,12 +81,12 @@ class _ProductsPageState extends State<ProductsPage> {
               final product = products[index];
 
               return InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(tokens.radiusCard),
                 onTap: () => _openProduct(product),
                 child: Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(tokens.radiusCard),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -94,7 +96,8 @@ class _ProductsPageState extends State<ProductsPage> {
                           Hero(
                             tag: 'product-image-${product.id}',
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(tokens.radiusSm),
                               child: SizedBox(
                                 width: 72,
                                 height: 72,
@@ -110,7 +113,8 @@ class _ProductsPageState extends State<ProductsPage> {
                             width: 72,
                             height: 72,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(tokens.radiusSm),
                               color: Colors.grey.shade300,
                             ),
                             alignment: Alignment.center,

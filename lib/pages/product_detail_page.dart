@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/product.dart';
 import '../models/cart_model.dart';
+import '../theme/app_theme.dart';
 import '../utils/format_price.dart';
 import '../widgets/cart_icon_button.dart';
 
@@ -15,6 +16,7 @@ class ProductDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cart = context.watch<CartModel>();
+    final tokens = context.thermoloxTokens;
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +41,7 @@ class ProductDetailPage extends StatelessWidget {
               Hero(
                 tag: 'product-image-${product.id}',
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(tokens.radiusCard),
                   child: AspectRatio(
                     aspectRatio: 4 / 3,
                     child: Image.network(product.imageUrl!, fit: BoxFit.cover),

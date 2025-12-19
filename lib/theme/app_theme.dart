@@ -6,8 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 @immutable
 class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
+  final double radiusXs;
   final double radiusSm;
   final double radiusMd;
+  final double radiusCard;
   final double radiusLg;
   final double radiusXl;
   final double radiusSheet;
@@ -25,8 +27,10 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   final Duration bubbleIntroDuration;
 
   const ThermoloxTokens({
+    required this.radiusXs,
     required this.radiusSm,
     required this.radiusMd,
+    required this.radiusCard,
     required this.radiusLg,
     required this.radiusXl,
     required this.radiusSheet,
@@ -54,8 +58,10 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   );
 
   static const ThermoloxTokens light = ThermoloxTokens(
+    radiusXs: 8,
     radiusSm: 12,
     radiusMd: 14,
+    radiusCard: 16,
     radiusLg: 18,
     radiusXl: 22,
     radiusSheet: 24,
@@ -73,8 +79,10 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
 
   @override
   ThermoloxTokens copyWith({
+    double? radiusXs,
     double? radiusSm,
     double? radiusMd,
+    double? radiusCard,
     double? radiusLg,
     double? radiusXl,
     double? radiusSheet,
@@ -90,8 +98,10 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     Duration? bubbleIntroDuration,
   }) {
     return ThermoloxTokens(
+      radiusXs: radiusXs ?? this.radiusXs,
       radiusSm: radiusSm ?? this.radiusSm,
       radiusMd: radiusMd ?? this.radiusMd,
+      radiusCard: radiusCard ?? this.radiusCard,
       radiusLg: radiusLg ?? this.radiusLg,
       radiusXl: radiusXl ?? this.radiusXl,
       radiusSheet: radiusSheet ?? this.radiusSheet,
@@ -115,8 +125,10 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   ThermoloxTokens lerp(ThemeExtension<ThermoloxTokens>? other, double t) {
     if (other is! ThermoloxTokens) return this;
     return ThermoloxTokens(
+      radiusXs: lerpDouble(radiusXs, other.radiusXs, t) ?? radiusXs,
       radiusSm: lerpDouble(radiusSm, other.radiusSm, t) ?? radiusSm,
       radiusMd: lerpDouble(radiusMd, other.radiusMd, t) ?? radiusMd,
+      radiusCard: lerpDouble(radiusCard, other.radiusCard, t) ?? radiusCard,
       radiusLg: lerpDouble(radiusLg, other.radiusLg, t) ?? radiusLg,
       radiusXl: lerpDouble(radiusXl, other.radiusXl, t) ?? radiusXl,
       radiusSheet:

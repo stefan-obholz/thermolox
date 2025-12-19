@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/cart_model.dart';
+import '../theme/app_theme.dart';
 import '../utils/format_price.dart';
 
 class CartPage extends StatelessWidget {
@@ -11,6 +12,7 @@ class CartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cart = context.watch<CartModel>(); // ✅ EINMAL holen, überall nutzbar
+    final tokens = context.thermoloxTokens;
 
     final baseSize = theme.textTheme.bodyLarge?.fontSize ?? 16;
     final totalLabelStyle = theme.textTheme.bodyLarge?.copyWith(
@@ -52,7 +54,7 @@ class CartPage extends StatelessWidget {
                 return Card(
                   elevation: 1,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(tokens.radiusSm),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -60,7 +62,8 @@ class CartPage extends StatelessWidget {
                       children: [
                         if (product.imageUrl != null)
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius:
+                                BorderRadius.circular(tokens.radiusXs),
                             child: SizedBox(
                               width: 56,
                               height: 56,
@@ -75,7 +78,8 @@ class CartPage extends StatelessWidget {
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius:
+                                  BorderRadius.circular(tokens.radiusXs),
                               color: Colors.grey.shade300,
                             ),
                             alignment: Alignment.center,

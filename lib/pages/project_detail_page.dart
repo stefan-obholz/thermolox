@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
+import '../theme/app_theme.dart';
 
 class ProjectDetailPage extends StatelessWidget {
   final String projectId;
@@ -146,6 +147,7 @@ class ProjectDetailPage extends StatelessWidget {
 
   Future<void> _openPreview(BuildContext context, ProjectItem item) async {
     if (item.type != 'image') return;
+    final tokens = context.thermoloxTokens;
     final Widget? image = item.path != null
         ? Image.file(File(item.path!), fit: BoxFit.contain)
         : (item.url != null
@@ -171,7 +173,8 @@ class ProjectDetailPage extends StatelessWidget {
                       children: [
                         InteractiveViewer(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius:
+                                BorderRadius.circular(tokens.radiusSm),
                             child: image,
                           ),
                         ),
@@ -209,6 +212,7 @@ class ProjectDetailPage extends StatelessWidget {
       return Color(0xFF000000 | val);
     }
 
+    final tokens = context.thermoloxTokens;
     return Consumer<ProjectsModel>(
       builder: (context, model, _) {
         final project = model.projects.firstWhere((p) => p.id == projectId);
@@ -250,11 +254,13 @@ class ProjectDetailPage extends StatelessWidget {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(tokens.radiusSm),
                               color: Colors.grey.shade200,
                             ),
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius:
+                                  BorderRadius.circular(tokens.radiusSm),
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
