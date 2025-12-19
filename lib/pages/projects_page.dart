@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
 import '../theme/app_theme.dart';
+import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/cart_icon_button.dart';
 import 'project_detail_page.dart';
@@ -25,40 +26,21 @@ class ProjectsPage extends StatelessWidget {
   }
 
   Future<void> _createProject(BuildContext context) async {
-    final controller = TextEditingController();
-    final confirmed = await showDialog<bool>(
+    final name = await ThermoloxOverlay.promptText(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Neues Projekt'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Projektname'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Anlegen'),
-          ),
-        ],
-      ),
+      title: 'Neues Projekt',
+      hintText: 'Projektname',
+      confirmLabel: 'Anlegen',
     );
-    if (confirmed == true && controller.text.trim().isNotEmpty) {
-      final name = controller.text.trim();
-      final model = context.read<ProjectsModel>();
-      if (model.existsName(name)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Projekt existiert bereits.')),
-        );
-        return;
-      }
-      final project = await model.addProject(name);
-      await _promptFirstUpload(context, project.id);
+    if (name == null) return;
+
+    final model = context.read<ProjectsModel>();
+    if (model.existsName(name)) {
+      ThermoloxOverlay.showSnack(context, 'Projekt existiert bereits.');
+      return;
     }
+    final project = await model.addProject(name);
+    await _promptFirstUpload(context, project.id);
   }
 
   Future<void> _promptFirstUpload(BuildContext context, String projectId) async {
@@ -229,53 +211,27 @@ class ProjectsPage extends StatelessWidget {
                         child: PopupMenuButton<String>(
                           onSelected: (value) async {
                             if (value == 'rename') {
-                              final ctrl = TextEditingController(text: p.name);
-                              final ok = await showDialog<bool>(
+                              final newName = await ThermoloxOverlay.promptText(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Projekt umbenennen'),
-                                  content: TextField(
-                                    controller: ctrl,
-                                    decoration: const InputDecoration(hintText: 'Neuer Name'),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
-                                      child: const Text('Abbrechen'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text('Speichern'),
-                                    ),
-                                  ],
-                                ),
+                                title: 'Projekt umbenennen',
+                                hintText: 'Neuer Name',
+                                initialValue: p.name,
+                                confirmLabel: 'Speichern',
                               );
-                              if (ok == true && ctrl.text.trim().isNotEmpty) {
+                              if (newName != null) {
                                 await context
                                     .read<ProjectsModel>()
-                                    .renameProject(p.id, ctrl.text.trim());
+                                    .renameProject(p.id, newName);
                               }
                             } else if (value == 'delete') {
-                              final ok = await showDialog<bool>(
+                              final ok = await ThermoloxOverlay.confirm(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Projekt löschen?'),
-                                  content: const Text(
+                                title: 'Projekt löschen?',
+                                message:
                                     'Das Projekt und alle zugehörigen Einträge werden entfernt.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
-                                      child: const Text('Abbrechen'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text('Löschen'),
-                                    ),
-                                  ],
-                                ),
+                                confirmLabel: 'Löschen',
                               );
-                              if (ok == true) {
+                              if (ok) {
                                 await context.read<ProjectsModel>().deleteProject(p.id);
                               }
                             }

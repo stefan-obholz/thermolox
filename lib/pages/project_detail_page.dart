@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
 import '../theme/app_theme.dart';
+import '../utils/thermolox_overlay.dart';
 
 class ProjectDetailPage extends StatelessWidget {
   final String projectId;
@@ -18,28 +19,20 @@ class ProjectDetailPage extends StatelessWidget {
       context.read<ProjectsModel>().projects.firstWhere((p) => p.id == projectId);
 
   Future<void> _renameProject(BuildContext context, Project project) async {
-    final ctrl = TextEditingController(text: project.name);
-    final ok = await showDialog<bool>(
+    final newName = await ThermoloxOverlay.promptText(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Projekt umbenennen'),
-        content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(hintText: 'Neuer Name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Speichern')),
-        ],
-      ),
+      title: 'Projekt umbenennen',
+      hintText: 'Neuer Name',
+      initialValue: project.name,
+      confirmLabel: 'Speichern',
     );
-    if (ok == true && ctrl.text.trim().isNotEmpty) {
-      await context.read<ProjectsModel>().renameProject(project.id, ctrl.text.trim());
+    if (newName != null) {
+      await context.read<ProjectsModel>().renameProject(project.id, newName);
     }
   }
 
   Future<void> _addUpload(BuildContext context, Project project) async {
-    final choice = await showModalBottomSheet<String>(
+    final choice = await ThermoloxOverlay.showSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Wrap(
@@ -101,29 +94,21 @@ class ProjectDetailPage extends StatelessWidget {
   }
 
   Future<void> _renameItem(BuildContext context, ProjectItem item) async {
-    final ctrl = TextEditingController(text: item.name);
-    final ok = await showDialog<bool>(
+    final newName = await ThermoloxOverlay.promptText(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Umbenennen'),
-        content: TextField(
-          controller: ctrl,
-          decoration: const InputDecoration(hintText: 'Neuer Name'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Abbrechen')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Speichern')),
-        ],
-      ),
+      title: 'Umbenennen',
+      hintText: 'Neuer Name',
+      initialValue: item.name,
+      confirmLabel: 'Speichern',
     );
-    if (ok == true && ctrl.text.trim().isNotEmpty) {
-      await context.read<ProjectsModel>().renameItem(item.id, ctrl.text.trim());
+    if (newName != null) {
+      await context.read<ProjectsModel>().renameItem(item.id, newName);
     }
   }
 
   Future<void> _moveItem(BuildContext context, ProjectItem item) async {
     final model = context.read<ProjectsModel>();
-    final targetId = await showModalBottomSheet<String>(
+    final targetId = await ThermoloxOverlay.showSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
         child: ListView(
@@ -154,7 +139,7 @@ class ProjectDetailPage extends StatelessWidget {
             ? Image.network(item.url!, fit: BoxFit.contain)
             : null);
     if (image == null) return;
-    await showDialog(
+    await ThermoloxOverlay.showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {

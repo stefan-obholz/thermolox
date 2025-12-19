@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
+import '../utils/thermolox_overlay.dart';
 
 class AttachmentPick {
   final String path;
@@ -19,13 +20,13 @@ class AttachmentPick {
 }
 
 Future<AttachmentPick?> pickThermoloxAttachment(BuildContext context) async {
-  final result = await showGeneralDialog<String>(
+  final result = await ThermoloxOverlay.showGlassDialog<String>(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Anhänge',
     barrierColor: Colors.black54,
     transitionDuration: const Duration(milliseconds: 220),
-    pageBuilder: (dialogCtx, _, __) {
+    builder: (dialogCtx) {
       final theme = Theme.of(dialogCtx);
       return SafeArea(
         child: Material(

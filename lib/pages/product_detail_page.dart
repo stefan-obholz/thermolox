@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../models/cart_model.dart';
 import '../theme/app_theme.dart';
+import '../utils/thermolox_overlay.dart';
 import '../utils/format_price.dart';
 import '../widgets/cart_icon_button.dart';
 
@@ -83,10 +84,9 @@ class ProductDetailPage extends StatelessWidget {
               ),
               onPressed: () {
                 cart.add(product);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Produkt zum Warenkorb hinzugefügt.'),
-                  ),
+                ThermoloxOverlay.showSnack(
+                  context,
+                  'Produkt zum Warenkorb hinzugefügt.',
                 );
               },
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../utils/thermolox_overlay.dart';
 import 'chat_bot.dart';
 
 class ThermoloxChatButton extends StatefulWidget {
@@ -43,17 +44,10 @@ class _ThermoloxChatButtonState extends State<ThermoloxChatButton>
 
   Future<void> _openChat() async {
     final height = MediaQuery.of(context).size.height * 0.85;
-    final tokens = context.thermoloxTokens;
 
-    await showModalBottomSheet(
+    await ThermoloxOverlay.showSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(tokens.radiusSheet),
-        ),
-      ),
       builder: (ctx) {
         return SizedBox(height: height, child: const ThermoloxChatBot());
       },
