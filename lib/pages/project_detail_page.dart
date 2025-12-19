@@ -153,7 +153,7 @@ class ProjectDetailPage extends StatelessWidget {
               Center(
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(tokens.screenPadding),
                     child: Stack(
                       children: [
                         InteractiveViewer(
@@ -202,7 +202,7 @@ class ProjectDetailPage extends StatelessWidget {
       builder: (context, model, _) {
         final project = model.projects.firstWhere((p) => p.id == projectId);
         final items = project.items;
-        return Scaffold(
+        return ThermoloxScaffold(
           appBar: AppBar(
             title: Text(project.name),
             actions: [
@@ -220,7 +220,12 @@ class ProjectDetailPage extends StatelessWidget {
           body: items.isEmpty
               ? const Center(child: Text('Noch keine Uploads in diesem Projekt.'))
               : GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                  padding: EdgeInsets.fromLTRB(
+                    0,
+                    tokens.screenPadding,
+                    0,
+                    100,
+                  ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
@@ -230,7 +235,8 @@ class ProjectDetailPage extends StatelessWidget {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    final hasImage = item.type == 'image' && (item.path != null || item.url != null);
+                    final hasImage =
+                        item.type == 'image' && (item.path != null || item.url != null);
                     final isColor = item.type == 'color';
                     final color = isColor ? _colorFromHex(item.url ?? item.name) : null;
                     return GestureDetector(
@@ -239,20 +245,24 @@ class ProjectDetailPage extends StatelessWidget {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(tokens.radiusSm),
+                              borderRadius: BorderRadius.circular(tokens.radiusSm),
                               color: Colors.grey.shade200,
                             ),
                             child: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(tokens.radiusSm),
+                              borderRadius: BorderRadius.circular(tokens.radiusSm),
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
                                   if (hasImage)
                                     item.path != null
-                                        ? Image.file(File(item.path!), fit: BoxFit.cover)
-                                        : Image.network(item.url!, fit: BoxFit.cover)
+                                        ? Image.file(
+                                            File(item.path!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.network(
+                                            item.url!,
+                                            fit: BoxFit.cover,
+                                          )
                                   else if (isColor && color != null)
                                     Container(color: color)
                                   else
@@ -270,7 +280,10 @@ class ProjectDetailPage extends StatelessWidget {
                                         item.name,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
                                               color: Colors.white,
                                               fontWeight: FontWeight.w600,
                                             ),

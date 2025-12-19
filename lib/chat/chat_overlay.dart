@@ -50,7 +50,10 @@ class ChatOverlay extends StatelessWidget {
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: tokens.screenPadding,
+                    vertical: tokens.screenPadding,
+                  ),
                   children: const [
                     Text(
                       'Hier kommt später dein echter Chatverlauf hin – '

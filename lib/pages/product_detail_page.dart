@@ -19,7 +19,7 @@ class ProductDetailPage extends StatelessWidget {
     final cart = context.watch<CartModel>();
     final tokens = context.thermoloxTokens;
 
-    return Scaffold(
+    return ThermoloxScaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -34,7 +34,9 @@ class ProductDetailPage extends StatelessWidget {
       ),
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(
+          vertical: tokens.screenPadding,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -73,7 +75,10 @@ class ProductDetailPage extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.symmetric(
+            horizontal: tokens.screenPadding,
+            vertical: tokens.screenPadding,
+          ),
           child: SizedBox(
             height: 52,
             width: double.infinity,

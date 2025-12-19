@@ -1697,7 +1697,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     return Container(
       height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: tokens.screenPadding,
+        vertical: tokens.gapSm,
+      ),
       alignment: Alignment.centerLeft,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
@@ -1796,7 +1799,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                horizontal: tokens.screenPadding,
+                vertical: tokens.screenPadding,
+              ),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];

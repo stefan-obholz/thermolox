@@ -34,7 +34,7 @@ class _ProductsPageState extends State<ProductsPage> {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
 
-    return Scaffold(
+    return ThermoloxScaffold(
       // ➜ AppBar MIT globalem Warenkorb (wie Referenz)
       appBar: AppBar(
         centerTitle: true,
@@ -74,7 +74,9 @@ class _ProductsPageState extends State<ProductsPage> {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.symmetric(
+              vertical: tokens.screenPadding,
+            ),
             itemCount: products.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {

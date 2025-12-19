@@ -24,7 +24,7 @@ class CartPage extends StatelessWidget {
       fontWeight: FontWeight.w800,
     );
 
-    return Scaffold(
+    return ThermoloxScaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -41,7 +41,9 @@ class CartPage extends StatelessWidget {
       body: cart.items.isEmpty
           ? const Center(child: Text('Dein Warenkorb ist noch leer.'))
           : ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.symmetric(
+                vertical: tokens.screenPadding,
+              ),
               itemCount: cart.items.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
@@ -162,7 +164,12 @@ class CartPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                padding: EdgeInsets.fromLTRB(
+                  tokens.screenPadding,
+                  tokens.screenPadding,
+                  tokens.screenPadding,
+                  12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -172,7 +179,12 @@ class CartPage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(
+                  tokens.screenPadding,
+                  0,
+                  tokens.screenPadding,
+                  tokens.screenPadding,
+                ),
                 child: SizedBox(
                   height: 52,
                   width: double.infinity,

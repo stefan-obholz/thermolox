@@ -15,6 +15,14 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   final double radiusSheet;
   final double radiusPill;
 
+  final double screenPadding;
+  final double screenPaddingSm;
+  final double contentMaxWidth;
+  final double gapXs;
+  final double gapSm;
+  final double gapMd;
+  final double gapLg;
+
   final SweepGradient rainbowRingGradient;
   final Color rainbowRingHaloColor;
   final double rainbowRingHaloBlur;
@@ -35,6 +43,13 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     required this.radiusXl,
     required this.radiusSheet,
     required this.radiusPill,
+    required this.screenPadding,
+    required this.screenPaddingSm,
+    required this.contentMaxWidth,
+    required this.gapXs,
+    required this.gapSm,
+    required this.gapMd,
+    required this.gapLg,
     required this.rainbowRingGradient,
     required this.rainbowRingHaloColor,
     required this.rainbowRingHaloBlur,
@@ -66,6 +81,13 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     radiusXl: 22,
     radiusSheet: 24,
     radiusPill: 999,
+    screenPadding: 32,
+    screenPaddingSm: 16,
+    contentMaxWidth: 720,
+    gapXs: 6,
+    gapSm: 8,
+    gapMd: 12,
+    gapLg: 24,
     rainbowRingGradient: _rainbowRingGradient,
     rainbowRingHaloColor: Color(0x80FFFFFF),
     rainbowRingHaloBlur: 24,
@@ -87,6 +109,13 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     double? radiusXl,
     double? radiusSheet,
     double? radiusPill,
+    double? screenPadding,
+    double? screenPaddingSm,
+    double? contentMaxWidth,
+    double? gapXs,
+    double? gapSm,
+    double? gapMd,
+    double? gapLg,
     SweepGradient? rainbowRingGradient,
     Color? rainbowRingHaloColor,
     double? rainbowRingHaloBlur,
@@ -106,6 +135,13 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
       radiusXl: radiusXl ?? this.radiusXl,
       radiusSheet: radiusSheet ?? this.radiusSheet,
       radiusPill: radiusPill ?? this.radiusPill,
+      screenPadding: screenPadding ?? this.screenPadding,
+      screenPaddingSm: screenPaddingSm ?? this.screenPaddingSm,
+      contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
+      gapXs: gapXs ?? this.gapXs,
+      gapSm: gapSm ?? this.gapSm,
+      gapMd: gapMd ?? this.gapMd,
+      gapLg: gapLg ?? this.gapLg,
       rainbowRingGradient: rainbowRingGradient ?? this.rainbowRingGradient,
       rainbowRingHaloColor: rainbowRingHaloColor ?? this.rainbowRingHaloColor,
       rainbowRingHaloBlur: rainbowRingHaloBlur ?? this.rainbowRingHaloBlur,
@@ -134,6 +170,20 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
       radiusSheet:
           lerpDouble(radiusSheet, other.radiusSheet, t) ?? radiusSheet,
       radiusPill: lerpDouble(radiusPill, other.radiusPill, t) ?? radiusPill,
+      screenPadding:
+          lerpDouble(screenPadding, other.screenPadding, t) ?? screenPadding,
+      screenPaddingSm: lerpDouble(
+            screenPaddingSm,
+            other.screenPaddingSm,
+            t,
+          ) ??
+          screenPaddingSm,
+      contentMaxWidth: lerpDouble(contentMaxWidth, other.contentMaxWidth, t) ??
+          contentMaxWidth,
+      gapXs: lerpDouble(gapXs, other.gapXs, t) ?? gapXs,
+      gapSm: lerpDouble(gapSm, other.gapSm, t) ?? gapSm,
+      gapMd: lerpDouble(gapMd, other.gapMd, t) ?? gapMd,
+      gapLg: lerpDouble(gapLg, other.gapLg, t) ?? gapLg,
       rainbowRingGradient:
           t < 0.5 ? rainbowRingGradient : other.rainbowRingGradient,
       rainbowRingHaloColor: Color.lerp(
@@ -349,4 +399,102 @@ class AppTheme {
 extension ThermoloxThemeX on BuildContext {
   ThermoloxTokens get thermoloxTokens =>
       Theme.of(this).extension<ThermoloxTokens>()!;
+}
+
+class ThermoloxPagePadding extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final bool center;
+  final double? maxWidth;
+
+  const ThermoloxPagePadding({
+    super.key,
+    required this.child,
+    this.padding,
+    this.center = true,
+    this.maxWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.thermoloxTokens;
+    final resolvedPadding =
+        padding ?? EdgeInsets.symmetric(horizontal: tokens.screenPadding);
+    final resolvedMaxWidth = maxWidth ?? tokens.contentMaxWidth;
+
+    Widget content = Padding(
+      padding: resolvedPadding,
+      child: child,
+    );
+
+    content = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: resolvedMaxWidth),
+      child: content,
+    );
+
+    if (center) {
+      content = Center(child: content);
+    }
+
+    return content;
+  }
+}
+
+class ThermoloxScaffold extends StatelessWidget {
+  final PreferredSizeWidget? appBar;
+  final Widget body;
+  final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final Color? backgroundColor;
+  final bool safeArea;
+  final EdgeInsetsGeometry? padding;
+  final double? maxWidth;
+  final bool centerBody;
+  final bool resizeToAvoidBottomInset;
+  final bool extendBody;
+  final bool extendBodyBehindAppBar;
+
+  const ThermoloxScaffold({
+    super.key,
+    this.appBar,
+    required this.body,
+    this.bottomNavigationBar,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
+    this.backgroundColor,
+    this.safeArea = false,
+    this.padding,
+    this.maxWidth,
+    this.centerBody = true,
+    this.resizeToAvoidBottomInset = true,
+    this.extendBody = false,
+    this.extendBodyBehindAppBar = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = ThermoloxPagePadding(
+      child: body,
+      padding: padding,
+      maxWidth: maxWidth,
+      center: centerBody,
+    );
+
+    if (safeArea) {
+      content = SafeArea(child: content);
+    }
+
+    return Scaffold(
+      appBar: appBar,
+      body: content,
+      backgroundColor: backgroundColor,
+      floatingActionButton: floatingActionButton,
+      floatingActionButtonLocation: floatingActionButtonLocation,
+      bottomNavigationBar: bottomNavigationBar,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      extendBody: extendBody,
+      extendBodyBehindAppBar: extendBodyBehindAppBar,
+    );
+  }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 class SimplePage extends StatelessWidget {
   final String title;
   final String description;
@@ -11,8 +13,7 @@ class SimplePage extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+      child: ThermoloxPagePadding(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

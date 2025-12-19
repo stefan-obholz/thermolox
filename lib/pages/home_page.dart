@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../widgets/cart_icon_button.dart';
+import '../theme/app_theme.dart';
 import 'products_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,14 +25,29 @@ class HomePageState extends State<HomePage> {
   /// Sammelpunkt für alle Home-Abschnitte.
   /// Neue Blöcke können einfach angehängt werden.
   List<Widget> _buildSections(BuildContext context) {
+    final tokens = context.thermoloxTokens;
+    final tightPadding =
+        EdgeInsets.symmetric(horizontal: tokens.screenPaddingSm);
+    final textPadding =
+        EdgeInsets.symmetric(horizontal: tokens.screenPadding);
+
     return [
-      ThermoloxShowcase(
-        key: _showcaseKey,
-        onCompleted: _playIconStrip,
+      Padding(
+        padding: tightPadding,
+        child: ThermoloxShowcase(
+          key: _showcaseKey,
+          onCompleted: _playIconStrip,
+        ),
       ),
       const SizedBox(height: 4), // tighter spacing
-      ThermoloxIconStrip(key: _iconStripKey),
-      const ThermoloxBeforeAfter(),
+      Padding(
+        padding: textPadding,
+        child: ThermoloxIconStrip(key: _iconStripKey),
+      ),
+      Padding(
+        padding: tightPadding,
+        child: const ThermoloxBeforeAfter(),
+      ),
       const SizedBox(height: 20),
       const ThermoloxImpactText(),
     ];
@@ -56,14 +72,17 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
     final sections = _buildSections(context);
 
-    return Scaffold(
+    return ThermoloxScaffold(
+      safeArea: true,
+      padding: EdgeInsets.zero,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'THERMOLOX',
-          style: TextStyle(
+          style: theme.textTheme.headlineMedium?.copyWith(
             fontSize: 34,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.0,
@@ -72,13 +91,16 @@ class HomePageState extends State<HomePage> {
         actions: const [CartIconButton()],
       ),
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          itemCount: sections.length,
-          itemBuilder: (context, index) => sections[index],
-          separatorBuilder: (_, __) => const SizedBox(height: 16),
+      body: ListView.separated(
+        padding: EdgeInsets.fromLTRB(
+          0,
+          tokens.gapMd,
+          0,
+          tokens.gapLg,
         ),
+        itemCount: sections.length,
+        itemBuilder: (context, index) => sections[index],
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
       ),
     );
   }
@@ -488,6 +510,7 @@ class ThermoloxImpactText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
     const bulletSpacing = SizedBox(height: 10);
     const double bodySize = 15;
 
@@ -510,7 +533,12 @@ class ThermoloxImpactText extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: EdgeInsets.fromLTRB(
+        tokens.screenPadding,
+        4,
+        tokens.screenPadding,
+        tokens.gapLg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
