@@ -22,6 +22,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   final double gapSm;
   final double gapMd;
   final double gapLg;
+  final double segmentedTabHeight;
 
   final SweepGradient rainbowRingGradient;
   final Color rainbowRingHaloColor;
@@ -50,6 +51,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     required this.gapSm,
     required this.gapMd,
     required this.gapLg,
+    required this.segmentedTabHeight,
     required this.rainbowRingGradient,
     required this.rainbowRingHaloColor,
     required this.rainbowRingHaloBlur,
@@ -88,6 +90,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     gapSm: 8,
     gapMd: 12,
     gapLg: 24,
+    segmentedTabHeight: 46,
     rainbowRingGradient: _rainbowRingGradient,
     rainbowRingHaloColor: Color(0x80FFFFFF),
     rainbowRingHaloBlur: 24,
@@ -116,6 +119,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     double? gapSm,
     double? gapMd,
     double? gapLg,
+    double? segmentedTabHeight,
     SweepGradient? rainbowRingGradient,
     Color? rainbowRingHaloColor,
     double? rainbowRingHaloBlur,
@@ -142,6 +146,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
       gapSm: gapSm ?? this.gapSm,
       gapMd: gapMd ?? this.gapMd,
       gapLg: gapLg ?? this.gapLg,
+      segmentedTabHeight: segmentedTabHeight ?? this.segmentedTabHeight,
       rainbowRingGradient: rainbowRingGradient ?? this.rainbowRingGradient,
       rainbowRingHaloColor: rainbowRingHaloColor ?? this.rainbowRingHaloColor,
       rainbowRingHaloBlur: rainbowRingHaloBlur ?? this.rainbowRingHaloBlur,
@@ -184,6 +189,9 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
       gapSm: lerpDouble(gapSm, other.gapSm, t) ?? gapSm,
       gapMd: lerpDouble(gapMd, other.gapMd, t) ?? gapMd,
       gapLg: lerpDouble(gapLg, other.gapLg, t) ?? gapLg,
+      segmentedTabHeight:
+          lerpDouble(segmentedTabHeight, other.segmentedTabHeight, t) ??
+              segmentedTabHeight,
       rainbowRingGradient:
           t < 0.5 ? rainbowRingGradient : other.rainbowRingGradient,
       rainbowRingHaloColor: Color.lerp(

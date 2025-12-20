@@ -1,13 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui'; // für Blur
+import 'dart:math' as math;
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
 
 import '../memory/memory_manager.dart';
 import '../models/cart_model.dart';
@@ -76,10 +73,7 @@ class QuickReplyButton {
     this.action = QuickReplyAction.send,
   });
 
-  QuickReplyButton copyWith({
-    bool? preferred,
-    QuickReplyAction? action,
-  }) {
+  QuickReplyButton copyWith({bool? preferred, QuickReplyAction? action}) {
     return QuickReplyButton(
       label: label,
       value: value,
@@ -152,12 +146,15 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   static bool _cachedProjectPromptShown = false;
   static bool _cachedUploadPromptShown = false;
 
-  static final RegExp _skillBlockRegex =
-      RegExp(r'```skill\s+([\s\S]*?)```', multiLine: true);
-  static final RegExp _buttonBlockRegex =
-      RegExp(r'```buttons?\s+([\s\S]*?)```', multiLine: true);
-  static final RegExp _inlineButtonsRegex =
-      RegExp(
+  static final RegExp _skillBlockRegex = RegExp(
+    r'```skill\s+([\s\S]*?)```',
+    multiLine: true,
+  );
+  static final RegExp _buttonBlockRegex = RegExp(
+    r'```buttons?\s+([\s\S]*?)```',
+    multiLine: true,
+  );
+  static final RegExp _inlineButtonsRegex = RegExp(
     r'BUTTONS\s*:\s*(\{[\s\S]*\})',
     multiLine: true,
     caseSensitive: false,
@@ -194,10 +191,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   bool _projectPromptAttemptedInTurn = false;
   bool _uploadPromptShown = false;
 
-  void _addAssistantMessage(
-    String text, {
-    List<QuickReplyButton>? buttons,
-  }) {
+  void _addAssistantMessage(String text, {List<QuickReplyButton>? buttons}) {
     if (!mounted) return;
     setState(() {
       _messages.add(
@@ -279,15 +273,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   ///  HELFER
   /// =======================
 
-  bool _looksLikeImage(String path) {
-    final lower = path.toLowerCase();
-    return lower.endsWith('.png') ||
-        lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.heic') ||
-        lower.endsWith('.webp');
-  }
-
   String _fileNameFromPath(String path) {
     final parts = path.split(Platform.pathSeparator);
     return parts.isNotEmpty ? parts.last : path;
@@ -296,7 +281,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   String _shorten(String? value, [int max = 200]) {
     if (value == null) return '';
     if (value.length <= max) return value;
-    return value.substring(0, max) + '...';
+    return '${value.substring(0, max)}...';
   }
 
   Future<void> _ensureMemoryLoaded() async {
@@ -335,10 +320,11 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
         _productError = '$e';
       });
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _productsLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _productsLoading = false;
+        });
+      }
     }
   }
 
@@ -347,39 +333,45 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     ProjectsModel projectsModel,
   ) {
     final products = _products
-        .map((p) => {
-              'id': p.id,
-              'title': p.title,
-              'price': p.price,
-              'description': _shorten(p.description, 180),
-              'imageUrl': p.imageUrl,
-            })
+        .map(
+          (p) => {
+            'id': p.id,
+            'title': p.title,
+            'price': p.price,
+            'description': _shorten(p.description, 180),
+            'imageUrl': p.imageUrl,
+          },
+        )
         .toList();
 
     final cartItems = cart.items
-        .map((item) => {
-              'productId': item.product.id,
-              'title': item.product.title,
-              'quantity': item.quantity,
-            })
+        .map(
+          (item) => {
+            'productId': item.product.id,
+            'title': item.product.title,
+            'quantity': item.quantity,
+          },
+        )
         .toList();
 
     final projects = projectsModel.projects
-        .map((p) => {
-              'id': p.id,
-              'name': p.name,
-              'items': p.items
-                  .map(
-                    (i) => {
-                      'id': i.id,
-                      'name': i.name,
-                      'type': i.type,
-                      'hasLocal': i.path != null,
-                      'hasRemote': i.url != null,
-                    },
-                  )
-                  .toList(),
-            })
+        .map(
+          (p) => {
+            'id': p.id,
+            'name': p.name,
+            'items': p.items
+                .map(
+                  (i) => {
+                    'id': i.id,
+                    'name': i.name,
+                    'type': i.type,
+                    'hasLocal': i.path != null,
+                    'hasRemote': i.url != null,
+                  },
+                )
+                .toList(),
+          },
+        )
         .toList();
 
     final uploads = _recentUploads
@@ -419,7 +411,8 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     ProjectsModel projectsModel,
   ) {
     final contextJson = jsonEncode(_skillContextSnapshot(cart, projectsModel));
-    final instructions = '''
+    final instructions =
+        '''
 Du bist der THERMOLOX Assistent mit Tool-Zugriff.
 Antworten klar, kurz, ohne Markdown/HTML oder Listen – nur Absätze/Emojis, max. 6 Zeilen pro Sinnblock.
 
@@ -464,7 +457,8 @@ Kontext (JSON): $contextJson
       'highlights': relevant,
     };
 
-    final content = '''
+    final content =
+        '''
 Langzeitgedächtnis (kompakt, lokal):
 ${jsonEncode(snapshot)}
 Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ignoriere Highlights.
@@ -550,9 +544,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       return;
     }
     if (option.action == QuickReplyAction.goToCart) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const CartPage()),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const CartPage()));
       return;
     }
     await _sendMessage(quickReplyText: option.value);
@@ -619,7 +613,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       if (decoded is List) {
         entries = decoded;
       } else if (decoded is Map<String, dynamic>) {
-        final candidates = decoded['buttons'] ??
+        final candidates =
+            decoded['buttons'] ??
             decoded['options'] ??
             decoded['choices'] ??
             decoded['actions'];
@@ -633,11 +628,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       final result = <QuickReplyButton>[];
       for (final entry in entries) {
         if (entry is! Map<String, dynamic>) continue;
-        final labelRaw = (entry['label'] ??
-                entry['title'] ??
-                entry['text'] ??
-                entry['display'])
-            ?.toString();
+        final labelRaw =
+            (entry['label'] ??
+                    entry['title'] ??
+                    entry['text'] ??
+                    entry['display'])
+                ?.toString();
         if (labelRaw == null || labelRaw.trim().isEmpty) continue;
         final label = labelRaw.trim();
         final lowerLabel = label.toLowerCase();
@@ -647,27 +643,31 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                 .toString();
         final value = valueRaw.trim().isEmpty ? label : valueRaw.trim();
 
-        final variantRaw = (entry['variant'] ??
-                entry['tone'] ??
-                entry['type'] ??
-                entry['style'] ??
-                entry['kind'])
-            ?.toString()
-            .toLowerCase();
+        final variantRaw =
+            (entry['variant'] ??
+                    entry['tone'] ??
+                    entry['type'] ??
+                    entry['style'] ??
+                    entry['kind'])
+                ?.toString()
+                .toLowerCase();
 
-        final preferred = entry['preferred'] == true ||
+        final preferred =
+            entry['preferred'] == true ||
             variantRaw == 'preferred' ||
             variantRaw == 'primary' ||
             variantRaw == 'cta' ||
             variantRaw == 'positive';
 
-        final actionRaw = (entry['action'] ??
-                entry['intent'] ??
-                entry['kind'] ??
-                entry['type'])
-            ?.toString()
-            .toLowerCase();
-        final isUpload = actionRaw == 'upload' ||
+        final actionRaw =
+            (entry['action'] ??
+                    entry['intent'] ??
+                    entry['kind'] ??
+                    entry['type'])
+                ?.toString()
+                .toLowerCase();
+        final isUpload =
+            actionRaw == 'upload' ||
             actionRaw == 'attachment' ||
             actionRaw == 'upload_attachment' ||
             actionRaw == 'photo' ||
@@ -677,8 +677,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         final action = isUpload
             ? QuickReplyAction.uploadAttachment
             : isCart
-                ? QuickReplyAction.goToCart
-                : QuickReplyAction.send;
+            ? QuickReplyAction.goToCart
+            : QuickReplyAction.send;
 
         // Normalize „System in den Warenkorb legen“ → „In den Warenkorb“
         String normalizedLabel = label;
@@ -705,9 +705,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   }
 
   String _normalizeJsonQuotes(String raw) {
-    return raw
-        .replaceAll(RegExp('[“”]'), '"')
-        .replaceAll(RegExp('[‘’]'), '"');
+    return raw.replaceAll(RegExp('[“”]'), '"').replaceAll(RegExp('[‘’]'), '"');
   }
 
   _FallbackButtons? _defaultButtonsForText(String text) {
@@ -719,15 +717,21 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final wantsCart = _looksLikeCartPrompt(lower);
     final hasProject = _currentProjectId != null;
     final mentionsRoom =
-        lower.contains('zimmer') || lower.contains('wohnzimmer') || lower.contains('schlafzimmer') || lower.contains('küche') || lower.contains('bad');
+        lower.contains('zimmer') ||
+        lower.contains('wohnzimmer') ||
+        lower.contains('schlafzimmer') ||
+        lower.contains('küche') ||
+        lower.contains('bad');
     final cartHasItems = context.read<CartModel>().items.isNotEmpty;
-    final cartAddPrompt = _looksLikeCartAddPrompt(lower);
-    final cartConfirmed = lower.contains('ist nun im warenkorb') ||
+    final cartConfirmed =
+        lower.contains('ist nun im warenkorb') ||
         lower.contains('liegt jetzt im warenkorb') ||
         lower.contains('warenkorb ist jetzt') ||
         lower.contains('im warenkorb hinzugefügt');
 
-    if (!hasProject && !_projectPromptAttemptedInTurn && (mentionsProject || mentionsRoom)) {
+    if (!hasProject &&
+        !_projectPromptAttemptedInTurn &&
+        (mentionsProject || mentionsRoom)) {
       _projectPromptAttemptedInTurn = true;
       return _FallbackButtons(
         key: 'project_prompt',
@@ -839,16 +843,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         lower.contains('checkout');
   }
 
-  bool _looksLikeCartAddPrompt(String lower) {
-    return (lower.contains('in den warenkorb') ||
-            lower.contains('warenkorb legen') ||
-            lower.contains('hinzufügen') ||
-            lower.contains('reinlegen') ||
-            lower.contains('dazulegen')) &&
-        (lower.contains('?') || lower.contains('soll') || lower.contains('möchtest'));
-  }
-
-
   bool _isCheckoutLabel(String label) {
     final lower = label.toLowerCase();
     return lower.contains('warenkorb') ||
@@ -891,13 +885,17 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     await _ensureProductsLoaded();
     await _ensureMemoryLoaded();
+    if (!mounted) return;
     final cart = context.read<CartModel>();
     final projectsModel = context.read<ProjectsModel>();
 
     final messagesForApi = [
       _buildMemorySystemMessage(''),
       _buildSkillSystemMessage(cart, projectsModel),
-      {'role': 'user', 'content': 'Starte die Unterhaltung mit deiner Begrüßung.'},
+      {
+        'role': 'user',
+        'content': 'Starte die Unterhaltung mit deiner Begrüßung.',
+      },
     ];
 
     final payload = <String, dynamic>{
@@ -965,7 +963,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           : _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: '',
-        assistantText: cleanedAssistant.isNotEmpty ? cleanedAssistant : fullText,
+        assistantText: cleanedAssistant.isNotEmpty
+            ? cleanedAssistant
+            : fullText,
       );
 
       if (fullText.trim().isEmpty) {
@@ -991,11 +991,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       });
       _scrollToBottom(animated: true);
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isSending = prevSending;
-        _streamingMsgIndex = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isSending = prevSending;
+          _streamingMsgIndex = null;
+        });
+      }
     }
   }
 
@@ -1016,9 +1017,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     if (title != null) {
       final lower = title.toLowerCase();
       try {
-        return _products.firstWhere(
-          (p) => p.title.toLowerCase() == lower,
-        );
+        return _products.firstWhere((p) => p.title.toLowerCase() == lower);
       } catch (_) {}
       try {
         return _products.firstWhere(
@@ -1032,10 +1031,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   Future<String?> _executeSkillCommand(Map<String, dynamic> cmd) async {
     if (!mounted) return null;
 
-    final action =
-        (cmd['action'] ?? cmd['skill'] ?? cmd['name']) as String?;
-    final payload =
-        (cmd['payload'] ?? cmd['args'] ?? <String, dynamic>{});
+    final action = (cmd['action'] ?? cmd['skill'] ?? cmd['name']) as String?;
+    final payload = (cmd['payload'] ?? cmd['args'] ?? <String, dynamic>{});
 
     if (action == null || payload is! Map<String, dynamic>) {
       return '⚠️ Aktion konnte nicht gelesen werden.';
@@ -1137,16 +1134,18 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         final typeRaw = (payload['type'] as String?)?.toLowerCase();
         String resolvedType =
             (typeRaw == 'image' || typeRaw == 'file' || typeRaw == 'other')
-                ? typeRaw!
-                : 'file';
+            ? typeRaw!
+            : 'file';
         String? path = payload['path'] as String?;
         String? url = payload['url'] as String?;
         String? name = providedName;
         bool? isImageFromUpload;
 
         if (uploadId != null) {
-          final upload = _recentUploads
-              .firstWhere((u) => u.id == uploadId, orElse: () => const _SentUpload(id: '', name: '', isImage: false));
+          final upload = _recentUploads.firstWhere(
+            (u) => u.id == uploadId,
+            orElse: () => const _SentUpload(id: '', name: '', isImage: false),
+          );
           if (upload.id.isNotEmpty) {
             path ??= upload.localPath;
             url ??= upload.remoteUrl;
@@ -1192,9 +1191,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         if (itemId == null || targetProjectId == null) {
           return '⚠️ Upload konnte nicht verschoben werden.';
         }
-        await context
-            .read<ProjectsModel>()
-            .moveItem(itemId: itemId, targetProjectId: targetProjectId);
+        await context.read<ProjectsModel>().moveItem(
+          itemId: itemId,
+          targetProjectId: targetProjectId,
+        );
         return '📦 Upload verschoben.';
 
       case 'delete_item':
@@ -1288,12 +1288,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         _streamingMsgIndex! < _messages.length &&
         mounted) {
       setState(() {
-        _messages[_streamingMsgIndex!] =
-            _messages[_streamingMsgIndex!].copyWith(
-          text: displayText,
-          content: displayText,
-          buttons: buttons.isNotEmpty ? buttons : null,
-        );
+        _messages[_streamingMsgIndex!] = _messages[_streamingMsgIndex!]
+            .copyWith(
+              text: displayText,
+              content: displayText,
+              buttons: buttons.isNotEmpty ? buttons : null,
+            );
       });
     }
 
@@ -1458,6 +1458,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     });
 
     _scrollToBottom(animated: true);
+    if (!mounted) return;
 
     // ===== 3b) Uploads direkt ins aktuelle Projekt hängen (falls gesetzt) =====
     if (_currentProjectId != null && justUploaded.isNotEmpty) {
@@ -1476,6 +1477,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     // ===== 4) Payload → Worker =====
     await _ensureProductsLoaded();
     await _ensureMemoryLoaded();
+    if (!mounted) return;
     final cart = context.read<CartModel>();
     final projectsModel = context.read<ProjectsModel>();
 
@@ -1551,8 +1553,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           : _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: text,
-        assistantText:
-            cleanedAssistant.isNotEmpty ? cleanedAssistant : fullText,
+        assistantText: cleanedAssistant.isNotEmpty
+            ? cleanedAssistant
+            : fullText,
       );
 
       if (fullText.trim().isEmpty) {
@@ -1578,11 +1581,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       });
       _scrollToBottom(animated: true);
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isSending = false;
-        _streamingMsgIndex = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+          _streamingMsgIndex = null;
+        });
+      }
     }
   }
 
@@ -1651,8 +1655,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                       Padding(
                         padding: const EdgeInsets.only(bottom: 6),
                         child: ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(tokens.radiusMd),
+                          borderRadius: BorderRadius.circular(tokens.radiusMd),
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(
                               maxWidth: maxPreviewWidth,
@@ -1673,7 +1676,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                         for (final btn in buttons)
                           _QuickReplyChip(
                             button: btn,
-                            onTap: () => _handleQuickReplyTap(btn, messageIndex),
+                            onTap: () =>
+                                _handleQuickReplyTap(btn, messageIndex),
                           ),
                       ],
                     ),
@@ -1705,7 +1709,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _pendingAttachments.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final att = _pendingAttachments[index];
           final isImage = att.isImage;
@@ -1900,10 +1904,7 @@ class _QuickReplyChip extends StatelessWidget {
   final QuickReplyButton button;
   final VoidCallback onTap;
 
-  const _QuickReplyChip({
-    required this.button,
-    required this.onTap,
-  });
+  const _QuickReplyChip({required this.button, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1912,8 +1913,9 @@ class _QuickReplyChip extends StatelessWidget {
     final isPreferred = button.preferred;
 
     final background = isPreferred ? theme.colorScheme.primary : Colors.white;
-    final foreground =
-        isPreferred ? theme.colorScheme.onPrimary : theme.colorScheme.primary;
+    final foreground = isPreferred
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.primary;
 
     return TextButton(
       onPressed: onTap,
@@ -1927,11 +1929,11 @@ class _QuickReplyChip extends StatelessWidget {
           side: BorderSide(
             color: isPreferred
                 ? background
-                : theme.colorScheme.primary.withOpacity(0.85),
+                : theme.colorScheme.primary.withAlpha(217),
             width: 1.3,
           ),
         ),
-        overlayColor: theme.colorScheme.primary.withOpacity(0.08),
+        overlayColor: theme.colorScheme.primary.withAlpha(20),
       ),
       child: Text(
         button.label,
@@ -2014,7 +2016,7 @@ class _AttachmentActionCircleState extends State<_AttachmentActionCircle>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.65),
+                    color: theme.colorScheme.primary.withAlpha(166),
                     blurRadius: 26,
                     spreadRadius: 3,
                     offset: const Offset(0, 10),
@@ -2135,7 +2137,7 @@ class _AttachmentIconButtonState extends State<_AttachmentIconButton>
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withOpacity(0.6),
+                color: theme.colorScheme.primary.withAlpha(153),
                 blurRadius: 20,
                 spreadRadius: 3,
                 offset: const Offset(0, 8),

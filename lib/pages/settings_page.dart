@@ -60,6 +60,8 @@ class ProfileTab extends StatefulWidget {
 
 class _ProfileTabState extends State<ProfileTab> {
   String? _profileImagePath;
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
   final _streetCtrl = TextEditingController();
   final _houseNumberCtrl = TextEditingController();
   final _zipCtrl = TextEditingController();
@@ -67,6 +69,8 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   void dispose() {
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _streetCtrl.dispose();
     _houseNumberCtrl.dispose();
     _zipCtrl.dispose();
@@ -143,20 +147,48 @@ class _ProfileTabState extends State<ProfileTab> {
           children: [
             GestureDetector(
               onTap: _pickProfileImage,
-              child: CircleAvatar(
-                radius: 34,
-                backgroundColor:
-                    theme.colorScheme.primary.withOpacity(0.12),
-                backgroundImage: _profileImagePath != null
-                    ? FileImage(File(_profileImagePath!))
-                    : null,
-                child: _profileImagePath == null
-                    ? Icon(
-                        Icons.person,
-                        size: 32,
-                        color: theme.colorScheme.primary,
-                      )
-                    : null,
+              child: SizedBox(
+                width: 96,
+                height: 96,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 46,
+                      backgroundColor: theme.colorScheme.primary.withAlpha(31),
+                      backgroundImage: _profileImagePath != null
+                          ? FileImage(File(_profileImagePath!))
+                          : null,
+                      child: _profileImagePath == null
+                          ? Icon(
+                              Icons.person,
+                              size: 40,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: theme.colorScheme.primary,
+                          border: Border.all(
+                            color: theme.colorScheme.surface,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.edit_rounded,
+                          size: 14,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             SizedBox(width: tokens.gapMd),
@@ -170,35 +202,38 @@ class _ProfileTabState extends State<ProfileTab> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: tokens.gapXs),
-                  Text(
-                    'Optional, hilft uns bei der persönlichen Beratung.',
-                    style: theme.textTheme.bodySmall,
-                  ),
                 ],
-              ),
-            ),
-            TextButton(
-              onPressed: _pickProfileImage,
-              child: Text(
-                _profileImagePath == null ? 'Hinzufügen' : 'Ändern',
               ),
             ),
           ],
         ),
         SizedBox(height: tokens.gapLg),
         Text(
-          'Adresse',
+          'Persönliche Angaben',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
         ),
         SizedBox(height: tokens.gapXs),
         Text(
-          'Diese Adresse wird später für den Versand genutzt.',
+          'Ihre Angaben werden als Rechnungsadresse verwendet',
           style: theme.textTheme.bodySmall,
         ),
         SizedBox(height: tokens.gapMd),
+        TextFormField(
+          controller: _firstNameCtrl,
+          decoration: const InputDecoration(labelText: 'Vorname'),
+          textInputAction: TextInputAction.next,
+          textCapitalization: TextCapitalization.words,
+        ),
+        SizedBox(height: tokens.gapSm),
+        TextFormField(
+          controller: _lastNameCtrl,
+          decoration: const InputDecoration(labelText: 'Nachname'),
+          textInputAction: TextInputAction.done,
+          textCapitalization: TextCapitalization.words,
+        ),
+        SizedBox(height: tokens.gapSm),
         Row(
           children: [
             Expanded(

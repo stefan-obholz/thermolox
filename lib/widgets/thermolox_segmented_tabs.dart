@@ -33,8 +33,9 @@ class ThermoloxSegmentedTabs extends StatelessWidget
         );
     final resolvedTabPadding = tabPadding ??
         (fill
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
-            : const EdgeInsets.symmetric(horizontal: 22, vertical: 10));
+            ? const EdgeInsets.symmetric(horizontal: 12)
+            : const EdgeInsets.symmetric(horizontal: 22));
+    final tabHeight = tokens.segmentedTabHeight;
 
     final isScrollable = !fill;
 
@@ -61,21 +62,23 @@ class ThermoloxSegmentedTabs extends StatelessWidget
             tabs: [
               for (final label in labels)
                 Tab(
-                  child: Padding(
-                    padding: resolvedTabPadding,
-                    child: fill
-                        ? FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              label,
-                              maxLines: 1,
-                              softWrap: false,
-                            ),
-                          )
-                        : Text(
-                            label,
-                            textAlign: TextAlign.center,
-                          ),
+                  child: SizedBox(
+                    height: tabHeight,
+                    child: Center(
+                      child: Padding(
+                        padding: resolvedTabPadding,
+                        child: fill
+                            ? FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                ),
+                              )
+                            : Text(label),
+                      ),
+                    ),
                   ),
                 ),
             ],
