@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../data/plan_data.dart';
 import '../theme/app_theme.dart';
+import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
+import '../widgets/plan_card_view.dart';
 import '../widgets/thermolox_secondary_tabs.dart';
 import '../widgets/thermolox_segmented_tabs.dart';
 
@@ -285,13 +288,36 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 }
 
-class PlanTab extends StatelessWidget {
+class PlanTab extends StatefulWidget {
   const PlanTab({super.key});
+
+  @override
+  State<PlanTab> createState() => _PlanTabState();
+}
+
+class _PlanTabState extends State<PlanTab> {
+  String _selectedPlanId = thermoloxPlanCards.first.id;
+
+  Future<void> _openPlanModal() async {
+    final selected = await showPlanModal(
+      context: context,
+      plans: thermoloxPlanCards,
+      selectedPlanId: _selectedPlanId,
+    );
+    if (!mounted) return;
+    if (selected != null && selected != _selectedPlanId) {
+      setState(() => _selectedPlanId = selected);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
+    final selectedPlan = thermoloxPlanCards.firstWhere(
+      (plan) => plan.id == _selectedPlanId,
+      orElse: () => thermoloxPlanCards.first,
+    );
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -308,47 +334,17 @@ class PlanTab extends StatelessWidget {
           ),
         ),
         SizedBox(height: tokens.gapSm),
-        Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(tokens.radiusCard),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(tokens.screenPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'THERMOLOX Starter',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: tokens.gapXs),
-                Text(
-                  'Kostenlos',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: tokens.gapSm),
-                Text(
-                  'Grundfunktionen für Projekte, Uploads und Beratung.',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
+        PlanCardView(
+          data: selectedPlan,
+          actionLabel: 'Aktiv',
+          canTap: false,
+          isSelected: true,
+          showActionButton: false,
         ),
         SizedBox(height: tokens.gapMd),
         ElevatedButton(
-          onPressed: () {
-            ThermoloxOverlay.showSnack(
-              context,
-              'Tarifverwaltung kommt bald.',
-            );
-          },
-          child: const Text('Tarif verwalten'),
+          onPressed: _openPlanModal,
+          child: const Text('Tarife verwalten'),
         ),
       ],
     );

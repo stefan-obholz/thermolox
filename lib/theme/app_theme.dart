@@ -301,7 +301,7 @@ class AppTheme {
       ),
       labelLarge: GoogleFonts.comfortaa(
         fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
         color: primaryText,
       ),
@@ -333,6 +333,10 @@ class AppTheme {
       onSurface: text,
     );
 
+    final buttonTextStyle =
+        textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700) ??
+        const TextStyle(fontWeight: FontWeight.w700);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
@@ -348,10 +352,24 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primary,
           foregroundColor: Colors.white,
-          textStyle: textTheme.labelLarge,
+          textStyle: buttonTextStyle,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radiusMd),
           ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(textStyle: buttonTextStyle),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(textStyle: buttonTextStyle),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(textStyle: buttonTextStyle),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          textStyle: MaterialStatePropertyAll(buttonTextStyle),
         ),
       ),
 
