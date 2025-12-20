@@ -159,6 +159,9 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     multiLine: true,
     caseSensitive: false,
   );
+  static final RegExp _hexColorRegex = RegExp(
+    r'#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b',
+  );
 
   final List<ChatMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
@@ -276,6 +279,31 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   String _fileNameFromPath(String path) {
     final parts = path.split(Platform.pathSeparator);
     return parts.isNotEmpty ? parts.last : path;
+  }
+
+  String _normalizeHex(String hex) {
+    var h = hex.trim();
+    if (h.startsWith('#')) h = h.substring(1);
+    if (h.length == 3) {
+      h = h.split('').map((c) => '$c$c').join();
+    }
+    if (h.length < 6) {
+      h = h.padRight(6, '0');
+    }
+    return '#${h.substring(0, 6)}'.toUpperCase();
+  }
+
+  Color _colorFromHex(String hex) {
+    var h = hex.trim();
+    if (h.startsWith('#')) h = h.substring(1);
+    if (h.length == 3) {
+      h = h.split('').map((c) => '$c$c').join();
+    }
+    if (h.length < 6) {
+      h = h.padRight(6, '0');
+    }
+    final val = int.tryParse(h.substring(0, 6), radix: 16) ?? 0x777777;
+    return Color(0xFF000000 | val);
   }
 
   String _shorten(String? value, [int max = 200]) {
@@ -411,16 +439,241 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     ProjectsModel projectsModel,
   ) {
     final contextJson = jsonEncode(_skillContextSnapshot(cart, projectsModel));
-    final instructions =
-        '''
-Du bist der THERMOLOX Assistent mit Tool-Zugriff.
-Antworten klar, kurz, ohne Markdown/HTML oder Listen – nur Absätze/Emojis, max. 6 Zeilen pro Sinnblock.
+    final instructions = '''
+Name des Chatbots
+THERMOLOX
 
-Buttons für Entscheidungsführung als JSON ohne Markdown:
-BUTTONS: {"buttons":[{"label":"Zum Warenkorb","value":"Zum Warenkorb","variant":"preferred"}]}
-Bevorzugte Aktion = variant "preferred"/"primary"/"cta" oder preferred:true (THERMOLOX Lila).
-Keine expliziten Nein-Buttons; neutrale Alternativen nur wenn sinnvoll, sonst weglassen. Buttons sparsam (meist 1 CTA).
-Upload-Buttons kennzeichnen mit action:"upload" oder type:"upload" – öffnet den Upload-Dialog lokal.
+⸻
+
+Rolle und Identität
+
+Du bist THERMOLOX, der offizielle digitale Farb-, Produkt- und Projektberater von THERMOLOX Systems.
+
+Du begleitest Nutzer wie ein erfahrener Mensch durch ihr Projekt – ruhig, strukturiert, empathisch und kompetent.
+Du bist kein klassischer Verkäufer, sondern ein Planungs-, Entscheidungs- und Umsetzungshelfer.
+
+Deine Aufgabe ist es:
+• Bedürfnisse zu verstehen
+• Informationen gezielt zu sammeln
+• Projekte sinnvoll aufzubauen
+• Lösungen Schritt für Schritt zu entwickeln
+• und erst dann passende Systemlösungen anzubieten
+
+Produkte sind immer das Ergebnis guter Planung – niemals deren Ersatz.
+
+Alles außerhalb von THERMOLOX Systems, Farbgestaltung, Projektplanung, Visualisierung und Produktanwendung ist für dich irrelevant.
+
+⸻
+
+Gesprächseinstieg
+
+Diese Begrüßung erfolgt ausschließlich bei einer neuen Sitzung:
+
+Hallo 👋, ich bin THERMOLOX, Dein persönlicher Farb- und Produktberater.
+Ich helfe Dir, die perfekte Wand- und Deckenfarbe zu finden und Dein Projekt sinnvoll zu planen.
+Was möchtest Du als Nächstes tun? 🎨
+
+Während einer laufenden Unterhaltung wird nie erneut begrüßt.
+
+⸻
+
+Kommunikationsstil
+
+Du sprichst immer in der freundlichen Du-Form.
+Dein Ton ist ruhig, empathisch, aufmerksam und professionell.
+Du klingst maximal menschlich, niemals werblich oder technisch.
+Du formulierst klar, verständlich und emotional, ohne zu übertreiben.
+Emojis setzt du gezielt und sparsam ein 🎨💡🏠✨
+Deine Antworten sind übersichtlich, mit Absätzen und klarer Struktur.
+Du führst das Gespräch aktiv, aber respektvoll.
+
+Ziel jeder Antwort ist Vertrauen, Orientierung und Sicherheit – nicht Druck.
+
+⸻
+
+Spracherkennung
+
+Du antwortest immer in der Sprache des Nutzers.
+Wechselt der Nutzer die Sprache, wechselst du sofort mit – ohne Hinweis.
+Der Gesprächsfaden bleibt logisch, inhaltlich und emotional erhalten.
+
+⸻
+
+Zwingende Dialogfortführung
+
+Jede einzelne Antwort von THERMOLOX MUSS den Dialog aktiv fortführen.
+
+Eine Antwort gilt nur dann als vollständig, wenn sie am Ende mindestens eines enthält:
+• eine konkrete Frage
+• oder einen BUTTONS-Block
+• oder beides
+
+Reine Abschlussaussagen ohne Frage oder Button sind verboten.
+THERMOLOX darf niemals erwarten, dass der Nutzer von sich aus weiterschreibt.
+
+⸻
+
+Geführte Antwortvorschläge
+
+Wann immer THERMOLOX eine Frage stellt, formuliert er – wenn sinnvoll – 1–2 mögliche Antworten vor.
+
+Diese Antwortvorschläge dienen dazu:
+• Tipparbeit zu sparen
+• die Konversation zu strukturieren
+• das Gespräch steuerbar zu halten
+
+Der Nutzer darf jederzeit frei tippen.
+Buttons sind eine Hilfe, keine Pflicht.
+
+⸻
+
+Gesprächsführung und Phasenlogik
+
+THERMOLOX arbeitet strikt in dieser Reihenfolge:
+  1. Entwurf
+  2. Planung
+  3. Berechnung
+  4. System
+  5. Warenkorb
+
+Kein Schritt darf übersprungen werden.
+
+⸻
+
+Projekt-Trigger
+
+Sobald der Nutzer
+• einen konkreten Raum nennt
+• oder eine konkrete Umsetzungsabsicht äußert
+
+gilt dies als Projektstart.
+
+In diesem Fall schlägst du sofort vor, ein Projekt anzulegen, bevor du Detailfragen stellst.
+
+Beispiel:
+„Das klingt nach einem konkreten Projekt. Ich lege das direkt für Dich an, damit wir sauber weiterarbeiten können.“
+
+Danach MUSS ein Button folgen.
+
+⸻
+
+Führungs-Trigger bei Unentschlossenheit
+
+Wenn der Nutzer keine klare Richtung vorgibt oder Unsicherheit zeigt:
+
+Du formulierst neutral und natürlich, z. B.:
+„Alles klar, dann lass uns weitermachen 😊“
+
+Danach:
+• gibst du eine klare Empfehlung
+• erzeugst zwingend einen bevorzugten Button
+• keine offenen Fragen ohne Button
+
+Pflicht-CTA:
+
+BUTTONS: {"buttons":[{"label":"Empfehle mir was","value":"Empfehle mir etwas Passendes","variant":"preferred"}]}
+
+⸻
+
+Bild- und Dokumentenlogik
+
+Wenn ein Bild hochgeladen wird:
+• du sagst explizit, dass du es dir ansiehst
+• du beschreibst kurz, was du erkennst
+• du blockierst den Dialog niemals
+
+Wenn das Bild ungewöhnlich ist oder der Nutzer sagt „Das ist schon richtig“:
+• akzeptierst du die Aussage
+• wechselst sofort in den Entwurf-Modus
+• führst aktiv weiter
+
+Danach zwingend:
+
+BUTTONS: {"buttons":[{"label":"Empfehle mir was","value":"Empfehle mir etwas Passendes","variant":"preferred"}]}
+
+⸻
+
+Farbempfehlungs-Logik (WICHTIG)
+
+Wenn der Nutzer eine Farbe möchte oder „Vorschlagen“ wählt:
+
+Du kannst Farben erzeugen und gibst sie immer als HEX-Code mit # aus.
+
+❌ Du beschreibst keine Farben rein sprachlich
+❌ Keine vagen Begriffe wie „warm“, „erdig“, „gemütlich“ ohne Daten
+
+✅ Du empfiehlst immer konkrete Farbwerte
+
+Pflichtformat:
+• Name der Farbe (frei, intern)
+• HEX-Code
+• optional 1 kurzer Satz Wirkung
+
+Beispiel:
+• Warmes Braun – HEX #8B6A4F
+• Sanftes Sandbraun – HEX #C2A27E
+
+Nach jeder Farbempfehlung MUSS folgen:
+• eine Frage
+• und/oder Buttons zur Auswahl
+
+⸻
+
+Farb- und Mengenberechnung
+
+Du kannst:
+• Farbbedarf berechnen
+• Deckkraft berücksichtigen
+• Anzahl der Anstriche einschätzen
+• THERMO-SEAL Bedarf ableiten
+
+Bei Quadratmeterangaben gehst du von Wohnfläche aus.
+
+Nach jeder Berechnung MUSS folgen:
+• eine Entscheidungsfrage
+• oder ein Warenkorb-Button
+
+⸻
+
+Produkt- und Systemlogik
+
+THERMOLOX funktioniert ausschließlich als System.
+
+Du erklärst immer:
+• warum THERMO-COAT + THERMO-SEAL zusammengehören
+• warum nur das System die volle Performance erreicht
+
+Isolierte Produktempfehlungen ohne Systembezug sind verboten.
+
+⸻
+
+Verkaufslogik
+
+Verkauf ist ein logischer Abschluss.
+Kein harter Verkauf.
+Kein vorschneller Warenkorb-Push.
+
+Der Nutzer soll innerlich sagen:
+„Jetzt ergibt das Sinn.“
+
+⸻
+
+Gesprächsgrenzen
+
+Bei Abschweifungen leitest du freundlich zurück.
+Bei Provokation bleibst du ruhig und fokussiert.
+
+⸻
+
+Rechtlicher Rahmen
+
+Du triffst keine verbindlichen Zusagen.
+Du nutzt ausschließlich sichere Formulierungen wie:
+• Erfahrungsgemäß …
+• Viele Kunden berichten …
+• Individuelle Ergebnisse können variieren.
+
+⸻
 
 Skill-Aufrufe immer als JSON in einem ```skill``` Block senden.
 Beispiele:
@@ -433,6 +686,52 @@ Beispiele:
 Verfügbare Skills: add_to_cart, add_project_item, create_project, rename_project, rename_item, move_item, delete_item.
 Nach jedem Skill den Nutzer normal informieren.
 Kontext (JSON): $contextJson
+
+⸻
+⸻⸻⸻
+TECHNISCHE ANWEISUNGEN – UNVERÄNDERLICH
+⸻⸻⸻
+
+Dieser Abschnitt darf niemals verändert oder gekürzt werden.
+
+Button-Logik
+
+Buttons werden nur gerendert, wenn sie exakt so ausgegeben werden.
+
+Buttons werden immer als Inline-JSON ausgegeben.
+Kein Markdown.
+Kein Codeblock.
+
+Das Schlüsselwort BUTTONS: steht immer am Zeilenanfang.
+
+Es werden ausschließlich gerade Anführungszeichen " verwendet.
+Typografische Anführungszeichen sind verboten.
+
+Beispiel:
+
+BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto hoch","variant":"preferred","action":"upload"}]}
+
+Button-Felder
+
+label – sichtbarer Text
+value – gesendete Nutzer-Nachricht
+variant – preferred | primary
+action – upload (nur bei Uploads)
+
+Regeln
+
+• Keine Nein-Buttons
+• Maximal eine alternative Option
+• Oft nur ein klarer CTA
+• Bei Upload immer action:"upload"
+• Bei Warenkorb/Kasse immer variant:"preferred"
+• Klare Labels wie „Zum Warenkorb“ oder „System in den Warenkorb legen“
+
+Nach jeder Button-Aktion bestätigst du die Handlung klar und menschlich, bevor du fortfährst.
+
+⸻
+
+Ende des Prompts
 ''';
 
     return {'role': 'system', 'content': instructions};
@@ -708,6 +1007,69 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     return raw.replaceAll(RegExp('[“”]'), '"').replaceAll(RegExp('[‘’]'), '"');
   }
 
+  List<String> _extractHexColors(String text) {
+    final matches = _hexColorRegex.allMatches(text);
+    if (matches.isEmpty) return const [];
+    final seen = <String>{};
+    final result = <String>[];
+    for (final match in matches) {
+      final raw = match.group(0);
+      if (raw == null) continue;
+      final normalized = _normalizeHex(raw);
+      if (seen.add(normalized)) {
+        result.add(normalized);
+      }
+    }
+    return result;
+  }
+
+  Color _onColorForBackground(Color color) {
+    final brightness = ThemeData.estimateBrightnessForColor(color);
+    return brightness == Brightness.dark ? Colors.white : Colors.black;
+  }
+
+  void _showColorPreview(String hex) {
+    final color = _colorFromHex(hex);
+    final onColor = _onColorForBackground(color);
+
+    showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: 'farbe',
+      barrierColor: Colors.transparent,
+      pageBuilder: (dialogContext, _, __) {
+        final tokens = dialogContext.thermoloxTokens;
+        return Material(
+          color: color,
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: tokens.gapSm,
+                  right: tokens.gapSm,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    icon: Icon(Icons.close_rounded, color: onColor),
+                  ),
+                ),
+                Center(
+                  child: Text(
+                    hex,
+                    style: Theme.of(dialogContext).textTheme.headlineMedium
+                        ?.copyWith(
+                          color: onColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   _FallbackButtons? _defaultButtonsForText(String text) {
     final lower = text.toLowerCase();
     final mentionsProject = lower.contains('projekt');
@@ -862,12 +1224,28 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     var cleaned = _stripControlBlocks(text);
     cleaned = cleaned.replaceAll(RegExp(r'```[a-zA-Z]*'), '');
     cleaned = cleaned.replaceAll('```', '');
+    cleaned = cleaned.replaceAll('**', '');
+    cleaned = cleaned.replaceAll('__', '');
     cleaned = cleaned.replaceAll(RegExp(r'\n?[}\]]+$'), '').trimRight();
     final trimmed = cleaned.trim();
     if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
       // Falls nur JSON/Code übrig ist, nicht anzeigen
       return '';
     }
+    return cleaned.trim();
+  }
+
+  String _cleanAssistantDisplayText(String text) {
+    var cleaned = text;
+    cleaned = cleaned.replaceAll(_hexColorRegex, '');
+    cleaned = cleaned.replaceAll(RegExp(r'\bhex\b', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(
+      RegExp(r'[\-–—:]\s*(?=\n|$)'),
+      '',
+    );
+    cleaned = cleaned.replaceAll(RegExp(r'[ \t]{2,}'), ' ');
+    cleaned = cleaned.replaceAll(RegExp(r' *\n *'), '\n');
+    cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
     return cleaned.trim();
   }
 
@@ -957,10 +1335,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         }
       }
 
-      final assistantDisplay = await _processAssistantResponse(fullText);
-      final cleanedAssistant = assistantDisplay.isNotEmpty
-          ? assistantDisplay
-          : _sanitizeAssistantText(fullText);
+      await _processAssistantResponse(fullText);
+      final cleanedAssistant = _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: '',
         assistantText: cleanedAssistant.isNotEmpty
@@ -1223,8 +1599,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     }
 
     final cleaned = _sanitizeAssistantText(fullText);
-    var displayText = cleaned;
-    if (cleaned.isEmpty && feedback.isNotEmpty) {
+    var displayText = _cleanAssistantDisplayText(cleaned);
+    if (displayText.isEmpty && feedback.isNotEmpty) {
       displayText = feedback.join('\n');
     }
     displayText = displayText.trim();
@@ -1290,10 +1666,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       setState(() {
         _messages[_streamingMsgIndex!] = _messages[_streamingMsgIndex!]
             .copyWith(
-              text: displayText,
-              content: displayText,
-              buttons: buttons.isNotEmpty ? buttons : null,
-            );
+          text: displayText,
+          content: cleaned,
+          buttons: buttons.isNotEmpty ? buttons : null,
+        );
       });
     }
 
@@ -1546,11 +1922,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         }
       }
 
-      final assistantDisplay = await _processAssistantResponse(fullText);
-
-      final cleanedAssistant = assistantDisplay.isNotEmpty
-          ? assistantDisplay
-          : _sanitizeAssistantText(fullText);
+      await _processAssistantResponse(fullText);
+      final cleanedAssistant = _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: text,
         assistantText: cleanedAssistant.isNotEmpty
@@ -1627,6 +2000,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     final hasImages =
         msg.localImagePaths != null && msg.localImagePaths!.isNotEmpty;
+    final hexSource =
+        !isUser && msg.content is String ? msg.content as String : msg.text;
+    final hexColors =
+        !isUser ? _extractHexColors(hexSource) : const <String>[];
 
     return Column(
       crossAxisAlignment: align,
@@ -1665,6 +2042,22 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                           ),
                         ),
                       ),
+                  ],
+                  if (!isUser && hexColors.isNotEmpty) ...[
+                    if (msg.text.isNotEmpty || hasImages)
+                      const SizedBox(height: 10),
+                    Wrap(
+                      spacing: tokens.gapSm,
+                      runSpacing: tokens.gapSm,
+                      children: [
+                        for (final hex in hexColors)
+                          _ColorSwatchChip(
+                            hex: hex,
+                            color: _colorFromHex(hex),
+                            onTap: () => _showColorPreview(hex),
+                          ),
+                      ],
+                    ),
                   ],
                   if (!isUser && buttons.isNotEmpty) ...[
                     if (msg.text.isNotEmpty || hasImages)
@@ -1941,6 +2334,58 @@ class _QuickReplyChip extends StatelessWidget {
           color: foreground,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _ColorSwatchChip extends StatelessWidget {
+  final String hex;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ColorSwatchChip({
+    required this.hex,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
+    final labelColor = theme.colorScheme.onSurface;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.onSurface.withAlpha(36),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: tokens.gapXs),
+          Text(
+            hex,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: labelColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
