@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../models/project_models.dart';
 import '../services/projects_repository.dart';
@@ -28,6 +30,38 @@ class ProjectsModel extends ChangeNotifier {
   Future<void> _persist() async {
     await _repo.saveProjects(_projects);
     notifyListeners();
+  }
+
+  String _fileNameFromPath(String path) {
+    final parts = path.split(Platform.pathSeparator);
+    return parts.isNotEmpty ? parts.last : path;
+  }
+
+  Future<String?> _persistLocalFile(String? path) async {
+    if (path == null || path.isEmpty) return path;
+    try {
+      final file = File(path);
+      if (!await file.exists()) return path;
+
+      final docsDir = await getApplicationDocumentsDirectory();
+      final uploadsDir = Directory('${docsDir.path}${Platform.pathSeparator}uploads');
+      if (!await uploadsDir.exists()) {
+        await uploadsDir.create(recursive: true);
+      }
+
+      if (path.startsWith(uploadsDir.path)) return path;
+
+      final fileName = _fileNameFromPath(path);
+      final stampedName =
+          '${DateTime.now().microsecondsSinceEpoch}_$fileName';
+      final target = File(
+        '${uploadsDir.path}${Platform.pathSeparator}$stampedName',
+      );
+      final copied = await file.copy(target.path);
+      return copied.path;
+    } catch (_) {
+      return path;
+    }
   }
 
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString() + Random().nextInt(9999).toString();
@@ -65,12 +99,20 @@ class ProjectsModel extends ChangeNotifier {
     String? url,
   }) async {
     final project = _projects.firstWhere((e) => e.id == projectId);
+    if (type == 'image' || type == 'file') {
+      project.items.removeWhere(
+        (item) => item.type == 'image' || item.type == 'file',
+      );
+    } else if (type == 'color') {
+      project.items.removeWhere((item) => item.type == 'color');
+    }
+    final persistedPath = await _persistLocalFile(path);
     project.items.add(
       ProjectItem(
         id: _newId(),
         name: name,
         type: type,
-        path: path,
+        path: persistedPath,
         url: url,
       ),
     );
@@ -131,10 +173,7 @@ class ProjectsModel extends ChangeNotifier {
   }) async {
     final project = _projects.firstWhere((e) => e.id == projectId);
     final normalized = _normalizeHex(hex);
-    final exists = project.items.any(
-      (i) => i.type == 'color' && i.name.toLowerCase() == normalized.toLowerCase(),
-    );
-    if (exists) return;
+    project.items.removeWhere((item) => item.type == 'color');
     project.items.add(
       ProjectItem(
         id: _newId(),

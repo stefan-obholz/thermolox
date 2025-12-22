@@ -61,8 +61,15 @@ Future<String?> showPlanModal({
                       itemBuilder: (context, index) {
                         final plan = plans[index];
                         final isSelected = plan.id == selectedPlanId;
-                        final actionLabel =
-                            isSelected ? 'Aktiv' : 'Upgrade';
+                        final isDowngrade =
+                            selectedPlanId == 'pro' && plan.id == 'basic';
+                        final actionLabel = isSelected
+                            ? 'Aktiv'
+                            : isDowngrade
+                                ? 'Downgrade'
+                                : 'Upgrade';
+                        final canTap =
+                            showActionButton && !isSelected && !isDowngrade;
                         return Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: tokens.gapSm,
@@ -86,14 +93,13 @@ Future<String?> showPlanModal({
                                       child: PlanCardView(
                                         data: plan,
                                         actionLabel: actionLabel,
-                                        canTap:
-                                            showActionButton && !isSelected,
+                                        canTap: canTap,
                                         isSelected: isSelected,
                                         showActionButton: showActionButton,
-                                        onAction: () =>
-                                            Navigator.of(dialogContext).pop(
-                                              plan.id,
-                                            ),
+                                        onAction: canTap
+                                            ? () => Navigator.of(dialogContext)
+                                                .pop(plan.id)
+                                            : null,
                                       ),
                                     ),
                                   ),

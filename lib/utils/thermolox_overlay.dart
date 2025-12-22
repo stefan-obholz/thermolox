@@ -119,38 +119,35 @@ class ThermoloxOverlay {
     String cancelLabel = 'Abbrechen',
     bool autofocus = true,
   }) async {
-    final controller = TextEditingController(text: initialValue ?? '');
-    try {
-      final ok = await showAppDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(hintText: hintText),
-            autofocus: autofocus,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(cancelLabel),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(confirmLabel),
-            ),
-          ],
+    var value = initialValue ?? '';
+    final ok = await showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextFormField(
+          initialValue: value,
+          decoration: InputDecoration(hintText: hintText),
+          autofocus: autofocus,
+          onChanged: (next) => value = next,
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(cancelLabel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
 
-      final value = controller.text.trim();
-      if (ok == true && value.isNotEmpty) {
-        return value;
-      }
-      return null;
-    } finally {
-      controller.dispose();
+    final trimmed = value.trim();
+    if (ok == true && trimmed.isNotEmpty) {
+      return trimmed;
     }
+    return null;
   }
 
   static Future<bool> confirm({

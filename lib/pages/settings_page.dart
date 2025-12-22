@@ -1,15 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
-import '../data/plan_data.dart';
+import '../controllers/plan_controller.dart';
 import '../theme/app_theme.dart';
 import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
+import '../widgets/attachment_sheet.dart';
 import '../widgets/plan_card_view.dart';
 import '../widgets/thermolox_secondary_tabs.dart';
 import '../widgets/thermolox_segmented_tabs.dart';
+import 'auth_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -82,48 +84,13 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Future<void> _pickProfileImage() async {
-    final choice = await ThermoloxOverlay.showSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_rounded),
-              title: const Text('Aus Galerie wählen'),
-              onTap: () => Navigator.pop(ctx, 'gallery'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_rounded),
-              title: const Text('Kamera'),
-              onTap: () => Navigator.pop(ctx, 'camera'),
-            ),
-            if (_profileImagePath != null)
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Bild entfernen'),
-                onTap: () => Navigator.pop(ctx, 'remove'),
-              ),
-          ],
-        ),
-      ),
-    );
-
-    if (choice == null) return;
-    if (choice == 'remove') {
-      setState(() => _profileImagePath = null);
+    final picked = await pickThermoloxAttachment(context);
+    if (picked == null) return;
+    if (!picked.isImage) {
+      ThermoloxOverlay.showSnack(context, 'Bitte ein Foto auswählen.');
       return;
     }
-
-    final picker = ImagePicker();
-    XFile? image;
-    if (choice == 'camera') {
-      image = await picker.pickImage(source: ImageSource.camera);
-    } else if (choice == 'gallery') {
-      image = await picker.pickImage(source: ImageSource.gallery);
-    }
-    if (image == null) return;
-    final path = image.path;
-    setState(() => _profileImagePath = path);
+    setState(() => _profileImagePath = picked.path);
   }
 
   @override
@@ -253,7 +220,7 @@ class _ProfileTabState extends State<ProfileTab> {
               width: 110,
               child: TextFormField(
                 controller: _houseNumberCtrl,
-                decoration: const InputDecoration(labelText: 'Hausnummer'),
+                decoration: const InputDecoration(labelText: 'Nr.'),
                 textInputAction: TextInputAction.next,
                 textCapitalization: TextCapitalization.characters,
               ),
@@ -288,25 +255,37 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 }
 
-class PlanTab extends StatefulWidget {
+class PlanTab extends StatelessWidget {
   const PlanTab({super.key});
 
-  @override
-  State<PlanTab> createState() => _PlanTabState();
-}
-
-class _PlanTabState extends State<PlanTab> {
-  String _selectedPlanId = thermoloxPlanCards.first.id;
-
-  Future<void> _openPlanModal() async {
+  Future<void> _openPlanModal(BuildContext context) async {
+    final planController = context.read<PlanController>();
+    final plans = planController.planCards;
+    final selectedPlanId =
+        planController.activePlan?.plan.slug ?? 'basic';
     final selected = await showPlanModal(
       context: context,
-      plans: thermoloxPlanCards,
-      selectedPlanId: _selectedPlanId,
+      plans: plans,
+      selectedPlanId: selectedPlanId,
     );
-    if (!mounted) return;
-    if (selected != null && selected != _selectedPlanId) {
-      setState(() => _selectedPlanId = selected);
+    if (selected == null) return;
+
+    if (!planController.isLoggedIn && selected == 'pro') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const AuthPage(initialTabIndex: 1),
+        ),
+      );
+      await planController.load(force: true);
+      if (planController.isLoggedIn &&
+          planController.activePlan?.plan.slug != 'pro') {
+        await planController.selectPlan('pro');
+      }
+      return;
+    }
+
+    if (selected != planController.activePlan?.plan.slug) {
+      await planController.selectPlan(selected);
     }
   }
 
@@ -314,9 +293,13 @@ class _PlanTabState extends State<PlanTab> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
-    final selectedPlan = thermoloxPlanCards.firstWhere(
-      (plan) => plan.id == _selectedPlanId,
-      orElse: () => thermoloxPlanCards.first,
+    final controller = context.watch<PlanController>();
+    final plans = controller.planCards;
+    final selectedPlanId =
+        controller.activePlan?.plan.slug ?? 'basic';
+    final selectedPlan = plans.firstWhere(
+      (plan) => plan.id == selectedPlanId,
+      orElse: () => plans.first,
     );
 
     return ListView(
@@ -333,6 +316,19 @@ class _PlanTabState extends State<PlanTab> {
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (controller.isLoading) ...[
+          SizedBox(height: tokens.gapSm),
+          const LinearProgressIndicator(minHeight: 2),
+        ],
+        if (controller.error != null) ...[
+          SizedBox(height: tokens.gapSm),
+          Text(
+            'Tarife konnten nicht geladen werden.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
         SizedBox(height: tokens.gapSm),
         PlanCardView(
           data: selectedPlan,
@@ -343,7 +339,7 @@ class _PlanTabState extends State<PlanTab> {
         ),
         SizedBox(height: tokens.gapMd),
         ElevatedButton(
-          onPressed: _openPlanModal,
+          onPressed: () => _openPlanModal(context),
           child: const Text('Tarife verwalten'),
         ),
       ],

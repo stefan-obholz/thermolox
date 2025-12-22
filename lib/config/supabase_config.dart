@@ -1,0 +1,3 @@
+const String kSupabaseUrl = 'https://xivtfgyvpqckfwwyloub.supabase.co';
+const String kSupabaseAnonKey =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';

@@ -13,8 +13,8 @@ const thermoloxBasicFeatures = <PlanFeatureData>[
   ),
   PlanFeatureData(
     label: 'Projektmappe',
-    included: true,
-    description: 'Inklusive',
+    included: false,
+    description: 'Nicht enthalten',
   ),
   PlanFeatureData(
     label: 'Projektberatung',

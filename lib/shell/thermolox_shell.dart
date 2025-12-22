@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../pages/settings_page.dart';
 import '../pages/projects_page.dart';
 import '../pages/products_page.dart';
 import '../pages/home_page.dart';
 import '../chat/chat_button.dart';
+import '../controllers/plan_controller.dart';
+import '../utils/thermolox_overlay.dart';
 
 class ThermoloxShell extends StatefulWidget {
   final int initialIndex;
@@ -37,6 +40,15 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
   }
 
   void _onNavTapped(int index) {
+    final canAccessProjects =
+        context.read<PlanController>().hasProjectsAccess;
+    if (index == 1 && !canAccessProjects) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Projekte sind nur im Pro-Tarif verfügbar.',
+      );
+      return;
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -44,6 +56,16 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
   Widget build(BuildContext context) {
     const Color footerColor = Color(0xFF242833);
     const Color iconBaseColor = Colors.white;
+    final canAccessProjects =
+        context.watch<PlanController>().hasProjectsAccess;
+
+    if (!canAccessProjects && _currentIndex == 1) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _currentIndex = 3);
+        }
+      });
+    }
 
     // >>> EINSTELLUNGEN FÜR ABSTÄNDE <<<
     final double navTopPadding = 12; // Abstand Icons -> oberer Rand Footer
@@ -81,6 +103,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
                     currentIndex: _currentIndex,
                     onTap: _onNavTapped,
                     baseColor: iconBaseColor,
+                    enabled: true,
                   ),
                 ),
 
@@ -97,6 +120,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
                     currentIndex: _currentIndex,
                     onTap: _onNavTapped,
                     baseColor: iconBaseColor,
+                    enabled: canAccessProjects,
                   ),
                 ),
 
@@ -113,6 +137,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
                     currentIndex: _currentIndex,
                     onTap: _onNavTapped,
                     baseColor: iconBaseColor,
+                    enabled: true,
                   ),
                 ),
 
@@ -129,6 +154,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
                     currentIndex: _currentIndex,
                     onTap: _onNavTapped,
                     baseColor: iconBaseColor,
+                    enabled: true,
                   ),
                 ),
               ],
@@ -156,6 +182,7 @@ class _NavIcon extends StatelessWidget {
   final int currentIndex;
   final void Function(int) onTap;
   final Color baseColor;
+  final bool enabled;
 
   const _NavIcon({
     required this.icon,
@@ -164,14 +191,20 @@ class _NavIcon extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     required this.baseColor,
+    required this.enabled,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isSelected = index == currentIndex;
+    final effectiveEnabled = enabled;
+    final inactiveColor =
+        effectiveEnabled ? baseColor.withOpacity(0.45) : baseColor.withOpacity(0.2);
+    final inactiveLabel =
+        effectiveEnabled ? baseColor.withOpacity(0.60) : baseColor.withOpacity(0.3);
 
     return InkWell(
-      onTap: () => onTap(index),
+      onTap: effectiveEnabled ? () => onTap(index) : null,
       borderRadius: BorderRadius.circular(32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -179,7 +212,7 @@ class _NavIcon extends StatelessWidget {
           Icon(
             icon,
             size: 26,
-            color: isSelected ? Colors.white : baseColor.withOpacity(0.45),
+            color: isSelected ? Colors.white : inactiveColor,
           ),
           const SizedBox(height: 6),
           Text(
@@ -188,7 +221,7 @@ class _NavIcon extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-              color: isSelected ? Colors.white : baseColor.withOpacity(0.60),
+              color: isSelected ? Colors.white : inactiveLabel,
             ),
           ),
         ],

@@ -439,7 +439,8 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     ProjectsModel projectsModel,
   ) {
     final contextJson = jsonEncode(_skillContextSnapshot(cart, projectsModel));
-    final instructions = '''
+    final instructions =
+        '''
 Name des Chatbots
 THERMOLOX
 
@@ -1037,7 +1038,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       barrierDismissible: false,
       barrierLabel: 'farbe',
       barrierColor: Colors.transparent,
-      pageBuilder: (dialogContext, _, __) {
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
         final tokens = dialogContext.thermoloxTokens;
         return Material(
           color: color,
@@ -1056,10 +1057,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                   child: Text(
                     hex,
                     style: Theme.of(dialogContext).textTheme.headlineMedium
-                        ?.copyWith(
-                          color: onColor,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        ?.copyWith(color: onColor, fontWeight: FontWeight.w800),
                   ),
                 ),
               ],
@@ -1239,10 +1237,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     var cleaned = text;
     cleaned = cleaned.replaceAll(_hexColorRegex, '');
     cleaned = cleaned.replaceAll(RegExp(r'\bhex\b', caseSensitive: false), '');
-    cleaned = cleaned.replaceAll(
-      RegExp(r'[\-–—:]\s*(?=\n|$)'),
-      '',
-    );
+    cleaned = cleaned.replaceAll(RegExp(r'[\-–—:]\s*(?=\n|$)'), '');
     cleaned = cleaned.replaceAll(RegExp(r'[ \t]{2,}'), ' ');
     cleaned = cleaned.replaceAll(RegExp(r' *\n *'), '\n');
     cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
@@ -1666,10 +1661,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       setState(() {
         _messages[_streamingMsgIndex!] = _messages[_streamingMsgIndex!]
             .copyWith(
-          text: displayText,
-          content: cleaned,
-          buttons: buttons.isNotEmpty ? buttons : null,
-        );
+              text: displayText,
+              content: cleaned,
+              buttons: buttons.isNotEmpty ? buttons : null,
+            );
       });
     }
 
@@ -2000,10 +1995,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     final hasImages =
         msg.localImagePaths != null && msg.localImagePaths!.isNotEmpty;
-    final hexSource =
-        !isUser && msg.content is String ? msg.content as String : msg.text;
-    final hexColors =
-        !isUser ? _extractHexColors(hexSource) : const <String>[];
+    final hexSource = !isUser && msg.content is String
+        ? msg.content as String
+        : msg.text;
+    final hexColors = !isUser ? _extractHexColors(hexSource) : const <String>[];
 
     return Column(
       crossAxisAlignment: align,
@@ -2527,7 +2522,7 @@ class _AttachmentActionCircleState extends State<_AttachmentActionCircle>
 class _AttachmentIconButton extends StatefulWidget {
   final VoidCallback onTap;
 
-  const _AttachmentIconButton({super.key, required this.onTap});
+  const _AttachmentIconButton({required this.onTap});
 
   @override
   State<_AttachmentIconButton> createState() => _AttachmentIconButtonState();
