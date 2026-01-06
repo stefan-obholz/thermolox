@@ -1,24 +1,31 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../controllers/plan_controller.dart';
+import '../controllers/virtual_room_credit_manager.dart';
 import '../memory/memory_manager.dart';
 import '../models/cart_model.dart';
 import '../models/product.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
+import '../pages/auth_page.dart';
 import '../services/shopify_service.dart';
+import '../services/credit_service.dart';
+import '../services/image_edit_service.dart';
+import '../services/thermolox_api.dart';
+import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
+import '../widgets/mask_editor_page.dart';
 import '../pages/cart_page.dart';
 import '../theme/app_theme.dart';
-
-/// Base-URL deines Cloudflare-Workers – identisch zum JS
-const String kThermoloxApiBase =
-    'https://thermolox-proxy.stefan-obholz.workers.dev';
 
 /// =======================
 ///  MODEL-KLASSEN
@@ -321,6 +328,43 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     });
   }
 
+  bool _currentProjectHasImage() {
+    final projectId = _currentProjectId;
+    if (projectId == null) return false;
+    try {
+      final project = context
+          .read<ProjectsModel>()
+          .projects
+          .firstWhere((p) => p.id == projectId);
+      return project.items.any(
+        (item) =>
+            item.type == 'image' &&
+            ((item.path ?? '').isNotEmpty || (item.url ?? '').isNotEmpty),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String? _currentProjectRenderPathOrUrl() {
+    final projectId = _currentProjectId;
+    if (projectId == null) return null;
+    try {
+      final project = context
+          .read<ProjectsModel>()
+          .projects
+          .firstWhere((p) => p.id == projectId);
+      for (final item in project.items.reversed) {
+        if (item.type != 'render') continue;
+        if ((item.path ?? '').isNotEmpty) return item.path;
+        if ((item.url ?? '').isNotEmpty) return item.url;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   List<_SentUpload> _mergeUploads(List<_SentUpload> incoming) {
     const maxUploads = 15;
     final combined = [..._recentUploads, ...incoming];
@@ -387,6 +431,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
           (p) => {
             'id': p.id,
             'name': p.name,
+            'hasImage': p.items.any((i) => i.type == 'image'),
             'items': p.items
                 .map(
                   (i) => {
@@ -591,6 +636,27 @@ Wenn das Bild ungewöhnlich ist oder der Nutzer sagt „Das ist schon richtig“
 Danach zwingend:
 
 BUTTONS: {"buttons":[{"label":"Empfehle mir was","value":"Empfehle mir etwas Passendes","variant":"preferred"}]}
+
+⸻
+
+Bildbearbeitung / Virtuelle Raumgestaltung
+
+Du kannst Bilder bearbeiten, wenn der Nutzer eine Wandfarbe im Foto sehen will.
+Sage niemals, dass du Bilder nicht bearbeiten kannst.
+Leite stattdessen zur Virtuellen Raumgestaltung und fordere Foto + Farbwunsch an.
+Wenn im Projekt bereits ein Foto vorhanden ist (siehe Kontext), biete zuerst an,
+das vorhandene Foto zu verwenden oder ein neues hochzuladen.
+Sage niemals, dass du das Ergebnis nicht anzeigen kannst.
+Verweise auf die Vorschau im Projekt (Vorher/Nachher), sobald die Bearbeitung gestartet ist.
+Behaupte keine fertige Bearbeitung, bevor der Nutzer die Bearbeitung gestartet hat.
+Wenn noch kein Projekt existiert, schlage zuerst ein Projekt vor.
+Nach dem Hinweis immer Frage oder BUTTONS.
+
+Beispiel CTA:
+BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto hoch","variant":"preferred","action":"upload"}]}
+
+Beispiel CTA mit vorhandenem Foto:
+BUTTONS: {"buttons":[{"label":"Vorhandenes Foto verwenden","value":"Bitte verwende das vorhandene Foto aus meinem Projekt.","variant":"preferred"},{"label":"Neues Foto hochladen","value":"Ich lade ein neues Raumfoto hoch","action":"upload"}]}
 
 ⸻
 
@@ -1029,6 +1095,39 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     return brightness == Brightness.dark ? Colors.white : Colors.black;
   }
 
+  Future<void> _applyColorToCurrentProject(String hex) async {
+    final projectId = _currentProjectId;
+    final selectionMessage =
+        'Ich habe die Farbe $hex ausgewählt. Bitte nutze diese Farbe für mein Projekt.';
+    if (projectId == null) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Bitte zuerst ein Projekt anlegen.',
+        isError: true,
+      );
+      await _sendMessage(quickReplyText: selectionMessage);
+      return;
+    }
+    try {
+      await context.read<ProjectsModel>().addColorSwatch(
+            projectId: projectId,
+            hex: hex,
+          );
+      ThermoloxOverlay.showSnack(
+        context,
+        'Farbe im Projekt gespeichert.',
+      );
+    } catch (_) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Bitte anmelden, um Farben zu speichern.',
+        isError: true,
+      );
+    } finally {
+      await _sendMessage(quickReplyText: selectionMessage);
+    }
+  }
+
   void _showColorPreview(String hex) {
     final color = _colorFromHex(hex);
     final onColor = _onColorForBackground(color);
@@ -1060,6 +1159,19 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                         ?.copyWith(color: onColor, fontWeight: FontWeight.w800),
                   ),
                 ),
+                Positioned(
+                  left: tokens.screenPadding,
+                  right: tokens.screenPadding,
+                  bottom: tokens.gapLg,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      Navigator.of(dialogContext).pop();
+                      await _applyColorToCurrentProject(hex);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Farbe übernehmen'),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1076,6 +1188,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final wantsUpload = _looksLikeUploadPrompt(lower);
     final wantsCart = _looksLikeCartPrompt(lower);
     final hasProject = _currentProjectId != null;
+    final hasProjectImage = _currentProjectHasImage();
+    final wantsVisualEdit = _looksLikeVisualEditPrompt(lower);
     final mentionsRoom =
         lower.contains('zimmer') ||
         lower.contains('wohnzimmer') ||
@@ -1128,7 +1242,44 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       );
     }
 
+    if (hasProjectImage && wantsVisualEdit) {
+      return _FallbackButtons(
+        key: 'upload_choice',
+        buttons: const [
+          QuickReplyButton(
+            label: 'Vorhandenes Foto verwenden',
+            value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
+            preferred: true,
+          ),
+          QuickReplyButton(
+            label: 'Neues Foto hochladen',
+            value: 'Ich lade ein neues Raumfoto hoch',
+            preferred: false,
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ],
+      );
+    }
+
     if (wantsUpload) {
+      if (hasProjectImage) {
+        return _FallbackButtons(
+          key: 'upload_existing',
+          buttons: const [
+            QuickReplyButton(
+              label: 'Vorhandenes Foto verwenden',
+              value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
+              preferred: true,
+            ),
+            QuickReplyButton(
+              label: 'Neues Foto hochladen',
+              value: 'Ich lade ein neues Raumfoto hoch',
+              preferred: false,
+              action: QuickReplyAction.uploadAttachment,
+            ),
+          ],
+        );
+      }
       return _FallbackButtons(
         key: 'upload',
         buttons: const [
@@ -1195,6 +1346,43 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         lower.contains('upload');
   }
 
+  bool _looksLikeResultRequest(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('ergebnis') ||
+        lower.contains('ansehen') ||
+        lower.contains('anzeigen') ||
+        lower.contains('zeige') ||
+        lower.contains('zeigen') ||
+        lower.contains('vorher') ||
+        lower.contains('nachher') ||
+        lower.contains('vergleich') ||
+        lower.contains('before') ||
+        lower.contains('after') ||
+        lower.contains('sehen');
+  }
+
+  bool _looksLikeVisualEditPrompt(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('virtuell') ||
+        lower.contains('raumgestaltung') ||
+        lower.contains('bearbeit') ||
+        lower.contains('streichen') ||
+        lower.contains('farbe auf') ||
+        lower.contains('wand') ||
+        lower.contains('anwenden');
+  }
+
+  bool _looksLikeEditCompletion(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('bearbeitet') ||
+        lower.contains('angewendet') ||
+        lower.contains('fertig') ||
+        lower.contains('abgeschlossen') ||
+        lower.contains('gerendert') ||
+        lower.contains('erstellt') ||
+        lower.contains('erzeugt');
+  }
+
   bool _looksLikeCartPrompt(String text) {
     final lower = text.toLowerCase();
     return lower.contains('warenkorb') ||
@@ -1208,6 +1396,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     return lower.contains('warenkorb') ||
         lower.contains('kasse') ||
         lower.contains('checkout');
+  }
+
+  bool _isRemotePath(String path) {
+    return path.startsWith('http://') || path.startsWith('https://');
   }
 
   String _stripControlBlocks(String text) {
@@ -1585,6 +1777,29 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final commands = _parseSkillBlocks(fullText);
     var buttons = _parseButtonBlocks(fullText);
 
+    if (buttons.isNotEmpty && _currentProjectHasImage()) {
+      final hasUpload = buttons.any(
+        (b) => b.action == QuickReplyAction.uploadAttachment,
+      );
+      final hasExisting = buttons.any(
+        (b) =>
+            b.label.toLowerCase().contains('vorhand') ||
+            b.value.toLowerCase().contains('vorhand'),
+      );
+      if (hasUpload && !hasExisting) {
+        buttons = [
+          const QuickReplyButton(
+            label: 'Vorhandenes Foto verwenden',
+            value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
+            preferred: true,
+          ),
+          ...buttons.map(
+            (b) => b.preferred ? b.copyWith(preferred: false) : b,
+          ),
+        ];
+      }
+    }
+
     final feedback = <String>[];
     for (final cmd in commands) {
       final note = await _executeSkillCommand(cmd);
@@ -1600,7 +1815,58 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     }
     displayText = displayText.trim();
 
-    if (buttons.isEmpty) {
+    final lastUserText = _messages.reversed
+        .firstWhere(
+          (m) => m.role == 'user',
+          orElse: () => const ChatMessage(role: 'user', text: ''),
+        )
+        .text;
+    final renderPath = _currentProjectRenderPathOrUrl();
+    final wantsResult = _looksLikeResultRequest(lastUserText) ||
+        _looksLikeResultRequest(displayText);
+    final looksLikeCompletion = _looksLikeEditCompletion(displayText);
+    final shouldShowRender = renderPath != null && wantsResult;
+    final needsRenderButMissing = renderPath == null && (wantsResult || looksLikeCompletion);
+
+    if (shouldShowRender) {
+      displayText = 'Hier ist das bearbeitete Foto.';
+      buttons = const [];
+    } else if (needsRenderButMissing) {
+      displayText = _currentProjectHasImage()
+          ? 'Ich habe das Bild noch nicht fertig gerendert. Soll ich das vorhandene Foto verwenden oder ein neues aufnehmen?'
+          : 'Damit ich starten kann, brauche ich zuerst ein Foto. Möchtest du ein neues hochladen?';
+      buttons = _currentProjectHasImage()
+          ? const [
+              QuickReplyButton(
+                label: 'Vorhandenes Foto verwenden',
+                value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
+                preferred: true,
+              ),
+              QuickReplyButton(
+                label: 'Neues Foto hochladen',
+                value: 'Ich lade ein neues Raumfoto hoch',
+                preferred: false,
+                action: QuickReplyAction.uploadAttachment,
+              ),
+            ]
+          : const [
+              QuickReplyButton(
+                label: 'Foto hochladen',
+                value: 'Ich lade ein Raumfoto hoch',
+                preferred: true,
+                action: QuickReplyAction.uploadAttachment,
+              ),
+              QuickReplyButton(
+                label: 'Grundriss/Skizze',
+                value: 'Ich lade einen Grundriss oder eine Skizze hoch',
+                preferred: false,
+                action: QuickReplyAction.uploadAttachment,
+              ),
+            ];
+    }
+
+    final suppressFallback = shouldShowRender || needsRenderButMissing;
+    if (!suppressFallback && buttons.isEmpty) {
       final fallback = _defaultButtonsForText(displayText);
       if (fallback != null) {
         final allowRepeat = fallback.key == 'checkout';
@@ -1628,13 +1894,33 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           ),
           QuickReplyButton(
             label: 'Farbberatung',
-            value: 'Ich brauche eine Farbberatung',
+            value: 'Ich möchte eine Farbberatung',
             preferred: false,
           ),
         ];
         _projectPromptShown = true;
         _projectPromptAttemptedInTurn = true;
       }
+    }
+
+    final isFirstGreeting =
+        _messages.length <= 1 && _messages.every((m) => m.role != 'user');
+    if (!suppressFallback && isFirstGreeting) {
+      buttons = const [
+        QuickReplyButton(
+          label: 'Projekt starten',
+          value: 'Ich möchte ein Projekt starten',
+          preferred: true,
+        ),
+        QuickReplyButton(
+          label: 'Farbberatung',
+          value: 'Ich möchte eine Farbberatung',
+          preferred: false,
+        ),
+      ];
+      _projectPromptShown = true;
+      _projectPromptAttemptedInTurn = true;
+      _shownFallbacks.add('project_prompt');
     }
 
     // Nach Projektanlage immer Upload-CTA nachschieben, falls nicht geliefert.
@@ -1659,12 +1945,15 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         _streamingMsgIndex! < _messages.length &&
         mounted) {
       setState(() {
-        _messages[_streamingMsgIndex!] = _messages[_streamingMsgIndex!]
-            .copyWith(
-              text: displayText,
-              content: cleaned,
-              buttons: buttons.isNotEmpty ? buttons : null,
-            );
+        final current = _messages[_streamingMsgIndex!];
+        _messages[_streamingMsgIndex!] = current.copyWith(
+          text: displayText,
+          content: suppressFallback ? displayText : cleaned,
+          buttons: buttons.isNotEmpty ? buttons : null,
+          localImagePaths: shouldShowRender
+              ? [renderPath!]
+              : current.localImagePaths,
+        );
       });
     }
 
@@ -2033,7 +2322,24 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                               maxWidth: maxPreviewWidth,
                               maxHeight: maxPreviewHeight,
                             ),
-                            child: Image.file(File(path), fit: BoxFit.cover),
+                            child: _isRemotePath(path)
+                                ? Image.network(
+                                    path,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Center(
+                                      child: Icon(Icons.broken_image_outlined),
+                                    ),
+                                  )
+                                : Image.file(
+                                    File(path),
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Center(
+                                      child: Icon(Icons.broken_image_outlined),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

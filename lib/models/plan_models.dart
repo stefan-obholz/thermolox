@@ -23,11 +23,15 @@ class PlanFeatureData {
   final bool included;
   final String? value;
   final String? description;
+  final String? actionLabel;
+  final bool actionEnabled;
 
   const PlanFeatureData({
     required this.label,
     required this.included,
     this.value,
     this.description,
+    this.actionLabel,
+    this.actionEnabled = false,
   });
 }

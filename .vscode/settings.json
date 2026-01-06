@@ -1,0 +1,4 @@
+{
+  "dart.flutterRunAdditionalArgs": ["--dart-define-from-file=supabase.json"],
+  "dart.flutterTestAdditionalArgs": ["--dart-define-from-file=supabase.json"]
+}

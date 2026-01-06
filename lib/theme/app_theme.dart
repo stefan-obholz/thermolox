@@ -318,6 +318,8 @@ class AppTheme {
     const textMuted = textMutedLight;
 
     final textTheme = _buildTextTheme(text, textMuted);
+    final outlineColor = primary.withOpacity(0.35);
+    final outlineColorSoft = primary.withOpacity(0.2);
 
     final colorScheme = ColorScheme(
       brightness: Brightness.light,
@@ -362,7 +364,13 @@ class AppTheme {
         style: TextButton.styleFrom(textStyle: buttonTextStyle),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(textStyle: buttonTextStyle),
+        style: OutlinedButton.styleFrom(
+          textStyle: buttonTextStyle,
+          side: BorderSide(color: outlineColor, width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusMd),
+          ),
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(textStyle: buttonTextStyle),
@@ -386,13 +394,60 @@ class AppTheme {
       // Icons
       iconTheme: const IconThemeData(color: textLight),
 
+      cardTheme: CardThemeData(
+        color: surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusLg),
+          side: BorderSide(color: outlineColorSoft, width: 1.2),
+        ),
+        elevation: 0,
+      ),
+
       // Textfelder
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: outlineColorSoft,
+            width: 1.1,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: BorderSide(
+            color: outlineColorSoft,
+            width: 1.1,
+          ),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: BorderSide(
+            color: outlineColorSoft,
+            width: 1.1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: const BorderSide(
+            color: primary,
+            width: 1.4,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: const BorderSide(
+            color: Colors.redAccent,
+            width: 1.1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusMd),
+          borderSide: const BorderSide(
+            color: Colors.redAccent,
+            width: 1.4,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,

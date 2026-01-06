@@ -5,6 +5,7 @@ import '../pages/settings_page.dart';
 import '../pages/projects_page.dart';
 import '../pages/products_page.dart';
 import '../pages/home_page.dart';
+import '../pages/auth_page.dart';
 import '../chat/chat_button.dart';
 import '../controllers/plan_controller.dart';
 import '../utils/thermolox_overlay.dart';
@@ -40,9 +41,17 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
   }
 
   void _onNavTapped(int index) {
-    final canAccessProjects =
-        context.read<PlanController>().hasProjectsAccess;
+    final planController = context.read<PlanController>();
+    final canAccessProjects = planController.hasProjectsAccess;
     if (index == 1 && !canAccessProjects) {
+      if (!planController.isLoggedIn) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const AuthPage(initialTabIndex: 1),
+          ),
+        );
+        return;
+      }
       ThermoloxOverlay.showSnack(
         context,
         'Projekte sind nur im Pro-Tarif verfügbar.',

@@ -1,50 +1,69 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../data/plan_data.dart';
+import '../data/plan_feature_catalog.dart';
+import '../data/plan_ui_strings.dart';
 import '../models/current_plan.dart';
 import '../models/plan.dart';
 import '../models/plan_feature.dart';
 import '../models/plan_models.dart';
+import '../models/user_entitlements.dart';
+import '../services/analytics_service.dart';
+import '../services/auth_service.dart';
 import '../services/plan_service.dart';
 
 class PlanController extends ChangeNotifier {
-  PlanController(this._service) {
-    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
+  PlanController(this._planService, this._authService) {
+    _authSub = _authService.currentUserStream.listen((_) {
       load(force: true);
     });
     load();
   }
 
-  final PlanService _service;
-  StreamSubscription<AuthState>? _authSub;
+  final PlanService _planService;
+  final AuthService _authService;
+  StreamSubscription? _authSub;
 
   bool _isLoading = false;
   Object? _error;
-  CurrentPlan? _activePlan;
   Map<String, CurrentPlan> _publicPlans = {};
+  CurrentPlan? _activePlan;
+  PlanSubscriptionInfo? _subscriptionInfo;
+  UserEntitlements? _entitlements;
 
   bool get isLoading => _isLoading;
   Object? get error => _error;
   CurrentPlan? get activePlan => _activePlan;
   Map<String, CurrentPlan> get publicPlans => _publicPlans;
+  UserEntitlements? get entitlements => _entitlements;
+  int get virtualRoomCredits => _entitlements?.creditsBalance ?? 0;
 
-  bool get isLoggedIn => Supabase.instance.client.auth.currentUser != null;
-  bool get isPro => _activePlan?.plan.slug == 'pro';
-  bool get hasProjectsAccess =>
-      _activePlan?.features['project_folder']?.isEnabled ?? false;
+  bool get isLoggedIn => _authService.currentUser != null;
+  bool get isEmailVerified => _authService.isEmailVerified;
+  String? get currentUserEmail => _authService.currentUser?.email;
+  bool get canDowngrade =>
+      currentUserEmail?.toLowerCase() == 'stefan.obholz@gmail.com';
+
+  bool get isPro {
+    if (!isLoggedIn || !isEmailVerified) return false;
+    if (_entitlements?.proLifetime == true && !canDowngrade) return true;
+    if (_activePlan?.plan.slug != 'pro') return false;
+    final status = _subscriptionInfo?.status;
+    return status == null || status == 'active' || status == 'lifetime';
+  }
+
+  bool get hasProjectsAccess => isPro;
 
   List<PlanCardData> get planCards {
-    if (_publicPlans.isEmpty) {
-      return thermoloxPlanCards;
-    }
     const order = ['basic', 'pro'];
-    return [
-      for (final slug in order)
-        if (_publicPlans[slug] != null) _mapPlanCard(_publicPlans[slug]!),
-    ];
+    final cards = <PlanCardData>[];
+    for (final slug in order) {
+      final plan = _publicPlans[slug];
+      if (plan == null) continue;
+      cards.add(_mapPlanCard(plan));
+    }
+    return cards;
   }
 
   Future<void> load({bool force = false}) async {
@@ -53,33 +72,34 @@ class PlanController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final publicPlans = await _service.getAllPlansPublic();
-      final fallbackPlans = _fallbackPlans();
-      if (publicPlans.isNotEmpty) {
-        _publicPlans = _mergeFallbackPlans(
-          fallbackPlans,
-          publicPlans,
-        );
-      } else if (_publicPlans.isEmpty) {
-        _publicPlans = fallbackPlans;
+      final plans = await _planService.loadPlans();
+      final features = await _planService.loadPlanFeatures(plans);
+      _publicPlans = _buildPublicPlans(plans, features);
+
+      final user = _authService.currentUser;
+      if (user != null && _authService.isEmailVerified) {
+        _subscriptionInfo = await _planService.getCurrentUserPlanInfo();
+        _entitlements = await _planService.loadEntitlements(userId: user.id) ??
+            const UserEntitlements(proLifetime: false, creditsBalance: 0);
+      } else {
+        _subscriptionInfo = null;
+        _entitlements = null;
       }
 
-      final fallback = _publicPlans['basic'];
-      if (isLoggedIn) {
-        _activePlan = await _service.getPlanForCurrentUser(fallback: fallback);
-      } else {
-        _activePlan = fallback;
-      }
+      _activePlan = _resolveActivePlan();
       _error = null;
     } catch (e) {
       _error = e;
+      await AnalyticsService.instance.logEvent(
+        'plan_load_failed',
+        source: 'plan_controller',
+        payload: {'error': e.toString()},
+      );
       if (kDebugMode) {
         debugPrint('PlanController load failed: $e');
       }
-      if (_publicPlans.isEmpty) {
-        _publicPlans = _fallbackPlans();
-      }
-      _activePlan ??= _publicPlans['basic'];
+      _publicPlans = {};
+      _activePlan = null;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -87,7 +107,7 @@ class PlanController extends ChangeNotifier {
   }
 
   Future<void> selectPlan(String planSlug) async {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _authService.currentUser;
     if (user == null) {
       _error = StateError('No user session');
       notifyListeners();
@@ -102,7 +122,10 @@ class PlanController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _service.upsertSubscription(userId: user.id, plan: target.plan);
+      await _planService.upsertSubscription(
+        userId: user.id,
+        planId: target.plan.id,
+      );
       await load(force: true);
     } catch (e) {
       _error = e;
@@ -112,172 +135,115 @@ class PlanController extends ChangeNotifier {
     }
   }
 
+  void updateCreditsBalance(int? balance) {
+    if (balance == null) return;
+    final current = _entitlements ??
+        const UserEntitlements(proLifetime: false, creditsBalance: 0);
+    _entitlements = current.copyWith(creditsBalance: balance);
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _authSub?.cancel();
     super.dispose();
   }
 
+  Map<String, CurrentPlan> _buildPublicPlans(
+    List<Plan> plans,
+    Map<String, List<PlanFeature>> featuresBySlug,
+  ) {
+    final result = <String, CurrentPlan>{};
+    for (final plan in plans) {
+      final features = <String, PlanFeature>{};
+      for (final feature in featuresBySlug[plan.slug] ?? []) {
+        features[feature.featureKey] = feature;
+      }
+      result[plan.slug] = CurrentPlan(plan: plan, features: features);
+    }
+    return result;
+  }
+
+  CurrentPlan? _resolveActivePlan() {
+    if (_publicPlans.isEmpty) return null;
+    if (!isLoggedIn) return _publicPlans['basic'] ?? _publicPlans.values.first;
+    if (_entitlements?.proLifetime == true && !canDowngrade) {
+      return _publicPlans['pro'] ??
+          _publicPlans['basic'] ??
+          _publicPlans.values.first;
+    }
+
+    final slug = _subscriptionInfo?.planSlug ?? 'basic';
+    return _publicPlans[slug] ?? _publicPlans['basic'] ?? _publicPlans.values.first;
+  }
+
   PlanCardData _mapPlanCard(CurrentPlan plan) {
     final price = _formatPrice(plan.plan.priceEur);
-    final priceSubline = plan.plan.priceEur > 0 ? 'pro Monat' : '';
     final subline = plan.plan.slug == 'pro'
-        ? 'Für ambitionierte Projekte'
-        : 'Für den Einstieg';
+        ? PlanUiStrings.proSubline
+        : PlanUiStrings.basicSubline;
 
     return PlanCardData(
       id: plan.plan.slug,
       title: plan.plan.name,
       price: price,
-      priceSubline: priceSubline,
       subline: subline,
-      features: [
-        for (final descriptor in _featureOrder)
-          _mapFeature(plan, descriptor),
-      ],
+      features: _mapFeatures(plan),
     );
   }
 
-  PlanFeatureData _mapFeature(CurrentPlan plan, _FeatureDescriptor descriptor) {
-    final feature = plan.features[descriptor.key];
-    final enabled = feature?.isEnabled ?? false;
+  List<PlanFeatureData> _mapFeatures(CurrentPlan plan) {
+    final features = plan.features;
+    final result = <PlanFeatureData>[];
 
-    if (descriptor.key == 'virtual_room') {
-      if (!enabled) {
-        return const PlanFeatureData(
-          label: 'Virtuelle Raumgestaltung',
-          included: false,
-          description: 'Nicht enthalten',
-        );
+    for (final descriptor in planFeatureOrder) {
+      final feature = features[descriptor.key];
+      if (feature == null) continue;
+
+      if (descriptor.key == 'virtual_room') {
+        result.add(_mapVirtualRoom(plan, feature));
+        continue;
       }
-      final limit = feature?.monthlyLimit;
-      if (limit != null && limit > 0) {
-        return PlanFeatureData(
-          label: 'Virtuelle Raumgestaltung',
-          included: true,
-          value: '${limit}x',
-          description: '$limit Nutzungen',
-        );
-      }
-      return const PlanFeatureData(
-        label: 'Virtuelle Raumgestaltung',
-        included: true,
-        description: 'Inklusive',
+
+      result.add(
+        PlanFeatureData(
+          label: descriptor.label,
+          included: feature.isEnabled,
+          description: feature.isEnabled
+              ? PlanUiStrings.included
+              : PlanUiStrings.notIncluded,
+        ),
       );
     }
 
+    return result;
+  }
+
+  PlanFeatureData _mapVirtualRoom(CurrentPlan plan, PlanFeature feature) {
+    if (!feature.isEnabled) {
+      return const PlanFeatureData(
+        label: PlanUiStrings.virtualRoomLabel,
+        included: false,
+        description: PlanUiStrings.notIncluded,
+      );
+    }
+
+    final limit = feature.monthlyLimit ?? (plan.plan.slug == 'pro' ? 10 : null);
+    final value = limit != null ? '${limit}x' : null;
+    final description =
+        limit != null ? PlanUiStrings.usageLabel(limit) : PlanUiStrings.included;
+
     return PlanFeatureData(
-      label: descriptor.label,
-      included: enabled,
-      description: enabled ? 'Inklusive' : 'Nicht enthalten',
+      label: PlanUiStrings.virtualRoomLabel,
+      included: true,
+      value: value,
+      description: description,
     );
   }
 
   String _formatPrice(double price) {
-    if (price <= 0) return 'Kostenlos';
-    final rounded = price % 1 == 0 ? price.toInt().toString() : price.toString();
-    return '$rounded€';
-  }
-
-  Map<String, CurrentPlan> _fallbackPlans() {
-    final result = <String, CurrentPlan>{};
-    for (final card in thermoloxPlanCards) {
-      final plan = Plan(
-        id: card.id,
-        slug: card.id,
-        name: card.title,
-        priceEur: _parsePrice(card.price),
-      );
-
-      final features = <String, PlanFeature>{};
-      for (final feature in card.features) {
-        final key = _featureKeyFromLabel(feature.label);
-        if (key == null) continue;
-        final limit = _parseLimit(feature.value);
-        features[key] = PlanFeature(
-          featureKey: key,
-          isEnabled: feature.included,
-          monthlyLimit: limit,
-        );
-      }
-
-      final virtual = features['virtual_room'];
-      final limit = virtual?.monthlyLimit;
-      final enabled = virtual?.isEnabled ?? false;
-      result[plan.slug] = CurrentPlan(
-        plan: plan,
-        features: features,
-        virtualRoomLimit: enabled ? limit : null,
-        virtualRoomUsed: enabled ? 0 : null,
-        virtualRoomRemaining: enabled ? limit : null,
-      );
-    }
-    return result;
-  }
-
-  Map<String, CurrentPlan> _mergeFallbackPlans(
-    Map<String, CurrentPlan> fallback,
-    Map<String, CurrentPlan> remote,
-  ) {
-    final merged = <String, CurrentPlan>{...fallback};
-    remote.forEach((slug, plan) {
-      final fallbackPlan = fallback[slug];
-      if (plan.features.isEmpty && fallbackPlan != null) {
-        merged[slug] = CurrentPlan(
-          plan: plan.plan,
-          features: fallbackPlan.features,
-          virtualRoomLimit: fallbackPlan.virtualRoomLimit,
-          virtualRoomUsed: fallbackPlan.virtualRoomUsed,
-          virtualRoomRemaining: fallbackPlan.virtualRoomRemaining,
-        );
-      } else {
-        merged[slug] = plan;
-      }
-    });
-    return merged;
-  }
-
-  double _parsePrice(String price) {
-    final cleaned =
-        price.replaceAll(RegExp(r'[^0-9,\\.]'), '').replaceAll(',', '.');
-    return double.tryParse(cleaned) ?? 0.0;
-  }
-
-  int? _parseLimit(String? value) {
-    if (value == null) return null;
-    final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
-    return int.tryParse(cleaned);
-  }
-
-  String? _featureKeyFromLabel(String label) {
-    switch (label) {
-      case 'THERMOLOX Chatbot':
-        return 'chatbot';
-      case 'Farbberatung':
-        return 'color_advice';
-      case 'Projektmappe':
-        return 'project_folder';
-      case 'Projektberatung':
-        return 'project_consulting';
-      case 'Virtuelle Raumgestaltung':
-        return 'virtual_room';
-      default:
-        return null;
-    }
+    if (price <= 0) return 'Free';
+    final formatted = price.toStringAsFixed(2).replaceAll('.', ',');
+    return '$formatted€';
   }
 }
-
-class _FeatureDescriptor {
-  final String key;
-  final String label;
-
-  const _FeatureDescriptor(this.key, this.label);
-}
-
-const _featureOrder = <_FeatureDescriptor>[
-  _FeatureDescriptor('chatbot', 'THERMOLOX Chatbot'),
-  _FeatureDescriptor('color_advice', 'Farbberatung'),
-  _FeatureDescriptor('project_folder', 'Projektmappe'),
-  _FeatureDescriptor('project_consulting', 'Projektberatung'),
-  _FeatureDescriptor('virtual_room', 'Virtuelle Raumgestaltung'),
-];

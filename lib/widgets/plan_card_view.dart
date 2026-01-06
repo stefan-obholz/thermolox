@@ -138,6 +138,26 @@ class PlanCardView extends StatelessWidget {
                       padding: EdgeInsets.only(top: tokens.gapXs / 2),
                       child: Text(f.description!, style: featureDescStyle),
                     ),
+                  if ((f.actionLabel ?? '').trim().isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(top: tokens.gapXs / 2),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: f.actionEnabled ? () {} : null,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 0),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: theme.colorScheme.primary,
+                            textStyle: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          child: Text(f.actionLabel ?? ''),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

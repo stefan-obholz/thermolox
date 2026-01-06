@@ -2,13 +2,19 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../controllers/plan_controller.dart';
+import '../data/plan_ui_strings.dart';
+import '../models/user_profile.dart';
+import '../services/auth_service.dart';
+import '../services/profile_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/plan_card_view.dart';
+import '../widgets/settings_auth_panel.dart';
 import '../widgets/thermolox_secondary_tabs.dart';
 import '../widgets/thermolox_segmented_tabs.dart';
 import 'auth_page.dart';
@@ -65,6 +71,11 @@ class ProfileTab extends StatefulWidget {
 
 class _ProfileTabState extends State<ProfileTab> {
   String? _profileImagePath;
+  String? _profileImageUrl;
+  UserProfile? _profile;
+  String? _profileError;
+  bool _loadingProfile = false;
+  String? _lastUserId;
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _streetCtrl = TextEditingController();
@@ -83,6 +94,16 @@ class _ProfileTabState extends State<ProfileTab> {
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = Supabase.instance.client.auth.currentUser;
+    final userId = user?.id;
+    if (userId == null || user == null || userId == _lastUserId) return;
+    _lastUserId = userId;
+    _loadProfile(user);
+  }
+
   Future<void> _pickProfileImage() async {
     final picked = await pickThermoloxAttachment(context);
     if (picked == null) return;
@@ -93,10 +114,121 @@ class _ProfileTabState extends State<ProfileTab> {
     setState(() => _profileImagePath = picked.path);
   }
 
+  Future<void> _loadProfile(User user) async {
+    setState(() {
+      _loadingProfile = true;
+      _profileError = null;
+    });
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final profileService = ProfileService();
+    try {
+      await profileService.seedProfileFromAuth(user: user, locale: locale);
+      final profile = await profileService.getProfile(user.id);
+      if (!mounted) return;
+      setState(() {
+        _profile = profile;
+        _profileImageUrl = profile?.avatarUrl;
+      });
+      if (profile != null) {
+        _firstNameCtrl.text = profile.firstName ?? '';
+        _lastNameCtrl.text = profile.lastName ?? '';
+        _streetCtrl.text = profile.street ?? '';
+        _houseNumberCtrl.text = profile.houseNumber ?? '';
+        _zipCtrl.text = profile.postalCode ?? '';
+        _cityCtrl.text = profile.city ?? '';
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _profileError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _loadingProfile = false);
+      }
+    }
+  }
+
+  Future<void> _logout() async {
+    try {
+      await AuthService().signOut();
+      if (!mounted) return;
+      context.read<PlanController>().load(force: true);
+    } catch (_) {
+      if (!mounted) return;
+      ThermoloxOverlay.showSnack(
+        context,
+        'Logout fehlgeschlagen.',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirm = await ThermoloxOverlay.confirm(
+      context: context,
+      title: 'Logout',
+      message: 'Möchtest Du Dich wirklich ausloggen?',
+      confirmLabel: 'Logout',
+      cancelLabel: 'Abbrechen',
+    );
+    if (!confirm) return;
+    await _logout();
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirm = await ThermoloxOverlay.confirm(
+      context: context,
+      title: 'Account löschen',
+      message:
+          'Möchtest Du Deinen Account endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.',
+      confirmLabel: 'Löschen',
+      cancelLabel: 'Abbrechen',
+    );
+    if (!confirm) return;
+    try {
+      await AuthService().deleteAccount();
+      if (!mounted) return;
+      context.read<PlanController>().load(force: true);
+      ThermoloxOverlay.showSnack(
+        context,
+        'Account gelöscht.',
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ThermoloxOverlay.showSnack(
+        context,
+        'Account konnte nicht gelöscht werden.',
+        isError: true,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
+    final isLoggedIn = context.watch<PlanController>().isLoggedIn;
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (!isLoggedIn) {
+      return SettingsAuthPanel(
+        padding: EdgeInsets.fromLTRB(
+          0,
+          tokens.gapMd,
+          0,
+          tokens.gapLg,
+        ),
+        initialMode: SettingsAuthMode.signup,
+        onAuthenticated: () {
+          context.read<PlanController>().load(force: true);
+        },
+      );
+    }
+
+    final ImageProvider<Object>? avatarImage = _profileImagePath != null
+        ? FileImage(File(_profileImagePath!))
+        : (_profileImageUrl != null && _profileImageUrl!.isNotEmpty)
+            ? NetworkImage(_profileImageUrl!)
+            : null;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -106,6 +238,17 @@ class _ProfileTabState extends State<ProfileTab> {
         tokens.gapLg,
       ),
       children: [
+        if (_loadingProfile)
+          const LinearProgressIndicator(minHeight: 2),
+        if (_profileError != null) ...[
+          SizedBox(height: tokens.gapSm),
+          Text(
+            'Profil konnte nicht geladen werden.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
         Text(
           'Profilbild',
           style: theme.textTheme.titleMedium?.copyWith(
@@ -126,10 +269,8 @@ class _ProfileTabState extends State<ProfileTab> {
                     CircleAvatar(
                       radius: 46,
                       backgroundColor: theme.colorScheme.primary.withAlpha(31),
-                      backgroundImage: _profileImagePath != null
-                          ? FileImage(File(_profileImagePath!))
-                          : null,
-                      child: _profileImagePath == null
+                      backgroundImage: avatarImage,
+                      child: avatarImage == null
                           ? Icon(
                               Icons.person,
                               size: 40,
@@ -163,16 +304,30 @@ class _ProfileTabState extends State<ProfileTab> {
             ),
             SizedBox(width: tokens.gapMd),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Profilbild hinzufügen',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: user != null ? _confirmLogout : null,
+                      style: ElevatedButton.styleFrom(
+                        shape: const StadiumBorder(),
+                      ),
+                      child: const Text('Logout'),
                     ),
-                  ),
-                ],
+                    SizedBox(height: tokens.gapXs),
+                    OutlinedButton(
+                      onPressed: user != null ? _confirmDeleteAccount : null,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.colorScheme.error,
+                        shape: const StadiumBorder(),
+                      ),
+                      child: const Text('Account löschen'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -261,27 +416,26 @@ class PlanTab extends StatelessWidget {
   Future<void> _openPlanModal(BuildContext context) async {
     final planController = context.read<PlanController>();
     final plans = planController.planCards;
+    if (plans.isEmpty) return;
     final selectedPlanId =
         planController.activePlan?.plan.slug ?? 'basic';
     final selected = await showPlanModal(
       context: context,
       plans: plans,
       selectedPlanId: selectedPlanId,
+      allowDowngrade: planController.canDowngrade,
     );
     if (selected == null) return;
 
     if (!planController.isLoggedIn && selected == 'pro') {
-      await Navigator.of(context).push(
+      final navigator = Navigator.of(context, rootNavigator: true);
+      await navigator.push(
         MaterialPageRoute(
           builder: (_) => const AuthPage(initialTabIndex: 1),
         ),
       );
       await planController.load(force: true);
-      if (planController.isLoggedIn &&
-          planController.activePlan?.plan.slug != 'pro') {
-        await planController.selectPlan('pro');
-      }
-      return;
+      if (!planController.isLoggedIn) return;
     }
 
     if (selected != planController.activePlan?.plan.slug) {
@@ -295,12 +449,13 @@ class PlanTab extends StatelessWidget {
     final tokens = context.thermoloxTokens;
     final controller = context.watch<PlanController>();
     final plans = controller.planCards;
-    final selectedPlanId =
-        controller.activePlan?.plan.slug ?? 'basic';
-    final selectedPlan = plans.firstWhere(
-      (plan) => plan.id == selectedPlanId,
-      orElse: () => plans.first,
-    );
+    final selectedPlanId = controller.activePlan?.plan.slug;
+    final selectedPlan = plans.isNotEmpty
+        ? plans.firstWhere(
+            (plan) => plan.id == (selectedPlanId ?? plans.first.id),
+            orElse: () => plans.first,
+          )
+        : null;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -311,7 +466,7 @@ class PlanTab extends StatelessWidget {
       ),
       children: [
         Text(
-          'Dein Tarif',
+          PlanUiStrings.yourPlan,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -323,24 +478,27 @@ class PlanTab extends StatelessWidget {
         if (controller.error != null) ...[
           SizedBox(height: tokens.gapSm),
           Text(
-            'Tarife konnten nicht geladen werden.',
+            PlanUiStrings.loadError,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.error,
             ),
           ),
         ],
         SizedBox(height: tokens.gapSm),
-        PlanCardView(
-          data: selectedPlan,
-          actionLabel: 'Aktiv',
-          canTap: false,
-          isSelected: true,
-          showActionButton: false,
-        ),
+        if (selectedPlan != null)
+          PlanCardView(
+            data: selectedPlan,
+            actionLabel: PlanUiStrings.actionActive,
+            canTap: false,
+            isSelected: true,
+            showActionButton: false,
+          ),
         SizedBox(height: tokens.gapMd),
         ElevatedButton(
-          onPressed: () => _openPlanModal(context),
-          child: const Text('Tarife verwalten'),
+          onPressed: plans.isEmpty || controller.isLoading
+              ? null
+              : () => _openPlanModal(context),
+          child: const Text(PlanUiStrings.managePlans),
         ),
       ],
     );

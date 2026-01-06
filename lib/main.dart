@@ -1,41 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'config/supabase_config.dart';
 import 'theme/app_theme.dart';
 import 'shell/thermolox_shell.dart';
 import 'controllers/plan_controller.dart';
 import 'models/cart_model.dart';
 import 'models/projects_model.dart';
+import 'services/auth_service.dart';
+import 'services/credit_service.dart';
+import 'services/deep_link_service.dart';
 import 'services/plan_service.dart';
+import 'services/profile_service.dart';
+import 'services/supabase_service.dart';
+import 'pages/email_verification_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final supabaseUrl = const String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: kSupabaseUrl,
-  );
-  final supabaseAnonKey = const String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: kSupabaseAnonKey,
-  );
-
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+  try {
+    await SupabaseService.initialize();
+    await DeepLinkService.initialize();
+  } on SupabaseConfigException catch (e) {
     runApp(
-      const _ThermoloxErrorApp(
-        message:
-            'Missing Supabase config. Provide SUPABASE_URL and SUPABASE_ANON_KEY.',
+      _ThermoloxErrorApp(
+        message: e.message,
       ),
     );
     return;
-  }
-
-  try {
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
   } catch (e) {
     runApp(
       _ThermoloxErrorApp(
@@ -45,13 +34,21 @@ Future<void> main() async {
     return;
   }
 
+  final authService = AuthService();
+  final profileService = ProfileService();
+  final planService = PlanService();
+  final creditService = CreditService();
+
   runApp(
     MultiProvider(
       providers: [
+        Provider.value(value: authService),
+        Provider.value(value: profileService),
+        Provider.value(value: planService),
+        Provider.value(value: creditService),
         ChangeNotifierProvider(create: (_) => CartModel()),
         ChangeNotifierProvider(
-          create: (_) =>
-              PlanController(PlanService(Supabase.instance.client)),
+          create: (_) => PlanController(planService, authService),
         ),
         ChangeNotifierProvider(create: (_) => ProjectsModel()),
       ],
@@ -65,11 +62,23 @@ class ThermoloxApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'THERMOLOX',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      home: const ThermoloxShell(),
+    return StreamBuilder(
+      stream: context.read<AuthService>().currentUserStream,
+      builder: (context, snapshot) {
+        final authService = context.read<AuthService>();
+        final user = snapshot.data;
+        final needsVerification =
+            user != null && !authService.isUserVerified(user);
+
+        return MaterialApp(
+          title: 'THERMOLOX',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.theme,
+          home: needsVerification
+              ? const EmailVerificationPage()
+              : const ThermoloxShell(),
+        );
+      },
     );
   }
 }

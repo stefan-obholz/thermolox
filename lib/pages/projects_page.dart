@@ -30,19 +30,33 @@ class ProjectsPage extends StatelessWidget {
       ThermoloxOverlay.showSnack(context, 'Projekt existiert bereits.');
       return;
     }
-    final project = await model.addProject(name);
-    await _promptFirstUpload(context, project.id);
+    try {
+      final project = await model.addProject(name);
+      await _promptFirstUpload(context, project.id);
+    } catch (_) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Bitte anmelden, um Projekte zu speichern.',
+      );
+    }
   }
 
   Future<void> _promptFirstUpload(BuildContext context, String projectId) async {
     final picked = await pickThermoloxAttachment(context);
     if (picked == null) return;
-    await context.read<ProjectsModel>().addItem(
-          projectId: projectId,
-          name: picked.name ?? 'Upload',
-          type: picked.isImage ? 'image' : 'file',
-          path: picked.path,
-        );
+    try {
+      await context.read<ProjectsModel>().addItem(
+            projectId: projectId,
+            name: picked.name ?? 'Upload',
+            type: picked.isImage ? 'image' : 'file',
+            path: picked.path,
+          );
+    } catch (_) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Bitte anmelden, um Uploads zu speichern.',
+      );
+    }
   }
 
   @override
@@ -213,7 +227,10 @@ class ProjectsPage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      p.name,
+                                      (p.title != null &&
+                                              p.title!.trim().isNotEmpty)
+                                          ? p.title!
+                                          : p.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: theme.textTheme.bodyMedium?.copyWith(

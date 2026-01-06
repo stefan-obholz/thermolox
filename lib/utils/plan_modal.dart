@@ -2,8 +2,12 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../data/plan_ui_strings.dart';
+import '../controllers/plan_controller.dart';
 import '../models/plan_models.dart';
+import '../pages/auth_page.dart';
 import '../theme/app_theme.dart';
 import '../widgets/plan_card_view.dart';
 import 'thermolox_overlay.dart';
@@ -13,6 +17,7 @@ Future<String?> showPlanModal({
   required List<PlanCardData> plans,
   required String selectedPlanId,
   bool showActionButton = true,
+  bool allowDowngrade = false,
 }) {
   final initialIndex = math.max(
     0,
@@ -64,12 +69,13 @@ Future<String?> showPlanModal({
                         final isDowngrade =
                             selectedPlanId == 'pro' && plan.id == 'basic';
                         final actionLabel = isSelected
-                            ? 'Aktiv'
+                            ? PlanUiStrings.actionActive
                             : isDowngrade
-                                ? 'Downgrade'
-                                : 'Upgrade';
-                        final canTap =
-                            showActionButton && !isSelected && !isDowngrade;
+                                ? PlanUiStrings.actionDowngrade
+                                : PlanUiStrings.actionUpgrade;
+                        final canTap = showActionButton &&
+                            !isSelected &&
+                            (!isDowngrade || allowDowngrade);
                         return Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: tokens.gapSm,
@@ -97,8 +103,39 @@ Future<String?> showPlanModal({
                                         isSelected: isSelected,
                                         showActionButton: showActionButton,
                                         onAction: canTap
-                                            ? () => Navigator.of(dialogContext)
-                                                .pop(plan.id)
+                                            ? () async {
+                                                final planController =
+                                                    dialogContext
+                                                        .read<PlanController>();
+                                                if (plan.id == 'pro' &&
+                                                    !planController
+                                                        .isLoggedIn) {
+                                                  final navigator =
+                                                      Navigator.of(
+                                                    dialogContext,
+                                                    rootNavigator: true,
+                                                  );
+                                                  await navigator.push(
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const AuthPage(
+                                                        initialTabIndex: 1,
+                                                      ),
+                                                    ),
+                                                  );
+                                                  await planController.load(
+                                                    force: true,
+                                                  );
+                                                  if (!planController
+                                                      .isLoggedIn) {
+                                                    return;
+                                                  }
+                                                }
+                                                if (dialogContext.mounted) {
+                                                  Navigator.of(dialogContext)
+                                                      .pop(plan.id);
+                                                }
+                                              }
                                             : null,
                                       ),
                                     ),

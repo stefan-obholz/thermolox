@@ -1,16 +1,19 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/project_models.dart';
 import '../services/projects_repository.dart';
+import '../services/supabase_service.dart';
 
 class ProjectsModel extends ChangeNotifier {
   final ProjectsRepository _repo;
   bool _loaded = false;
   List<Project> _projects = [];
+  StreamSubscription<AuthState>? _authSub;
 
   bool get isLoaded => _loaded;
   List<Project> get projects => List.unmodifiable(_projects);
@@ -18,18 +21,28 @@ class ProjectsModel extends ChangeNotifier {
       _projects.any((p) => p.name.toLowerCase() == name.toLowerCase());
 
   ProjectsModel({ProjectsRepository? repo}) : _repo = repo ?? ProjectsRepository() {
+    _authSub = SupabaseService.client.auth.onAuthStateChange.listen((_) {
+      reload();
+    });
     _init();
   }
 
   Future<void> _init() async {
-    _projects = await _repo.loadProjects();
-    _loaded = true;
-    notifyListeners();
+    try {
+      await _repo.migrateLocalProjectsIfNeeded();
+      _projects = await _repo.loadProjects();
+    } catch (_) {
+      _projects = [];
+    } finally {
+      _loaded = true;
+      notifyListeners();
+    }
   }
 
-  Future<void> _persist() async {
-    await _repo.saveProjects(_projects);
+  Future<void> reload() async {
+    _loaded = false;
     notifyListeners();
+    await _init();
   }
 
   String _fileNameFromPath(String path) {
@@ -64,8 +77,6 @@ class ProjectsModel extends ChangeNotifier {
     }
   }
 
-  String _newId() => DateTime.now().microsecondsSinceEpoch.toString() + Random().nextInt(9999).toString();
-
   Future<Project> addProject(String name) async {
     final existing = _projects.firstWhere(
       (p) => p.name.toLowerCase() == name.toLowerCase(),
@@ -74,21 +85,24 @@ class ProjectsModel extends ChangeNotifier {
     if (existing.id.isNotEmpty) {
       return existing;
     }
-    final project = Project(id: _newId(), name: name, items: []);
+    final project = await _repo.createProject(name: name, title: name);
     _projects.add(project);
-    await _persist();
+    notifyListeners();
     return project;
   }
 
   Future<void> renameProject(String id, String newName) async {
     final p = _projects.firstWhere((e) => e.id == id);
     p.name = newName;
-    await _persist();
+    p.title = newName;
+    await _repo.updateProjectName(id: id, newName: newName);
+    notifyListeners();
   }
 
   Future<void> deleteProject(String id) async {
+    await _repo.deleteProject(id);
     _projects.removeWhere((e) => e.id == id);
-    await _persist();
+    notifyListeners();
   }
 
   Future<void> addItem({
@@ -105,18 +119,29 @@ class ProjectsModel extends ChangeNotifier {
       );
     } else if (type == 'color') {
       project.items.removeWhere((item) => item.type == 'color');
+    } else if (type == 'render') {
+      project.items.removeWhere((item) => item.type == 'render');
     }
     final persistedPath = await _persistLocalFile(path);
+    final localPath = persistedPath ?? path;
+    final item = await _repo.addItem(
+      projectId: projectId,
+      name: name,
+      type: type,
+      localPath: localPath,
+      remoteUrl: url,
+    );
     project.items.add(
       ProjectItem(
-        id: _newId(),
-        name: name,
-        type: type,
+        id: item.id,
+        name: item.name,
+        type: item.type,
         path: persistedPath,
-        url: url,
+        url: item.url ?? url,
+        storagePath: item.storagePath,
       ),
     );
-    await _persist();
+    notifyListeners();
   }
 
   Future<void> renameItem(String itemId, String newName) async {
@@ -124,17 +149,19 @@ class ProjectsModel extends ChangeNotifier {
       final idx = p.items.indexWhere((e) => e.id == itemId);
       if (idx != -1) {
         p.items[idx].name = newName;
-        await _persist();
+        await _repo.renameItem(itemId, newName);
+        notifyListeners();
         return;
       }
     }
   }
 
   Future<void> deleteItem(String itemId) async {
+    await _repo.deleteItem(itemId);
     for (final p in _projects) {
       p.items.removeWhere((e) => e.id == itemId);
     }
-    await _persist();
+    notifyListeners();
   }
 
   Future<void> moveItem({
@@ -152,7 +179,8 @@ class ProjectsModel extends ChangeNotifier {
     if (item == null) return;
     final target = _projects.firstWhere((e) => e.id == targetProjectId);
     target.items.add(item);
-    await _persist();
+    await _repo.moveItem(itemId: itemId, targetProjectId: targetProjectId);
+    notifyListeners();
   }
 
   String _normalizeHex(String hex) {
@@ -174,14 +202,34 @@ class ProjectsModel extends ChangeNotifier {
     final project = _projects.firstWhere((e) => e.id == projectId);
     final normalized = _normalizeHex(hex);
     project.items.removeWhere((item) => item.type == 'color');
-    project.items.add(
-      ProjectItem(
-        id: _newId(),
-        name: normalized,
-        type: 'color',
-        url: normalized,
-      ),
+    final item = await _repo.addItem(
+      projectId: projectId,
+      name: normalized,
+      type: 'color',
+      colorHex: normalized,
     );
-    await _persist();
+    project.items.add(item);
+    notifyListeners();
+  }
+
+  Future<void> addRender({
+    required String projectId,
+    required String name,
+    String? path,
+    String? url,
+  }) async {
+    await addItem(
+      projectId: projectId,
+      name: name,
+      type: 'render',
+      path: path,
+      url: url,
+    );
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 }
