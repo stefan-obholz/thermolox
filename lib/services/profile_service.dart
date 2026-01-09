@@ -67,6 +67,35 @@ class ProfileService {
     );
   }
 
+  Future<void> recordLegalAcceptance({
+    required String userId,
+    required DateTime termsAcceptedAt,
+    required DateTime privacyAcceptedAt,
+    String? termsVersion,
+    String? privacyVersion,
+    String? locale,
+    String? source,
+  }) async {
+    final payload = <String, dynamic>{
+      'id': userId,
+      'terms_accepted_at': termsAcceptedAt.toUtc().toIso8601String(),
+      'privacy_accepted_at': privacyAcceptedAt.toUtc().toIso8601String(),
+      if (termsVersion != null && termsVersion.isNotEmpty)
+        'terms_version': termsVersion,
+      if (privacyVersion != null && privacyVersion.isNotEmpty)
+        'privacy_version': privacyVersion,
+      if (locale != null && locale.isNotEmpty) 'locale': locale,
+    };
+
+    await _upsertProfileData(payload);
+    await _insertUserConsents(
+      userId: userId,
+      payload: payload,
+      locale: locale,
+      source: source,
+    );
+  }
+
   Future<void> seedProfileFromAuth({
     required User user,
     String? locale,

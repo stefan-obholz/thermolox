@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/shopify_config.dart';
 import '../models/product.dart';
 import '../services/shopify_service.dart';
 import '../theme/app_theme.dart';
@@ -27,6 +28,30 @@ class _ProductsPageState extends State<ProductsPage> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ProductDetailPage(product: product)),
     );
+  }
+
+  bool _isHiddenProduct(Product product) {
+    final title = product.title.toLowerCase();
+    for (final keyword in ShopifyConfig.hiddenProductTitleKeywords) {
+      final match = keyword.trim().toLowerCase();
+      if (match.isEmpty) continue;
+      if (title.contains(match)) return true;
+    }
+
+    final handle = product.handle?.toLowerCase();
+    if (handle != null &&
+        ShopifyConfig.hiddenProductHandles.contains(handle)) {
+      return true;
+    }
+
+    for (final tag in product.tags) {
+      final lowerTag = tag.toLowerCase();
+      if (ShopifyConfig.hiddenProductTags.contains(lowerTag)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -68,8 +93,11 @@ class _ProductsPageState extends State<ProductsPage> {
           }
 
           final products = snapshot.data ?? [];
+          final visibleProducts = products
+              .where((product) => !_isHiddenProduct(product))
+              .toList();
 
-          if (products.isEmpty) {
+          if (visibleProducts.isEmpty) {
             return const Center(child: Text('Noch keine Produkte gefunden.'));
           }
 
@@ -77,10 +105,10 @@ class _ProductsPageState extends State<ProductsPage> {
             padding: EdgeInsets.symmetric(
               vertical: tokens.screenPadding,
             ),
-            itemCount: products.length,
+            itemCount: visibleProducts.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final product = products[index];
+              final product = visibleProducts[index];
 
               return InkWell(
                 borderRadius: BorderRadius.circular(tokens.radiusCard),

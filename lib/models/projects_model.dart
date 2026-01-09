@@ -12,10 +12,12 @@ import '../services/supabase_service.dart';
 class ProjectsModel extends ChangeNotifier {
   final ProjectsRepository _repo;
   bool _loaded = false;
+  bool _loadedFromCache = false;
   List<Project> _projects = [];
   StreamSubscription<AuthState>? _authSub;
 
   bool get isLoaded => _loaded;
+  bool get loadedFromCache => _loadedFromCache;
   List<Project> get projects => List.unmodifiable(_projects);
   bool existsName(String name) =>
       _projects.any((p) => p.name.toLowerCase() == name.toLowerCase());
@@ -31,8 +33,10 @@ class ProjectsModel extends ChangeNotifier {
     try {
       await _repo.migrateLocalProjectsIfNeeded();
       _projects = await _repo.loadProjects();
+      _loadedFromCache = _repo.lastLoadUsedCache;
     } catch (_) {
       _projects = [];
+      _loadedFromCache = true;
     } finally {
       _loaded = true;
       notifyListeners();
@@ -43,6 +47,10 @@ class ProjectsModel extends ChangeNotifier {
     _loaded = false;
     notifyListeners();
     await _init();
+  }
+
+  Future<void> _cacheProjects() async {
+    await _repo.cacheProjects(_projects);
   }
 
   String _fileNameFromPath(String path) {
@@ -87,6 +95,7 @@ class ProjectsModel extends ChangeNotifier {
     }
     final project = await _repo.createProject(name: name, title: name);
     _projects.add(project);
+    await _cacheProjects();
     notifyListeners();
     return project;
   }
@@ -96,12 +105,14 @@ class ProjectsModel extends ChangeNotifier {
     p.name = newName;
     p.title = newName;
     await _repo.updateProjectName(id: id, newName: newName);
+    await _cacheProjects();
     notifyListeners();
   }
 
   Future<void> deleteProject(String id) async {
     await _repo.deleteProject(id);
     _projects.removeWhere((e) => e.id == id);
+    await _cacheProjects();
     notifyListeners();
   }
 
@@ -113,10 +124,10 @@ class ProjectsModel extends ChangeNotifier {
     String? url,
   }) async {
     final project = _projects.firstWhere((e) => e.id == projectId);
-    if (type == 'image' || type == 'file') {
-      project.items.removeWhere(
-        (item) => item.type == 'image' || item.type == 'file',
-      );
+    if (type == 'image') {
+      project.items.removeWhere((item) => item.type == 'image');
+    } else if (type == 'file') {
+      project.items.removeWhere((item) => item.type == 'file');
     } else if (type == 'color') {
       project.items.removeWhere((item) => item.type == 'color');
     } else if (type == 'render') {
@@ -141,6 +152,7 @@ class ProjectsModel extends ChangeNotifier {
         storagePath: item.storagePath,
       ),
     );
+    await _cacheProjects();
     notifyListeners();
   }
 
@@ -150,6 +162,7 @@ class ProjectsModel extends ChangeNotifier {
       if (idx != -1) {
         p.items[idx].name = newName;
         await _repo.renameItem(itemId, newName);
+        await _cacheProjects();
         notifyListeners();
         return;
       }
@@ -161,6 +174,7 @@ class ProjectsModel extends ChangeNotifier {
     for (final p in _projects) {
       p.items.removeWhere((e) => e.id == itemId);
     }
+    await _cacheProjects();
     notifyListeners();
   }
 
@@ -180,6 +194,7 @@ class ProjectsModel extends ChangeNotifier {
     final target = _projects.firstWhere((e) => e.id == targetProjectId);
     target.items.add(item);
     await _repo.moveItem(itemId: itemId, targetProjectId: targetProjectId);
+    await _cacheProjects();
     notifyListeners();
   }
 
@@ -209,6 +224,7 @@ class ProjectsModel extends ChangeNotifier {
       colorHex: normalized,
     );
     project.items.add(item);
+    await _cacheProjects();
     notifyListeners();
   }
 

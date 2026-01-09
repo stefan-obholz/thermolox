@@ -1,23 +1,23 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'memory_state.dart';
+import '../services/consent_service.dart';
+import 'memory_storage.dart';
 
 class MemoryRepository {
-  static const _storageKey = 'memory_v1';
-
   Future<MemoryState> load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_storageKey);
+    final raw = await MemoryStorage.read();
     if (raw == null || raw.isEmpty) return MemoryState.initial();
     return MemoryState.fromJson(raw);
   }
 
   Future<void> save(MemoryState state) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, state.toJson());
+    await MemoryStorage.write(state.toJson());
+  }
+
+  Future<void> clear() async {
+    await MemoryStorage.clear();
   }
 }
 
@@ -88,6 +88,7 @@ class MemoryManager {
     required String userText,
     required String assistantText,
   }) async {
+    if (!ConsentService.instance.aiAllowed) return;
     if (userText.trim().isEmpty && assistantText.trim().isEmpty) return;
 
     final updated = await _summarizeWithModel(
@@ -99,6 +100,12 @@ class MemoryManager {
       _state = updated.copyWith(updatedAt: DateTime.now());
       await _repo.save(_state);
     }
+  }
+
+  Future<void> clearLocal() async {
+    _state = MemoryState.initial();
+    _loaded = true;
+    await _repo.clear();
   }
 
   Future<MemoryState?> _summarizeWithModel({

@@ -14,6 +14,20 @@ class ShopifyConfig {
   // GraphQL-Endpunkt
   static String get graphQLEndpoint =>
       'https://$shopDomain/api/$apiVersion/graphql.json';
+
+  // Produkte, die nicht in der Produktliste erscheinen sollen.
+  // Fuer das Chatbot-Selling bleiben sie weiterhin verfuegbar.
+  static const List<String> hiddenProductTitleKeywords = [
+    'pro-lifetime',
+  ]; // lowercase
+
+  static const List<String> hiddenProductHandles = [
+    // z.B. 'pro-lifetime-10x-virtuelle-raumgestaltung'
+  ]; // lowercase
+
+  static const List<String> hiddenProductTags = [
+    // z.B. 'chat_only'
+  ]; // lowercase
 }
 
 // Eine einfache Query, um Produkte zu laden

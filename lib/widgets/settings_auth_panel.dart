@@ -9,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../controllers/plan_controller.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
+import '../services/consent_service.dart';
+import '../services/legal_gate_service.dart';
 import '../services/profile_service.dart';
 import '../services/supabase_service.dart';
 import '../theme/app_theme.dart';
@@ -46,6 +48,8 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
   bool _emailSent = false;
   bool _acceptLegal = false;
   bool _marketingAccepted = false;
+  bool _analyticsAccepted = false;
+  bool _aiAccepted = false;
   String? _statusMessage;
   bool _statusIsError = false;
   String? _debugInfo;
@@ -101,6 +105,8 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     if (!mounted) return;
     final profileService = context.read<ProfileService>();
     final authService = context.read<AuthService>();
+    final consentService = context.read<ConsentService>();
+    final legalGate = context.read<LegalGateService>();
     final locale = Localizations.localeOf(context).toLanguageTag();
 
     try {
@@ -122,26 +128,35 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     final needsConsents = !authService.isUserVerified(user) ||
         profileService.needsConsents(profile);
     if (needsConsents) {
-      final accepted = await _showConsentSheet();
-      if (!accepted) {
-        await SupabaseService.client.auth.signOut();
-        if (!mounted) return;
-        _setStatus(
-          'Bitte AGB und Datenschutzerklaerung akzeptieren.',
-          isError: true,
-        );
-        return;
+      if (!legalGate.isAccepted) {
+        final accepted = await _showConsentSheet();
+        if (!accepted) {
+          await SupabaseService.client.auth.signOut();
+          if (!mounted) return;
+          _setStatus(
+            'Bitte AGB und Datenschutzerklaerung akzeptieren.',
+            isError: true,
+          );
+          return;
+        }
       }
       try {
         await profileService.ensureConsents(
           userId: user.id,
-          termsAccepted: true,
-          privacyAccepted: true,
+          termsAccepted: legalGate.isAccepted || _acceptLegal,
+          privacyAccepted: legalGate.isAccepted || _acceptLegal,
           marketingAccepted: _marketingAccepted,
           locale: locale,
           forceIfMissing: true,
           source: 'google',
         );
+        await legalGate.syncToServerIfNeeded();
+        if (_analyticsAccepted) {
+          await consentService.setAnalyticsAllowed(true);
+        }
+        if (_aiAccepted) {
+          await consentService.setAiAllowed(true);
+        }
       } catch (_) {
         // ignore consent write errors; UI will still be logged in
       }
@@ -160,7 +175,6 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
     bool accepted = _acceptLegal;
-    bool marketing = _marketingAccepted;
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -205,18 +219,6 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                   style: theme.textTheme.bodySmall,
                 ),
               ),
-              CheckboxListTile(
-                value: marketing,
-                onChanged: (value) => setState(() {
-                  marketing = value ?? false;
-                }),
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Text(
-                  'Marketing-E-Mails (optional)',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
               SizedBox(height: tokens.gapSm),
               FilledButton(
                 onPressed: accepted ? () => Navigator.of(context).pop(true) : null,
@@ -232,7 +234,6 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
       ),
     );
     _acceptLegal = accepted;
-    _marketingAccepted = marketing;
     return result ?? false;
   }
 
@@ -246,13 +247,16 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
   }
 
   void _switchMode(bool login) {
+    final legalGate = context.read<LegalGateService>();
     setState(() {
       _isLogin = login;
       _emailSent = false;
       _statusMessage = null;
       _statusIsError = false;
-      _acceptLegal = false;
+      _acceptLegal = legalGate.isAccepted;
       _marketingAccepted = false;
+      _analyticsAccepted = false;
+      _aiAccepted = false;
       _debugInfo = null;
     });
   }
@@ -261,6 +265,8 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     if (_busy) return;
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
+    final legalGate = context.read<LegalGateService>();
+    final legalAccepted = legalGate.isAccepted || _acceptLegal;
 
     if (!_isValidEmail(email)) {
       _setStatus('Bitte eine gueltige E-Mail eingeben.', isError: true);
@@ -274,7 +280,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
       _setStatus('Passwort muss mindestens 8 Zeichen lang sein.', isError: true);
       return;
     }
-    if (!_isLogin && !_acceptLegal) {
+    if (!_isLogin && !legalAccepted) {
       _setStatus(
         'Bitte AGB und Datenschutzerklaerung akzeptieren.',
         isError: true,
@@ -292,6 +298,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     try {
       final authService = context.read<AuthService>();
       final profileService = context.read<ProfileService>();
+      final consentService = context.read<ConsentService>();
       final locale = Localizations.localeOf(context).toLanguageTag();
 
       if (_isLogin) {
@@ -315,11 +322,18 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
         if (user != null) {
           await profileService.ensureConsents(
             userId: user.id,
-            termsAccepted: _acceptLegal,
-            privacyAccepted: _acceptLegal,
+            termsAccepted: legalAccepted,
+            privacyAccepted: legalAccepted,
             marketingAccepted: _marketingAccepted,
             locale: locale,
           );
+          await legalGate.syncToServerIfNeeded();
+          if (_analyticsAccepted) {
+            await consentService.setAnalyticsAllowed(true);
+          }
+          if (_aiAccepted) {
+            await consentService.setAiAllowed(true);
+          }
         }
 
         if (response.session == null) {
@@ -433,6 +447,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
+    final legalGate = context.watch<LegalGateService>();
     final statusColor =
         _statusIsError ? theme.colorScheme.error : theme.colorScheme.primary;
     final padding = widget.padding ??
@@ -517,7 +532,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                   ),
                 ),
               ],
-              if (!_isLogin) ...[
+              if (!_isLogin && !legalGate.isAccepted) ...[
                 SizedBox(height: tokens.gapSm),
                 CheckboxListTile(
                   value: _acceptLegal,
@@ -529,19 +544,6 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(
                     'Ich stimme den AGB und der Datenschutzerklaerung zu',
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-                CheckboxListTile(
-                  value: _marketingAccepted,
-                  onChanged: _busy
-                      ? null
-                      : (value) =>
-                          setState(() => _marketingAccepted = value ?? false),
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  title: Text(
-                    'Marketing-E-Mails (optional)',
                     style: theme.textTheme.bodySmall,
                   ),
                 ),

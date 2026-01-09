@@ -6,11 +6,14 @@ import 'controllers/plan_controller.dart';
 import 'models/cart_model.dart';
 import 'models/projects_model.dart';
 import 'services/auth_service.dart';
+import 'services/consent_service.dart';
 import 'services/credit_service.dart';
 import 'services/deep_link_service.dart';
+import 'services/legal_gate_service.dart';
 import 'services/plan_service.dart';
 import 'services/profile_service.dart';
 import 'services/supabase_service.dart';
+import 'pages/legal_gate_page.dart';
 import 'pages/email_verification_page.dart';
 
 Future<void> main() async {
@@ -18,6 +21,16 @@ Future<void> main() async {
   try {
     await SupabaseService.initialize();
     await DeepLinkService.initialize();
+    try {
+      await ConsentService.instance.load();
+    } catch (_) {
+      // If consent load fails, continue without blocking app start.
+    }
+    try {
+      await LegalGateService.instance.load();
+    } catch (_) {
+      // If legal gate load fails, continue without blocking app start.
+    }
   } on SupabaseConfigException catch (e) {
     runApp(
       _ThermoloxErrorApp(
@@ -46,6 +59,8 @@ Future<void> main() async {
         Provider.value(value: profileService),
         Provider.value(value: planService),
         Provider.value(value: creditService),
+        ChangeNotifierProvider.value(value: ConsentService.instance),
+        ChangeNotifierProvider.value(value: LegalGateService.instance),
         ChangeNotifierProvider(create: (_) => CartModel()),
         ChangeNotifierProvider(
           create: (_) => PlanController(planService, authService),
@@ -66,17 +81,23 @@ class ThermoloxApp extends StatelessWidget {
       stream: context.read<AuthService>().currentUserStream,
       builder: (context, snapshot) {
         final authService = context.read<AuthService>();
+        final legalGate = context.watch<LegalGateService>();
         final user = snapshot.data;
         final needsVerification =
             user != null && !authService.isUserVerified(user);
+        final home = !legalGate.isLoaded
+            ? const _GateLoadingPage()
+            : !legalGate.isAccepted
+                ? const LegalGatePage()
+                : needsVerification
+                    ? const EmailVerificationPage()
+                    : const ThermoloxShell();
 
         return MaterialApp(
           title: 'THERMOLOX',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme,
-          home: needsVerification
-              ? const EmailVerificationPage()
-              : const ThermoloxShell(),
+          home: home,
         );
       },
     );
@@ -102,6 +123,19 @@ class _ThermoloxErrorApp extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GateLoadingPage extends StatelessWidget {
+  const _GateLoadingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }

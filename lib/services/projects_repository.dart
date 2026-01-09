@@ -13,11 +13,13 @@ class ProjectsRepository {
   static const _bucket = 'project_uploads';
   static const _legacyKey = 'projects_v1';
   static const _migratedKey = 'projects_migrated_v1';
+  static const _cachePrefix = 'projects_cache_v1_';
 
   ProjectsRepository({SupabaseClient? client})
       : _client = client ?? SupabaseService.client;
 
   final SupabaseClient _client;
+  bool lastLoadUsedCache = false;
 
   User _requireUser() {
     final user = _client.auth.currentUser;
@@ -133,56 +135,105 @@ class ProjectsRepository {
     }
   }
 
+  Future<List<Project>> _readCachedProjects(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('$_cachePrefix$userId');
+      if (raw == null || raw.isEmpty) return [];
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      final projects = <Project>[];
+      for (final entry in decoded) {
+        if (entry is Map<String, dynamic>) {
+          projects.add(Project.fromJson(entry));
+        } else if (entry is Map) {
+          projects.add(Project.fromJson(entry.cast<String, dynamic>()));
+        }
+      }
+      return projects;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Projects cache read failed: $e');
+      }
+      return [];
+    }
+  }
+
+  Future<void> cacheProjects(List<Project> projects) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final payload = jsonEncode(projects.map((p) => p.toJson()).toList());
+      await prefs.setString('$_cachePrefix${user.id}', payload);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Projects cache write failed: $e');
+      }
+    }
+  }
+
   Future<List<Project>> loadProjects() async {
     final user = _client.auth.currentUser;
     if (user == null) return [];
 
-    final projectRows = await _client
-        .from('projects')
-        .select('id,name,title')
-        .eq('user_id', user.id)
-        .order('created_at', ascending: true);
+    lastLoadUsedCache = false;
+    try {
+      final projectRows = await _client
+          .from('projects')
+          .select('id,name,title')
+          .eq('user_id', user.id)
+          .order('created_at', ascending: true);
 
-    final projects = <Project>[];
-    final projectIds = <String>[];
-    for (final row in projectRows) {
-      final data = row as Map<String, dynamic>;
-      final id = data['id']?.toString();
-      if (id == null || id.isEmpty) continue;
-      projectIds.add(id);
-      projects.add(
-        Project(
-          id: id,
-          name: data['name']?.toString() ?? '',
-          title: data['title']?.toString(),
-          items: [],
-        ),
-      );
+      final projects = <Project>[];
+      final projectIds = <String>[];
+      for (final row in projectRows) {
+        final data = row as Map<String, dynamic>;
+        final id = data['id']?.toString();
+        if (id == null || id.isEmpty) continue;
+        projectIds.add(id);
+        projects.add(
+          Project(
+            id: id,
+            name: data['name']?.toString() ?? '',
+            title: data['title']?.toString(),
+            items: [],
+          ),
+        );
+      }
+
+      if (projectIds.isNotEmpty) {
+        final itemRows = await _client
+            .from('project_items')
+            .select('id,project_id,type,name,storage_path,url,color_hex')
+            .eq('user_id', user.id)
+            .inFilter('project_id', projectIds);
+
+        final itemsByProject = <String, List<ProjectItem>>{};
+        for (final row in itemRows) {
+          final data = row as Map<String, dynamic>;
+          final projectId = data['project_id']?.toString();
+          if (projectId == null || projectId.isEmpty) continue;
+          final item = await _mapItemRow(data);
+          if (item == null) continue;
+          itemsByProject.putIfAbsent(projectId, () => []).add(item);
+        }
+
+        for (final project in projects) {
+          project.items.addAll(itemsByProject[project.id] ?? []);
+        }
+      }
+
+      await cacheProjects(projects);
+      lastLoadUsedCache = false;
+      return projects;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Projects load failed, using cache: $e');
+      }
+      lastLoadUsedCache = true;
+      return _readCachedProjects(user.id);
     }
-
-    if (projectIds.isEmpty) return projects;
-
-    final itemRows = await _client
-        .from('project_items')
-        .select('id,project_id,type,name,storage_path,url,color_hex')
-        .eq('user_id', user.id)
-        .inFilter('project_id', projectIds);
-
-    final itemsByProject = <String, List<ProjectItem>>{};
-    for (final row in itemRows) {
-      final data = row as Map<String, dynamic>;
-      final projectId = data['project_id']?.toString();
-      if (projectId == null || projectId.isEmpty) continue;
-      final item = await _mapItemRow(data);
-      if (item == null) continue;
-      itemsByProject.putIfAbsent(projectId, () => []).add(item);
-    }
-
-    for (final project in projects) {
-      project.items.addAll(itemsByProject[project.id] ?? []);
-    }
-
-    return projects;
   }
 
   Future<Project> createProject({
@@ -258,7 +309,11 @@ class ProjectsRepository {
         ? ['color']
         : normalizedType == 'render'
             ? ['render']
-            : ['image', 'file'];
+            : normalizedType == 'image'
+                ? ['image']
+                : normalizedType == 'file'
+                    ? ['file']
+                    : [normalizedType];
 
     await _removeExistingByTypes(
       userId: user.id,
@@ -386,8 +441,11 @@ class ProjectsRepository {
       return ProjectItem(id: id, name: label, type: 'color', url: label);
     }
 
-    if (url == null && storagePath != null && storagePath.isNotEmpty) {
-      url = await _signedUrl(storagePath);
+    if (storagePath != null && storagePath.isNotEmpty) {
+      final refreshedUrl = await _signedUrl(storagePath);
+      if (refreshedUrl != null && refreshedUrl.isNotEmpty) {
+        url = refreshedUrl;
+      }
     }
 
     return ProjectItem(

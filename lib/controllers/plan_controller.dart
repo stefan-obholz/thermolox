@@ -39,7 +39,8 @@ class PlanController extends ChangeNotifier {
   UserEntitlements? get entitlements => _entitlements;
   int get virtualRoomCredits => _entitlements?.creditsBalance ?? 0;
 
-  bool get isLoggedIn => _authService.currentUser != null;
+  bool get isLoggedIn =>
+      _authService.currentUser != null && !_authService.isAnonymous;
   bool get isEmailVerified => _authService.isEmailVerified;
   String? get currentUserEmail => _authService.currentUser?.email;
   bool get canDowngrade =>

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'consent_service.dart';
 import 'supabase_service.dart';
 
 class AnalyticsService {
@@ -16,6 +17,7 @@ class AnalyticsService {
     String? source,
     Map<String, dynamic>? payload,
   }) async {
+    if (!ConsentService.instance.analyticsAllowed) return;
     final name = eventName.trim();
     if (name.isEmpty) return;
 

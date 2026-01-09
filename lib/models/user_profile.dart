@@ -2,7 +2,13 @@ class UserProfile {
   final String id;
   final DateTime? termsAcceptedAt;
   final DateTime? privacyAcceptedAt;
+  final String? termsVersion;
+  final String? privacyVersion;
   final DateTime? marketingAcceptedAt;
+  final bool? analyticsConsent;
+  final DateTime? analyticsConsentAt;
+  final bool? aiConsent;
+  final DateTime? aiConsentAt;
   final String? locale;
   final String? firstName;
   final String? lastName;
@@ -27,7 +33,13 @@ class UserProfile {
     required this.id,
     this.termsAcceptedAt,
     this.privacyAcceptedAt,
+    this.termsVersion,
+    this.privacyVersion,
     this.marketingAcceptedAt,
+    this.analyticsConsent,
+    this.analyticsConsentAt,
+    this.aiConsent,
+    this.aiConsentAt,
     this.locale,
     this.firstName,
     this.lastName,
@@ -54,7 +66,13 @@ class UserProfile {
       id: map['id']?.toString() ?? map['user_id']?.toString() ?? '',
       termsAcceptedAt: _parseDate(map['terms_accepted_at']),
       privacyAcceptedAt: _parseDate(map['privacy_accepted_at']),
+      termsVersion: map['terms_version']?.toString(),
+      privacyVersion: map['privacy_version']?.toString(),
       marketingAcceptedAt: _parseDate(map['marketing_accepted_at']),
+      analyticsConsent: map['analytics_consent'] as bool?,
+      analyticsConsentAt: _parseDate(map['analytics_consent_at']),
+      aiConsent: map['ai_consent'] as bool?,
+      aiConsentAt: _parseDate(map['ai_consent_at']),
       locale: map['locale']?.toString(),
       firstName: map['first_name']?.toString(),
       lastName: map['last_name']?.toString(),
@@ -83,7 +101,13 @@ class UserProfile {
       'id': id,
       'terms_accepted_at': termsAcceptedAt?.toIso8601String(),
       'privacy_accepted_at': privacyAcceptedAt?.toIso8601String(),
+      'terms_version': termsVersion,
+      'privacy_version': privacyVersion,
       'marketing_accepted_at': marketingAcceptedAt?.toIso8601String(),
+      'analytics_consent': analyticsConsent,
+      'analytics_consent_at': analyticsConsentAt?.toIso8601String(),
+      'ai_consent': aiConsent,
+      'ai_consent_at': aiConsentAt?.toIso8601String(),
       'locale': locale,
       'first_name': firstName,
       'last_name': lastName,

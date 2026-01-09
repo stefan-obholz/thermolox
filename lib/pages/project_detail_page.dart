@@ -12,6 +12,7 @@ import '../controllers/virtual_room_credit_manager.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
 import '../pages/auth_page.dart';
+import '../services/consent_service.dart';
 import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
 import '../theme/app_theme.dart';
@@ -676,6 +677,15 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   }
 
   Future<void> _startRender({bool isRetry = false}) async {
+    if (!context.read<ConsentService>().aiAllowed) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Bitte Einwilligung für KI-Funktionen aktivieren '
+        '(Einstellungen > Rechtliches > Datenschutz).',
+        isError: true,
+      );
+      return;
+    }
     final planController = context.read<PlanController>();
     final hasPro = planController.isPro;
     final credits = planController.virtualRoomCredits;

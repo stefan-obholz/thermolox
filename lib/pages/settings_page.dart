@@ -8,6 +8,8 @@ import '../controllers/plan_controller.dart';
 import '../data/plan_ui_strings.dart';
 import '../models/user_profile.dart';
 import '../services/auth_service.dart';
+import '../services/consent_service.dart';
+import '../services/local_data_service.dart';
 import '../services/profile_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/plan_modal.dart';
@@ -20,12 +22,20 @@ import '../widgets/thermolox_segmented_tabs.dart';
 import 'auth_page.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  final int initialTabIndex;
+  final int initialLegalTabIndex;
+
+  const SettingsPage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialLegalTabIndex = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
+      initialIndex: initialTabIndex.clamp(0, 2).toInt(),
       child: ThermoloxScaffold(
         safeArea: true,
         appBar: AppBar(
@@ -40,8 +50,8 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
         body: Column(
-          children: const [
-            ThermoloxSegmentedTabs(
+          children: [
+            const ThermoloxSegmentedTabs(
               labels: ['Profil', 'Tarif', 'Rechtliches'],
               margin: EdgeInsets.zero,
               fill: true,
@@ -49,9 +59,9 @@ class SettingsPage extends StatelessWidget {
             Expanded(
               child: TabBarView(
                 children: [
-                  ProfileTab(),
-                  PlanTab(),
-                  LegalTab(),
+                  const ProfileTab(),
+                  const PlanTab(),
+                  LegalTab(initialTabIndex: initialLegalTabIndex),
                 ],
               ),
             ),
@@ -174,34 +184,6 @@ class _ProfileTabState extends State<ProfileTab> {
     await _logout();
   }
 
-  Future<void> _confirmDeleteAccount() async {
-    final confirm = await ThermoloxOverlay.confirm(
-      context: context,
-      title: 'Account löschen',
-      message:
-          'Möchtest Du Deinen Account endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.',
-      confirmLabel: 'Löschen',
-      cancelLabel: 'Abbrechen',
-    );
-    if (!confirm) return;
-    try {
-      await AuthService().deleteAccount();
-      if (!mounted) return;
-      context.read<PlanController>().load(force: true);
-      ThermoloxOverlay.showSnack(
-        context,
-        'Account gelöscht.',
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ThermoloxOverlay.showSnack(
-        context,
-        'Account konnte nicht gelöscht werden.',
-        isError: true,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -316,15 +298,6 @@ class _ProfileTabState extends State<ProfileTab> {
                         shape: const StadiumBorder(),
                       ),
                       child: const Text('Logout'),
-                    ),
-                    SizedBox(height: tokens.gapXs),
-                    OutlinedButton(
-                      onPressed: user != null ? _confirmDeleteAccount : null,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error,
-                        shape: const StadiumBorder(),
-                      ),
-                      child: const Text('Account löschen'),
                     ),
                   ],
                 ),
@@ -506,7 +479,9 @@ class PlanTab extends StatelessWidget {
 }
 
 class LegalTab extends StatelessWidget {
-  const LegalTab({super.key});
+  final int initialTabIndex;
+
+  const LegalTab({super.key, this.initialTabIndex = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -520,6 +495,8 @@ class LegalTab extends StatelessWidget {
 
     return DefaultTabController(
       length: labels.length,
+      initialIndex:
+          initialTabIndex.clamp(0, labels.length - 1).toInt(),
       child: Column(
         children: [
           const ThermoloxSecondaryTabs(
@@ -539,11 +516,7 @@ class LegalTab extends StatelessWidget {
                   body: 'Hier folgen die Allgemeinen Geschäftsbedingungen.',
                   padding: tokens.gapMd,
                 ),
-                _LegalSection(
-                  title: 'Datenschutz',
-                  body: 'Hier folgt die Datenschutzerklärung.',
-                  padding: tokens.gapMd,
-                ),
+                const _PrivacySection(),
                 _LegalSection(
                   title: 'Widerrufsrecht',
                   body: 'Hier folgt die Widerrufsbelehrung.',
@@ -593,6 +566,233 @@ class _LegalSection extends StatelessWidget {
         Text(
           body,
           style: theme.textTheme.bodyMedium,
+        ),
+      ],
+    );
+  }
+}
+
+class _PrivacySection extends StatefulWidget {
+  const _PrivacySection();
+
+  @override
+  State<_PrivacySection> createState() => _PrivacySectionState();
+}
+
+class _PrivacySectionState extends State<_PrivacySection> {
+  bool _isDeleting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
+    final consent = context.watch<ConsentService>();
+    final isLoaded = consent.isLoaded;
+    final authService = context.read<AuthService>();
+    final user = Supabase.instance.client.auth.currentUser;
+    final hasServerUser = user != null;
+    final isAnonymous = authService.isUserAnonymous(user);
+
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+        0,
+        tokens.gapMd,
+        0,
+        tokens.gapLg,
+      ),
+      children: [
+        Text(
+          'Datenschutz',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Hier folgt die Datenschutzerklärung.',
+          style: theme.textTheme.bodyMedium,
+        ),
+        SizedBox(height: tokens.gapMd),
+        Text(
+          'Einwilligungen (optional)',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizedBox(height: tokens.gapXs),
+        Text(
+          'Diese Funktionen sind optional und können jederzeit deaktiviert werden.',
+          style: theme.textTheme.bodySmall,
+        ),
+        SizedBox(height: tokens.gapSm),
+        Card(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: tokens.gapSm,
+              vertical: tokens.gapXs,
+            ),
+            child: Column(
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'Analytics zur Produktverbesserung',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Speicherdauer: 180 Tage.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  value: consent.analyticsAllowed,
+                  onChanged: isLoaded
+                      ? (value) => consent.setAnalyticsAllowed(value)
+                      : null,
+                ),
+                Divider(height: tokens.gapMd),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'KI-Chat und Bildbearbeitung',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Anfragen gehen über Cloudflare an OpenAI. '
+                    'Ohne Einwilligung ist der Chat aus. '
+                    'Widerruf löscht lokales Chat-Gedächtnis.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  value: consent.aiAllowed,
+                  onChanged: isLoaded
+                      ? (value) async {
+                          await consent.setAiAllowed(value);
+                          if (!value && context.mounted) {
+                            ThermoloxOverlay.showSnack(
+                              context,
+                              'Lokales Chat-Gedächtnis wurde gelöscht.',
+                            );
+                          }
+                        }
+                      : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        SizedBox(height: tokens.gapMd),
+        Text(
+          'Daten löschen',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizedBox(height: tokens.gapXs),
+        Text(
+          'Du kannst lokale Daten auf diesem Gerät löschen. '
+          'Serverdaten sind nur vorhanden, wenn eine Sitzung besteht.',
+          style: theme.textTheme.bodySmall,
+        ),
+        SizedBox(height: tokens.gapSm),
+        OutlinedButton(
+          onPressed: () async {
+            final confirm = await ThermoloxOverlay.confirm(
+              context: context,
+              title: 'Lokale Daten löschen',
+              message:
+                  'Löscht lokale Projekte, Uploads und das Chat-Gedächtnis auf diesem Gerät.',
+              confirmLabel: 'Löschen',
+              cancelLabel: 'Abbrechen',
+            );
+            if (!confirm) return;
+            await LocalDataService.clearAll();
+            if (!context.mounted) return;
+            ThermoloxOverlay.showSnack(
+              context,
+              'Lokale Daten gelöscht.',
+            );
+          },
+          child: const Text('Lokale Daten löschen'),
+        ),
+        if (hasServerUser) ...[
+          SizedBox(height: tokens.gapSm),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+            ),
+            onPressed: _isDeleting
+                ? null
+                : () async {
+              final title =
+                  isAnonymous ? 'Daten in der Cloud löschen' : 'Account löschen';
+              final message = isAnonymous
+                  ? 'Löscht deine in der Cloud gespeicherten Daten. Dieser Schritt kann nicht rückgängig gemacht werden.'
+                  : 'Möchtest Du Deinen Account endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.';
+              final confirm = await ThermoloxOverlay.confirm(
+                context: context,
+                title: title,
+                message: message,
+                confirmLabel: 'Löschen',
+                cancelLabel: 'Abbrechen',
+              );
+              if (!confirm) return;
+              setState(() => _isDeleting = true);
+              try {
+                await authService.deleteAccount();
+                if (!context.mounted) return;
+                context.read<PlanController>().load(force: true);
+                ThermoloxOverlay.showSnack(
+                  context,
+                  isAnonymous
+                      ? 'Cloud-Daten gelöscht.'
+                      : 'Account gelöscht. Du wurdest abgemeldet.',
+                );
+              } catch (error) {
+                if (!context.mounted) return;
+                debugPrint('Delete account failed: $error');
+                ThermoloxOverlay.showSnack(
+                  context,
+                  'Daten konnten nicht gelöscht werden.',
+                  isError: true,
+                );
+              } finally {
+                if (mounted) {
+                  setState(() => _isDeleting = false);
+                }
+              }
+            },
+            child: _isDeleting
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.onError,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: tokens.gapXs),
+                      const Text('Lösche...'),
+                    ],
+                  )
+                : Text(
+                    isAnonymous
+                        ? 'Daten in der Cloud löschen'
+                        : 'Account löschen',
+                  ),
+          ),
+        ],
+        SizedBox(height: tokens.gapSm),
+        Text(
+          'Auftragsverarbeiter: Supabase, Shopify, Cloudflare, OpenAI.',
+          style: theme.textTheme.bodySmall,
         ),
       ],
     );

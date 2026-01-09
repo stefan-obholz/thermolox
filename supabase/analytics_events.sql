@@ -31,6 +31,11 @@ create index if not exists analytics_events_created_at_idx
 
 alter table public.analytics_events enable row level security;
 
+drop policy if exists "analytics_events_insert_anon" on public.analytics_events;
+drop policy if exists "analytics_events_insert_own" on public.analytics_events;
+drop policy if exists "analytics_events_select_own" on public.analytics_events;
+drop policy if exists "analytics_events_select_admin" on public.analytics_events;
+
 create policy "analytics_events_insert_own"
   on public.analytics_events
   for insert
@@ -43,12 +48,6 @@ create policy "analytics_events_select_own"
   to authenticated
   using (user_id = auth.uid());
 
-create policy "analytics_events_insert_anon"
-  on public.analytics_events
-  for insert
-  to anon
-  with check (user_id is null);
-
 create policy "analytics_events_select_admin"
   on public.analytics_events
   for select
@@ -57,3 +56,26 @@ create policy "analytics_events_select_admin"
     (auth.jwt() ->> 'is_admin') = 'true'
     or (auth.jwt() ->> 'role') = 'admin'
   );
+
+-- Retention: delete analytics events older than 180 days.
+create or replace function public.purge_analytics_events() returns void
+language plpgsql
+security definer
+set search_path = public
+set row_security = off
+as $$
+begin
+  delete from public.analytics_events
+  where created_at < now() - interval '180 days';
+end;
+$$;
+
+revoke all on function public.purge_analytics_events() from public;
+grant execute on function public.purge_analytics_events() to service_role;
+
+-- Optional scheduling (requires pg_cron):
+-- select cron.schedule(
+--   'purge_analytics_events_daily',
+--   '30 3 * * *',
+--   $$select public.purge_analytics_events();$$
+-- );

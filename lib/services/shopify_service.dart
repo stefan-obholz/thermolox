@@ -47,6 +47,10 @@ class ShopifyService {
             ? firstImageNode['url'] as String?
             : null,
         price: _extractPrice(node),
+        handle: node['handle'] as String?,
+        tags: (node['tags'] as List<dynamic>? ?? const [])
+            .map((tag) => tag.toString())
+            .toList(),
       );
     }).toList();
   }
@@ -83,6 +87,8 @@ const String _productsQuery = r'''
       node {
         id
         title
+        handle
+        tags
         description
         images(first: 1) {
           edges {

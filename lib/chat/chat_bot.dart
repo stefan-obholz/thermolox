@@ -17,7 +17,9 @@ import '../models/product.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
 import '../pages/auth_page.dart';
+import '../pages/settings_page.dart';
 import '../services/shopify_service.dart';
+import '../services/consent_service.dart';
 import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
 import '../services/thermolox_api.dart';
@@ -90,7 +92,14 @@ class QuickReplyButton {
   }
 }
 
-enum QuickReplyAction { send, uploadAttachment, goToCart }
+enum QuickReplyAction {
+  send,
+  uploadAttachment,
+  goToCart,
+  acceptAllConsents,
+  openSettings,
+  declineConsents,
+}
 
 class _FallbackButtons {
   final List<QuickReplyButton> buttons;
@@ -200,6 +209,9 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   bool _projectPromptShown = false;
   bool _projectPromptAttemptedInTurn = false;
   bool _uploadPromptShown = false;
+  bool _consentPromptShown = false;
+  late final ConsentService _consentService;
+  bool _lastAiAllowed = false;
 
   void _addAssistantMessage(String text, {List<QuickReplyButton>? buttons}) {
     if (!mounted) return;
@@ -216,10 +228,49 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     _scrollToBottom(animated: true);
   }
 
+  bool _ensureAiConsent() {
+    final consent = context.read<ConsentService>();
+    if (consent.aiAllowed) return true;
+    _showAiConsentPrompt();
+    return false;
+  }
+
+  void _showAiConsentPrompt() {
+    if (_consentPromptShown) return;
+    final hasExisting = _messages.any(
+      (msg) =>
+          (msg.buttons ?? const <QuickReplyButton>[])
+              .any((b) => b.action == QuickReplyAction.acceptAllConsents),
+    );
+    if (hasExisting) {
+      _consentPromptShown = true;
+      return;
+    }
+    _consentPromptShown = true;
+    const message =
+        'Ich nutze KI, um dir bei Analysen und Bildern zu helfen.\n'
+        'Zusätzlich nutze ich Analytics zur Produktverbesserung (180 Tage).\n'
+        'Darf ich das für dich tun?';
+    _addAssistantMessage(
+      message,
+      buttons: const [
+        QuickReplyButton(
+          label: '✅ Ja, alles aktivieren',
+          value: 'Ich stimme allen optionalen Einwilligungen zu.',
+          preferred: true,
+          action: QuickReplyAction.acceptAllConsents,
+        ),
+      ],
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _memoryManager = MemoryManager.withApiBase(apiBase: kThermoloxApiBase);
+    _consentService = context.read<ConsentService>();
+    _lastAiAllowed = _consentService.aiAllowed;
+    _consentService.addListener(_handleConsentChange);
 
     // Scroll-Position beobachten, damit wir nur auto-scrollen,
     // wenn der User nicht manuell nach oben gescrollt hat.
@@ -266,6 +317,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
 
   @override
   void dispose() {
+    _consentService.removeListener(_handleConsentChange);
     _cachedMessages = List<ChatMessage>.from(_messages);
     _cachedUploads = List<_SentUpload>.from(_recentUploads);
     _cachedFallbacks = Set<String>.from(_shownFallbacks);
@@ -277,6 +329,17 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _handleConsentChange() {
+    final allowed = _consentService.aiAllowed;
+    if (_lastAiAllowed && !allowed) {
+      _memoryManager.clearLocal();
+      _consentPromptShown = false;
+    } else if (!_lastAiAllowed && allowed) {
+      _consentPromptShown = false;
+    }
+    _lastAiAllowed = allowed;
   }
 
   /// =======================
@@ -430,16 +493,21 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
         .map(
           (p) => {
             'id': p.id,
-            'name': p.name,
+            'name': _shorten(p.name, 40),
             'hasImage': p.items.any((i) => i.type == 'image'),
             'items': p.items
                 .map(
-                  (i) => {
-                    'id': i.id,
-                    'name': i.name,
-                    'type': i.type,
-                    'hasLocal': i.path != null,
-                    'hasRemote': i.url != null,
+                  (i) {
+                    final item = <String, dynamic>{
+                      'id': i.id,
+                      'type': i.type,
+                      'hasLocal': i.path != null,
+                      'hasRemote': i.url != null,
+                    };
+                    if (i.type == 'color' && i.name.isNotEmpty) {
+                      item['color'] = _shorten(i.name, 24);
+                    }
+                    return item;
                   },
                 )
                 .toList(),
@@ -451,7 +519,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
         .map(
           (u) => {
             'id': u.id,
-            'name': u.name,
             'isImage': u.isImage,
             'hasRemoteUrl': u.remoteUrl != null,
           },
@@ -915,6 +982,63 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       ).push(MaterialPageRoute(builder: (_) => const CartPage()));
       return;
     }
+    if (option.action == QuickReplyAction.acceptAllConsents) {
+      final consent = context.read<ConsentService>();
+      await consent.setAnalyticsAllowed(true);
+      await consent.setAiAllowed(true);
+      if (!mounted) return;
+      final hasDraft =
+          _inputController.text.trim().isNotEmpty ||
+          _pendingAttachments.isNotEmpty;
+      if (hasDraft) {
+        ThermoloxOverlay.showSnack(
+          context,
+          'Alles klar. Du kannst jetzt senden.',
+        );
+        return;
+      }
+      _addAssistantMessage(
+        'Perfekt! Womit möchtest du starten?',
+        buttons: const [
+          QuickReplyButton(
+            label: 'Projekt starten',
+            value: 'Ich möchte ein Projekt starten',
+            preferred: true,
+          ),
+          QuickReplyButton(
+            label: 'Farbberatung',
+            value: 'Ich möchte eine Farbberatung',
+            preferred: false,
+          ),
+        ],
+      );
+      return;
+    }
+    if (option.action == QuickReplyAction.openSettings) {
+      _consentPromptShown = false;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const SettingsPage(
+            initialTabIndex: 2,
+            initialLegalTabIndex: 2,
+          ),
+        ),
+      );
+      return;
+    }
+    if (option.action == QuickReplyAction.declineConsents) {
+      final consent = context.read<ConsentService>();
+      await consent.setAnalyticsAllowed(false);
+      await consent.setAiAllowed(false);
+      if (!mounted) return;
+      _consentPromptShown = false;
+      _addAssistantMessage(
+        'Alles klar. Ohne Einwilligung kann ich dir hier leider '
+        'nicht helfen. Du kannst das jederzeit in den Einstellungen '
+        'ändern.',
+      );
+      return;
+    }
     await _sendMessage(quickReplyText: option.value);
   }
 
@@ -1040,10 +1164,22 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             actionRaw == 'image' ||
             actionRaw == 'file';
         final isCart = actionRaw == 'checkout' || actionRaw == 'cart';
+        final isSettings =
+            actionRaw == 'settings' ||
+            actionRaw == 'open_settings' ||
+            actionRaw == 'preferences';
+        final isConsent =
+            actionRaw == 'consent' ||
+            actionRaw == 'accept_consents' ||
+            actionRaw == 'accept_all_consents';
         final action = isUpload
             ? QuickReplyAction.uploadAttachment
             : isCart
             ? QuickReplyAction.goToCart
+            : isSettings
+            ? QuickReplyAction.openSettings
+            : isConsent
+            ? QuickReplyAction.acceptAllConsents
             : QuickReplyAction.send;
 
         // Normalize „System in den Warenkorb legen“ → „In den Warenkorb“
@@ -1438,6 +1574,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Future<void> _startGreetingIfNeeded() async {
     if (_greetingRequested || !mounted || _messages.isNotEmpty) return;
+    if (!_ensureAiConsent()) return;
     _projectPromptShown = false;
     _projectPromptAttemptedInTurn = false;
     _uploadPromptShown = false;
@@ -1985,6 +2122,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Future<void> _sendMessage({String? quickReplyText}) async {
     if (_isSending) return;
+    if (!_ensureAiConsent()) return;
 
     final rawText = quickReplyText ?? _inputController.text;
     final text = rawText.trim();

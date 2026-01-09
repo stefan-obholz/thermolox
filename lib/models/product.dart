@@ -4,6 +4,8 @@ class Product {
   final String? description;
   final String? imageUrl;
   final double? price; // optional, falls noch nicht sauber gemappt
+  final String? handle;
+  final List<String> tags;
 
   const Product({
     required this.id,
@@ -11,5 +13,7 @@ class Product {
     this.description,
     this.imageUrl,
     this.price,
+    this.handle,
+    this.tags = const [],
   });
 }

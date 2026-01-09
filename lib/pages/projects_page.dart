@@ -146,8 +146,6 @@ class ProjectsPage extends StatelessWidget {
               final fileItem = _findByType('file');
               final colorItem = _findByType('color');
               final mediaItem = imageItem ?? fileItem;
-              final uploadCount =
-                  (mediaItem != null ? 1 : 0) + (colorItem != null ? 1 : 0);
               final thumb = mediaItem ?? colorItem;
               final localPath = thumb?.path;
               final localExists =
@@ -236,12 +234,6 @@ class ProjectsPage extends StatelessWidget {
                                       style: theme.textTheme.bodyMedium?.copyWith(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    Text(
-                                      '$uploadCount Upload${uploadCount == 1 ? '' : 's'}',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: Colors.white70,
                                       ),
                                     ),
                                   ],

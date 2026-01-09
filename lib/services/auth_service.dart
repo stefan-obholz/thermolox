@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'consent_service.dart';
+import 'local_data_service.dart';
 import 'supabase_service.dart';
 
 class AuthService {
@@ -10,6 +12,8 @@ class AuthService {
 
   User? get currentUser => _client.auth.currentUser;
 
+  bool get isAnonymous => isUserAnonymous(currentUser);
+
   bool get isEmailVerified {
     final user = currentUser;
     return isUserVerified(user);
@@ -18,6 +22,17 @@ class AuthService {
   bool isUserVerified(User? user) {
     if (user == null) return false;
     return user.emailConfirmedAt != null || user.confirmedAt != null;
+  }
+
+  bool isUserAnonymous(User? user) {
+    if (user == null) return false;
+    final appMeta = user.appMetadata;
+    final provider = appMeta['provider']?.toString();
+    if (provider == 'anonymous') return true;
+    final providers = appMeta['providers'];
+    if (providers is List && providers.contains('anonymous')) return true;
+    final isAnon = appMeta['is_anonymous'];
+    return isAnon == true;
   }
 
   Stream<User?> get currentUserStream => _client.auth.onAuthStateChange.map(
@@ -66,5 +81,11 @@ class AuthService {
       throw Exception(message);
     }
     await _client.auth.signOut();
+    try {
+      await LocalDataService.clearAll();
+      await ConsentService.instance.clearLocal();
+    } catch (_) {
+      // ignore local cleanup errors after account deletion
+    }
   }
 }

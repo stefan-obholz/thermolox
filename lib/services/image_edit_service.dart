@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
+import 'consent_service.dart';
 import 'thermolox_api.dart';
 
 class ImageEditService {
@@ -14,6 +15,9 @@ class ImageEditService {
     required Uint8List maskPng,
     required String prompt,
   }) async {
+    if (!ConsentService.instance.aiAllowed) {
+      throw StateError('AI consent required');
+    }
     if ((imageUrl == null || imageUrl.isEmpty) &&
         (imageBytes == null || imageBytes.isEmpty)) {
       throw StateError('Missing image input');
