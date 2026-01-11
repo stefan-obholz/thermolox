@@ -16,12 +16,14 @@ Future<String?> showPlanModal({
   required BuildContext context,
   required List<PlanCardData> plans,
   required String selectedPlanId,
+  String? initialPlanId,
   bool showActionButton = true,
   bool allowDowngrade = false,
 }) {
+  final initialId = initialPlanId ?? selectedPlanId;
   final initialIndex = math.max(
     0,
-    plans.indexWhere((plan) => plan.id == selectedPlanId),
+    plans.indexWhere((plan) => plan.id == initialId),
   );
   final controller = PageController(initialPage: initialIndex);
 

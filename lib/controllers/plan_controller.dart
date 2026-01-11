@@ -43,8 +43,9 @@ class PlanController extends ChangeNotifier {
       _authService.currentUser != null && !_authService.isAnonymous;
   bool get isEmailVerified => _authService.isEmailVerified;
   String? get currentUserEmail => _authService.currentUser?.email;
+  String? get currentUserId => _authService.currentUser?.id;
   bool get canDowngrade =>
-      currentUserEmail?.toLowerCase() == 'stefan.obholz@gmail.com';
+      _isGodModeUser(currentUserEmail) || _isGodModeUserId(currentUserId);
 
   bool get isPro {
     if (!isLoggedIn || !isEmailVerified) return false;
@@ -218,6 +219,31 @@ class PlanController extends ChangeNotifier {
     }
 
     return result;
+  }
+
+  bool _isGodModeUser(String? email) {
+    if (email == null) return false;
+    return _normalizeEmail(email) == 'stefanobholz@gmail.com';
+  }
+
+  bool _isGodModeUserId(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    return userId == '0d3f96a8-a856-44da-b8c9-0c8003a2b6d7';
+  }
+
+  String _normalizeEmail(String email) {
+    final trimmed = email.trim().toLowerCase();
+    final parts = trimmed.split('@');
+    if (parts.length != 2) return trimmed;
+    var local = parts[0];
+    var domain = parts[1];
+    if (domain == 'googlemail.com') {
+      domain = 'gmail.com';
+    }
+    if (domain == 'gmail.com') {
+      local = local.split('+').first.replaceAll('.', '');
+    }
+    return '$local@$domain';
   }
 
   PlanFeatureData _mapVirtualRoom(CurrentPlan plan, PlanFeature feature) {

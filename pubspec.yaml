@@ -24,12 +24,18 @@ dependencies:
   shared_preferences: ^2.3.1
   path_provider: ^2.1.2
   path: ^1.9.0
+  record: ^5.0.4
+  audioplayers: ^6.0.0
   supabase_flutter: ^2.5.0
   uuid: ^4.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+dependency_overrides:
+  record_linux:
+    path: packages/record_linux
 
 flutter:
   uses-material-design: true

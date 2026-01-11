@@ -5,9 +5,9 @@ import '../pages/settings_page.dart';
 import '../pages/projects_page.dart';
 import '../pages/products_page.dart';
 import '../pages/home_page.dart';
-import '../pages/auth_page.dart';
 import '../chat/chat_button.dart';
 import '../controllers/plan_controller.dart';
+import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
 
 class ThermoloxShell extends StatefulWidget {
@@ -40,25 +40,80 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
     ];
   }
 
-  void _onNavTapped(int index) {
+  Future<void> _onNavTapped(int index) async {
     final planController = context.read<PlanController>();
     final canAccessProjects = planController.hasProjectsAccess;
     if (index == 1 && !canAccessProjects) {
-      if (!planController.isLoggedIn) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => const AuthPage(initialTabIndex: 1),
-          ),
-        );
-        return;
-      }
-      ThermoloxOverlay.showSnack(
-        context,
-        'Projekte sind nur im Pro-Tarif verfügbar.',
-      );
+      await _showPremiumGate(featureName: 'Projekte');
       return;
     }
     setState(() => _currentIndex = index);
+  }
+
+  Future<bool> _showPremiumGate({required String featureName}) async {
+    final planController = context.read<PlanController>();
+    if (planController.isPro) return true;
+
+    final wantsUpgrade = await ThermoloxOverlay.showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/icons/THERMOLOX_ICON.png',
+              width: 30,
+              height: 30,
+            ),
+            const SizedBox(width: 8),
+            const Text('Premium-Feature'),
+          ],
+        ),
+        content: Text(
+          'Um $featureName nutzen zu können, benötigst du einen Pro Account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Verzichten'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    );
+
+    if (wantsUpgrade != true) return false;
+    if (planController.isLoading) return false;
+    if (planController.planCards.isEmpty) {
+      await planController.load(force: true);
+    }
+    if (!mounted) return false;
+
+    final plans = List.of(planController.planCards)
+      ..sort((a, b) {
+        if (a.id == b.id) return 0;
+        if (a.id == 'pro') return -1;
+        if (b.id == 'pro') return 1;
+        return 0;
+      });
+    if (plans.isEmpty) return false;
+    final selected = planController.activePlan?.plan.slug ?? 'basic';
+    final initialPlanId =
+        plans.any((plan) => plan.id == 'pro') ? 'pro' : selected;
+    final choice = await showPlanModal(
+      context: context,
+      plans: plans,
+      selectedPlanId: selected,
+      initialPlanId: initialPlanId,
+      allowDowngrade: planController.canDowngrade,
+    );
+    if (choice != null && choice != selected) {
+      await planController.selectPlan(choice);
+    }
+    return false;
   }
 
   @override
@@ -130,6 +185,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
                     onTap: _onNavTapped,
                     baseColor: iconBaseColor,
                     enabled: canAccessProjects,
+                    allowTapWhenDisabled: true,
                   ),
                 ),
 
@@ -192,6 +248,7 @@ class _NavIcon extends StatelessWidget {
   final void Function(int) onTap;
   final Color baseColor;
   final bool enabled;
+  final bool allowTapWhenDisabled;
 
   const _NavIcon({
     required this.icon,
@@ -201,19 +258,21 @@ class _NavIcon extends StatelessWidget {
     required this.onTap,
     required this.baseColor,
     required this.enabled,
+    this.allowTapWhenDisabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isSelected = index == currentIndex;
     final effectiveEnabled = enabled;
+    final tapEnabled = enabled || allowTapWhenDisabled;
     final inactiveColor =
         effectiveEnabled ? baseColor.withOpacity(0.45) : baseColor.withOpacity(0.2);
     final inactiveLabel =
         effectiveEnabled ? baseColor.withOpacity(0.60) : baseColor.withOpacity(0.3);
 
     return InkWell(
-      onTap: effectiveEnabled ? () => onTap(index) : null,
+      onTap: tapEnabled ? () => onTap(index) : null,
       borderRadius: BorderRadius.circular(32),
       child: Column(
         mainAxisSize: MainAxisSize.min,

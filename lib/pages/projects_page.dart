@@ -8,6 +8,7 @@ import '../models/project_models.dart';
 import '../models/projects_model.dart';
 import '../theme/app_theme.dart';
 import '../utils/color_utils.dart';
+import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/cart_icon_button.dart';
@@ -16,7 +17,75 @@ import 'project_detail_page.dart';
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
 
+  Future<bool> _ensureProjectAccess(BuildContext context) async {
+    final planController = context.read<PlanController>();
+    if (planController.hasProjectsAccess) return true;
+
+    final wantsUpgrade = await ThermoloxOverlay.showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/icons/THERMOLOX_ICON.png',
+              width: 30,
+              height: 30,
+            ),
+            const SizedBox(width: 8),
+            const Text('Premium-Feature'),
+          ],
+        ),
+        content: const Text(
+          'Um Projekte nutzen zu können, benötigst du einen Pro Account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Verzichten'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    );
+
+    if (wantsUpgrade != true) return false;
+    if (planController.isLoading) return false;
+    if (planController.planCards.isEmpty) {
+      await planController.load(force: true);
+    }
+    if (!context.mounted) return false;
+
+    final plans = List.of(planController.planCards)
+      ..sort((a, b) {
+        if (a.id == b.id) return 0;
+        if (a.id == 'pro') return -1;
+        if (b.id == 'pro') return 1;
+        return 0;
+      });
+    if (plans.isEmpty) return false;
+    final selected = planController.activePlan?.plan.slug ?? 'basic';
+    final initialPlanId =
+        plans.any((plan) => plan.id == 'pro') ? 'pro' : selected;
+    final choice = await showPlanModal(
+      context: context,
+      plans: plans,
+      selectedPlanId: selected,
+      initialPlanId: initialPlanId,
+      allowDowngrade: planController.canDowngrade,
+    );
+    if (choice != null && choice != selected) {
+      await planController.selectPlan(choice);
+    }
+    return false;
+  }
+
   Future<void> _createProject(BuildContext context) async {
+    final allowed = await _ensureProjectAccess(context);
+    if (!allowed) return;
     final name = await ThermoloxOverlay.promptText(
       context: context,
       title: 'Neues Projekt',
@@ -82,7 +151,7 @@ class ProjectsPage extends StatelessWidget {
       ),
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: canAccessProjects ? () => _createProject(context) : null,
+        onPressed: () => _createProject(context),
         icon: const Icon(Icons.add),
         label: const Text('Projekt'),
       ),
@@ -105,9 +174,7 @@ class ProjectsPage extends StatelessWidget {
                     const Text('Noch keine Projekte'),
                     const SizedBox(height: 8),
                     ElevatedButton(
-                      onPressed: canAccessProjects
-                          ? () => _createProject(context)
-                          : null,
+                      onPressed: () => _createProject(context),
                       child: const Text('Neues Projekt anlegen'),
                     ),
                   ],
@@ -157,13 +224,17 @@ class ProjectsPage extends StatelessWidget {
               final isFileThumb = thumb != null && thumb.type == 'file';
               final isColorThumb = thumb != null && thumb.type == 'color';
               return GestureDetector(
-                onTap: canAccessProjects
-                    ? () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ProjectDetailPage(projectId: p.id),
-                          ),
-                        )
-                    : null,
+                onTap: () async {
+                  if (!canAccessProjects) {
+                    await _ensureProjectAccess(context);
+                    return;
+                  }
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProjectDetailPage(projectId: p.id),
+                    ),
+                  );
+                },
                 child: Stack(
                   children: [
                     Container(

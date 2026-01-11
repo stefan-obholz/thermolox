@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
@@ -5,9 +6,12 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:record/record.dart';
 
 import '../controllers/plan_controller.dart';
 import '../controllers/virtual_room_credit_manager.dart';
@@ -23,6 +27,7 @@ import '../services/consent_service.dart';
 import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
 import '../services/thermolox_api.dart';
+import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/mask_editor_page.dart';
@@ -153,7 +158,8 @@ class ThermoloxChatBot extends StatefulWidget {
   State<ThermoloxChatBot> createState() => _ThermoloxChatBotState();
 }
 
-class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
+class _ThermoloxChatBotState extends State<ThermoloxChatBot>
+    with TickerProviderStateMixin {
   static List<ChatMessage> _cachedMessages = [];
   static List<_SentUpload> _cachedUploads = [];
   static Set<String> _cachedFallbacks = {};
@@ -161,6 +167,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   static bool _cachedGreetingRequested = false;
   static bool _cachedProjectPromptShown = false;
   static bool _cachedUploadPromptShown = false;
+  static bool _cachedVoiceModeActive = false;
 
   static final RegExp _skillBlockRegex = RegExp(
     r'```skill\s+([\s\S]*?)```',
@@ -178,10 +185,12 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   static final RegExp _hexColorRegex = RegExp(
     r'#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b',
   );
+  static const int _minVoiceMs = 650;
 
   final List<ChatMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _voiceBarKey = GlobalKey();
 
   /// Anhänge, die ausgewählt wurden, aber noch nicht gesendet sind
   final List<_Attachment> _pendingAttachments = [];
@@ -198,6 +207,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
 
   bool _isSending = false;
   int? _streamingMsgIndex; // Index der gerade gestreamten Bot-Nachricht
+  String? _queuedTranscript;
 
   /// Ob der User aktuell „am unteren Rand“ des Chats ist.
   bool _autoScroll = true;
@@ -210,8 +220,67 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
   bool _projectPromptAttemptedInTurn = false;
   bool _uploadPromptShown = false;
   bool _consentPromptShown = false;
+  bool _voiceConsentPromptShown = false;
   late final ConsentService _consentService;
   bool _lastAiAllowed = false;
+
+  bool _hasInputText = false;
+  bool _voiceModeActive = false;
+  bool _voicePressActive = false;
+  bool _isStartingRecording = false;
+  bool _pendingStopAfterStart = false;
+  DateTime? _recordingStartedAt;
+  double _voiceBarHeight = 0;
+  bool _isRecording = false;
+  bool _isTranscribing = false;
+  bool _isSpeaking = false;
+  bool _isTtsLoading = false;
+  bool _ttsNoticeShown = false;
+  bool _enableVoiceOutput = false;
+  double _lastInputLevel = 0.0;
+  AudioRecorder _audioRecorder = AudioRecorder();
+  StreamSubscription<Amplitude>? _amplitudeSub;
+  String? _recordingPath;
+  final GlobalKey _voiceButtonKey = GlobalKey();
+  final math.Random _voiceRand = math.Random();
+  double _voiceVizLevel = 0.0;
+  Timer? _voiceVizTimer;
+  late final AudioPlayer _ttsPlayer;
+  late final AnimationController _voiceRingCtrl;
+  late final AnimationController _voicePulseCtrl;
+
+  void _resetVoiceFlags() {
+    _isStartingRecording = false;
+    _pendingStopAfterStart = false;
+    _voicePressActive = false;
+    _recordingStartedAt = null;
+  }
+
+  Future<void> _cancelRecorderSafely() async {
+    try {
+      await _audioRecorder.cancel();
+    } catch (_) {}
+  }
+
+  Future<void> _resetRecorderInstance() async {
+    _amplitudeSub?.cancel();
+    _amplitudeSub = null;
+    try {
+      await _audioRecorder.cancel();
+    } catch (_) {}
+    try {
+      await _audioRecorder.dispose();
+    } catch (_) {}
+    _audioRecorder = AudioRecorder();
+  }
+
+  Future<void> _flushQueuedTranscript() async {
+    if (_isSending) return;
+    final queued = _queuedTranscript;
+    if (queued == null || queued.trim().isEmpty) return;
+    _queuedTranscript = null;
+    await _sendMessage(quickReplyText: queued.trim());
+  }
 
   void _addAssistantMessage(String text, {List<QuickReplyButton>? buttons}) {
     if (!mounted) return;
@@ -232,6 +301,13 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     final consent = context.read<ConsentService>();
     if (consent.aiAllowed) return true;
     _showAiConsentPrompt();
+    return false;
+  }
+
+  Future<bool> _ensureChatAccess() async {
+    final planController = context.read<PlanController>();
+    if (planController.isPro) return true;
+    await _showPremiumGate(featureName: 'Chatbot');
     return false;
   }
 
@@ -264,6 +340,45 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     );
   }
 
+  Future<bool> _ensureVoiceConsent() async {
+    final consent = context.read<ConsentService>();
+    if (consent.aiAllowed) return true;
+    if (_voiceConsentPromptShown) {
+      _showSnack(
+        'Spracherkennung ist deaktiviert. Du kannst sie in Einstellungen aktivieren.',
+      );
+      return false;
+    }
+    _voiceConsentPromptShown = true;
+
+    final approved = await ThermoloxOverlay.showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Spracherkennung'),
+        content: const Text(
+          'Für die Spracherkennung senden wir deine Audioaufnahme an OpenAI (Cloud). '
+          'Möchtest du das erlauben?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Verzichten'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Zustimmen'),
+          ),
+        ],
+      ),
+    );
+
+    if (approved == true) {
+      await consent.setAiAllowed(true);
+      return true;
+    }
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -271,6 +386,25 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     _consentService = context.read<ConsentService>();
     _lastAiAllowed = _consentService.aiAllowed;
     _consentService.addListener(_handleConsentChange);
+    _inputController.addListener(_handleInputTextChanged);
+
+    _ttsPlayer = AudioPlayer();
+    _ttsPlayer.setReleaseMode(ReleaseMode.stop);
+    _ttsPlayer.onPlayerComplete.listen((_) {
+      _stopSpeaking();
+    });
+
+    final tokens = ThermoloxTokens.light;
+    _voiceRingCtrl = AnimationController(
+      vsync: this,
+      duration: tokens.ringRotationDuration,
+    )..repeat();
+    _voicePulseCtrl = AnimationController(
+      vsync: this,
+      duration: tokens.ringPulseDuration,
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    )..repeat(reverse: true);
 
     // Scroll-Position beobachten, damit wir nur auto-scrollen,
     // wenn der User nicht manuell nach oben gescrollt hat.
@@ -295,13 +429,21 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
         _greetingRequested = _cachedGreetingRequested;
         _projectPromptShown = _cachedProjectPromptShown;
         _uploadPromptShown = _cachedUploadPromptShown;
+        _voiceModeActive = _cachedVoiceModeActive;
         if (isFreshStart) {
           _projectPromptShown = false;
           _projectPromptAttemptedInTurn = false;
           _uploadPromptShown = false;
         }
       });
+    } else {
+      _voiceModeActive = _cachedVoiceModeActive;
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoScroll = true;
+      _scrollToBottom(animated: false);
+    });
 
     // Falls schon Projekte existieren, Projekt-Fallback unterdrücken
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -325,7 +467,15 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
     _cachedGreetingRequested = _greetingRequested;
     _cachedProjectPromptShown = _projectPromptShown;
     _cachedUploadPromptShown = _uploadPromptShown;
+    _cachedVoiceModeActive = _voiceModeActive;
 
+    _inputController.removeListener(_handleInputTextChanged);
+    _voiceVizTimer?.cancel();
+    _amplitudeSub?.cancel();
+    _audioRecorder.dispose();
+    _ttsPlayer.dispose();
+    _voiceRingCtrl.dispose();
+    _voicePulseCtrl.dispose();
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -340,6 +490,484 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot> {
       _consentPromptShown = false;
     }
     _lastAiAllowed = allowed;
+  }
+
+  void _handleInputTextChanged() {
+    final hasText = _inputController.text.trim().isNotEmpty;
+    if (hasText == _hasInputText) return;
+    setState(() {
+      _hasInputText = hasText;
+    });
+  }
+
+  Future<void> _handleMicTap() async {
+    if (_isSending || _isTranscribing) return;
+    final chatOk = await _ensureChatAccess();
+    if (!chatOk) return;
+    final consentOk = await _ensureVoiceConsent();
+    if (!consentOk) return;
+    _enterVoiceMode();
+  }
+
+  Future<bool> _showPremiumGate({required String featureName}) async {
+    final planController = context.read<PlanController>();
+    if (planController.isPro) return true;
+
+    final wantsUpgrade = await ThermoloxOverlay.showAppDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/icons/THERMOLOX_ICON.png',
+              width: 30,
+              height: 30,
+            ),
+            const SizedBox(width: 8),
+            const Text('Premium-Feature'),
+          ],
+        ),
+        content: Text(
+          'Um $featureName nutzen zu können, benötigst du einen Pro Account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Verzichten'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    );
+
+    if (wantsUpgrade != true) return false;
+    if (planController.isLoading) return false;
+    if (planController.planCards.isEmpty) {
+      await planController.load(force: true);
+    }
+    if (!mounted) return false;
+
+    final plans = List.of(planController.planCards)
+      ..sort((a, b) {
+        if (a.id == b.id) return 0;
+        if (a.id == 'pro') return -1;
+        if (b.id == 'pro') return 1;
+        return 0;
+      });
+    if (plans.isEmpty) return false;
+    final selected = planController.activePlan?.plan.slug ?? 'basic';
+    final initialPlanId =
+        plans.any((plan) => plan.id == 'pro') ? 'pro' : selected;
+    final choice = await showPlanModal(
+      context: context,
+      plans: plans,
+      selectedPlanId: selected,
+      initialPlanId: initialPlanId,
+      allowDowngrade: planController.canDowngrade,
+    );
+    if (choice != null && choice != selected) {
+      await planController.selectPlan(choice);
+    }
+    return false;
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<bool> _ensureRecordingReady() async {
+    final hasPermission = await _audioRecorder.hasPermission();
+    if (!hasPermission) {
+      _showSnack(
+        'Bitte in iOS Einstellungen > THERMOLOX Mikrofon erlauben.',
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<String?> _transcribeRecording(String path) async {
+    try {
+      final uri = Uri.parse('$kThermoloxApiBase/stt');
+      final request = http.MultipartRequest('POST', uri);
+      request.fields['model'] = 'gpt-4o-mini-transcribe';
+      request.fields['temperature'] = '0';
+      request.fields['response_format'] = 'json';
+
+      request.files.add(await http.MultipartFile.fromPath('file', path));
+
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final data = jsonDecode(body);
+        if (data is Map<String, dynamic>) {
+          final text = data['text'];
+          if (text is String && text.trim().isNotEmpty) {
+            return text.trim();
+          }
+        }
+        return null;
+      }
+
+      String? errorMessage;
+      try {
+        final data = jsonDecode(body);
+        if (data is Map<String, dynamic>) {
+          final error = data['error'];
+          if (error is Map<String, dynamic>) {
+            errorMessage = error['message']?.toString();
+          } else if (error != null) {
+            errorMessage = error.toString();
+          }
+        }
+      } catch (_) {
+        errorMessage = null;
+      }
+      _showSnack(errorMessage ?? 'Spracherkennung fehlgeschlagen.');
+      return null;
+    } catch (_) {
+      _showSnack('Spracherkennung fehlgeschlagen.');
+      return null;
+    }
+  }
+
+  void _enterVoiceMode() {
+    if (_voiceModeActive) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _voiceModeActive = true;
+      _cachedVoiceModeActive = true;
+    });
+  }
+
+  void _exitVoiceMode() {
+    if (!_voiceModeActive) return;
+    setState(() {
+      _voiceModeActive = false;
+      _ttsNoticeShown = false;
+      _cachedVoiceModeActive = false;
+    });
+  }
+
+  void _startVoiceVisualization() {
+    _voiceVizTimer?.cancel();
+    _voiceVizTimer = Timer.periodic(
+      const Duration(milliseconds: 90),
+      (timer) {
+        if (!mounted || !_isSpeaking) {
+          timer.cancel();
+          return;
+        }
+        setState(() {
+          _voiceVizLevel = 0.25 + (_voiceRand.nextDouble() * 0.75);
+        });
+      },
+    );
+  }
+
+  bool _isPointerInsideVoiceButton(Offset position) {
+    final ctx = _voiceButtonKey.currentContext;
+    if (ctx == null) return true;
+    final box = ctx.findRenderObject();
+    if (box is! RenderBox) return true;
+    final topLeft = box.localToGlobal(Offset.zero);
+    final rect = topLeft & box.size;
+    return rect.contains(position);
+  }
+
+  void _stopSpeaking() {
+    _voiceVizTimer?.cancel();
+    if (!mounted) {
+      _isSpeaking = false;
+      _voiceVizLevel = 0.0;
+      return;
+    }
+    setState(() {
+      _isSpeaking = false;
+      _voiceVizLevel = 0.0;
+    });
+  }
+
+  Future<void> _stopTtsPlayback() async {
+    await _ttsPlayer.stop();
+    _stopSpeaking();
+  }
+
+  void _startSpeaking() {
+    if (!mounted) return;
+    setState(() {
+      _isSpeaking = true;
+    });
+    _startVoiceVisualization();
+  }
+
+  Future<void> _startVoiceCapture() async {
+    if (_isRecording || _isTranscribing) return;
+    try {
+      final platformRecording = await _audioRecorder.isRecording();
+      if (platformRecording) {
+        await _cancelRecorderSafely();
+      }
+    } catch (_) {}
+    final planController = context.read<PlanController>();
+    final hasVoiceAccess = planController.isPro || planController.canDowngrade;
+    if (!hasVoiceAccess) {
+      final allowed = await _showPremiumGate(featureName: 'Spracheingabe');
+      if (!allowed) return;
+    }
+    final consentOk = await _ensureVoiceConsent();
+    if (!consentOk) return;
+    final ready = await _ensureRecordingReady();
+    if (!ready) return;
+
+    await _stopTtsPlayback();
+    final tempDir = await getTemporaryDirectory();
+    final path =
+        '${tempDir.path}/thermolox_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    _recordingPath = path;
+    _lastInputLevel = 0.0;
+    _isStartingRecording = true;
+    _pendingStopAfterStart = false;
+
+    setState(() {
+      _isRecording = true;
+      _isTranscribing = false;
+    });
+
+    try {
+      await _audioRecorder.start(
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          numChannels: 1,
+          sampleRate: 44100,
+          bitRate: 128000,
+        ),
+        path: path,
+      );
+      _isStartingRecording = false;
+      _recordingStartedAt = DateTime.now();
+      _amplitudeSub?.cancel();
+      _amplitudeSub = _audioRecorder
+          .onAmplitudeChanged(const Duration(milliseconds: 160))
+          .listen((amp) {
+        if (!mounted || !_isRecording) return;
+        final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0);
+        setState(() {
+          _lastInputLevel = normalized.toDouble();
+        });
+      });
+      if (_pendingStopAfterStart && _isRecording) {
+        await _stopVoiceCapture(forceDiscard: true);
+      } else if (!_voicePressActive && _isRecording) {
+        await _stopVoiceCapture();
+      }
+    } catch (e) {
+      await _resetRecorderInstance();
+      _resetVoiceFlags();
+      _recordingPath = null;
+      if (mounted) {
+        setState(() {
+          _isRecording = false;
+          _isTranscribing = false;
+        });
+      }
+      _showSnack('Sprachaufnahme konnte nicht gestartet werden.');
+    }
+  }
+
+  Future<void> _stopVoiceCapture({bool forceDiscard = false}) async {
+    if (!_isRecording) return;
+    if (_isStartingRecording) {
+      _pendingStopAfterStart = true;
+      _voicePressActive = false;
+      return;
+    }
+    _voicePressActive = false;
+
+    setState(() {
+      _isRecording = false;
+      _isTranscribing = true;
+    });
+
+    _amplitudeSub?.cancel();
+
+    final startedAt = _recordingStartedAt;
+    _recordingStartedAt = null;
+    final elapsedMs = startedAt == null
+        ? 0
+        : DateTime.now().difference(startedAt).inMilliseconds;
+    final shouldDiscard = forceDiscard || elapsedMs < _minVoiceMs;
+
+    String? path;
+    try {
+      path = await _audioRecorder.stop();
+    } catch (_) {
+      path = null;
+    }
+    path ??= _recordingPath;
+    _recordingPath = null;
+    try {
+      final stillRecording = await _audioRecorder.isRecording();
+      if (stillRecording) {
+        await _cancelRecorderSafely();
+      }
+    } catch (_) {}
+    await _resetRecorderInstance();
+
+    if (shouldDiscard) {
+      if (mounted) {
+        setState(() {
+          _isTranscribing = false;
+        });
+      }
+      if (path != null) {
+        try {
+          await File(path).delete();
+        } catch (_) {}
+      }
+      await _cancelRecorderSafely();
+      _resetVoiceFlags();
+      return;
+    }
+
+    if (path == null) {
+      if (mounted) {
+        setState(() {
+          _isTranscribing = false;
+        });
+      }
+      _showSnack('Sprachaufnahme fehlgeschlagen.');
+      _resetVoiceFlags();
+      return;
+    }
+
+    await Future.delayed(const Duration(milliseconds: 160));
+    final file = File(path);
+    int fileSize = 0;
+    try {
+      fileSize = await file.length();
+    } catch (_) {
+      fileSize = 0;
+    }
+
+    if (fileSize < 2048) {
+      if (mounted) {
+        setState(() {
+          _isTranscribing = false;
+        });
+      }
+      _showSnack('Ich konnte nichts hoeren.');
+      try {
+        await file.delete();
+      } catch (_) {}
+      await _cancelRecorderSafely();
+      _resetVoiceFlags();
+      return;
+    }
+
+    String? transcript;
+    try {
+      transcript = await _transcribeRecording(path)
+          .timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      _showSnack('Spracherkennung dauert zu lange.');
+      transcript = null;
+    }
+
+    try {
+      await File(path).delete();
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _isTranscribing = false;
+      });
+    }
+    _resetVoiceFlags();
+
+    if (transcript == null || transcript.trim().isEmpty) {
+      if (_lastInputLevel > 0.1) {
+        _showSnack('Audio erkannt, aber keine Spracherkennung.');
+      } else {
+        _showSnack('Ich konnte nichts hoeren.');
+      }
+      return;
+    }
+
+    if (_isSending) {
+      _queuedTranscript = transcript.trim();
+      _showSnack('Sende nach der aktuellen Antwort.');
+      return;
+    }
+
+    await _sendMessage(quickReplyText: transcript.trim());
+  }
+
+  Future<void> _maybeSpeakAssistant(String text) async {
+    if (!_voiceModeActive || !_enableVoiceOutput) return;
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+
+    final planController = context.read<PlanController>();
+    if (!planController.isPro) {
+      if (!_ttsNoticeShown) {
+        _ttsNoticeShown = true;
+        await _showPremiumGate(featureName: 'Sprachausgabe');
+      }
+      return;
+    }
+
+    await _playTts(trimmed);
+  }
+
+  Future<void> _playTts(String text) async {
+    if (_isTtsLoading) return;
+    await _stopTtsPlayback();
+
+    if (mounted) {
+      setState(() {
+        _isTtsLoading = true;
+      });
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('$kThermoloxApiBase/tts'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'text': text,
+          'voice': 'onyx',
+          'model': 'tts-1',
+          'format': 'mp3',
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        _showSnack(
+          'Sprachausgabe fehlgeschlagen (${response.statusCode}).',
+        );
+        return;
+      }
+
+      await _ttsPlayer.play(BytesSource(response.bodyBytes));
+      _startSpeaking();
+    } catch (e) {
+      _showSnack('Sprachausgabe fehlgeschlagen.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTtsLoading = false;
+        });
+      }
+    }
   }
 
   /// =======================
@@ -959,6 +1587,23 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     });
   }
 
+  void _scheduleVoiceBarMeasure() {
+    if (!_voiceModeActive) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_voiceModeActive) return;
+      final ctx = _voiceBarKey.currentContext;
+      if (ctx == null) return;
+      final box = ctx.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return;
+      final height = box.size.height;
+      if (height != _voiceBarHeight) {
+        setState(() {
+          _voiceBarHeight = height;
+        });
+      }
+    });
+  }
+
   Future<void> _handleQuickReplyTap(
     QuickReplyButton option,
     int messageIndex,
@@ -1574,6 +2219,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Future<void> _startGreetingIfNeeded() async {
     if (_greetingRequested || !mounted || _messages.isNotEmpty) return;
+    if (!await _ensureChatAccess()) return;
     if (!_ensureAiConsent()) return;
     _projectPromptShown = false;
     _projectPromptAttemptedInTurn = false;
@@ -1634,6 +2280,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       String buffer = '';
       String fullText = '';
 
+      var done = false;
       await for (final chunk in streamedRes.stream.transform(decoder)) {
         buffer += chunk;
         final lines = buffer.split('\n');
@@ -1644,7 +2291,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           if (!line.startsWith('data:')) continue;
 
           final data = line.substring(5).trim();
-          if (data == '[DONE]') continue;
+          if (data == '[DONE]') {
+            done = true;
+            break;
+          }
 
           try {
             final json = jsonDecode(data);
@@ -1657,9 +2307,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             // ignorieren
           }
         }
+        if (done) break;
       }
 
-      await _processAssistantResponse(fullText);
+      final displayText = await _processAssistantResponse(fullText);
       final cleanedAssistant = _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: '',
@@ -1667,6 +2318,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             ? cleanedAssistant
             : fullText,
       );
+      await _maybeSpeakAssistant(displayText);
 
       if (fullText.trim().isEmpty) {
         setState(() {
@@ -1696,6 +2348,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           _isSending = prevSending;
           _streamingMsgIndex = null;
         });
+      }
+      if (mounted) {
+        await _flushQueuedTranscript();
       }
     }
   }
@@ -2122,7 +2777,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Future<void> _sendMessage({String? quickReplyText}) async {
     if (_isSending) return;
+    if (!await _ensureChatAccess()) return;
     if (!_ensureAiConsent()) return;
+    await _stopTtsPlayback();
 
     final rawText = quickReplyText ?? _inputController.text;
     final text = rawText.trim();
@@ -2319,6 +2976,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       String buffer = '';
       String fullText = '';
 
+      var done = false;
       await for (final chunk in streamedRes.stream.transform(decoder)) {
         buffer += chunk;
         final lines = buffer.split('\n');
@@ -2329,7 +2987,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           if (!line.startsWith('data:')) continue;
 
           final data = line.substring(5).trim();
-          if (data == '[DONE]') continue;
+          if (data == '[DONE]') {
+            done = true;
+            break;
+          }
 
           try {
             final json = jsonDecode(data);
@@ -2342,9 +3003,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             // ignorieren
           }
         }
+        if (done) break;
       }
 
-      await _processAssistantResponse(fullText);
+      final displayText = await _processAssistantResponse(fullText);
       final cleanedAssistant = _sanitizeAssistantText(fullText);
       await _memoryManager.updateWithTurn(
         userText: text,
@@ -2352,6 +3014,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             ? cleanedAssistant
             : fullText,
       );
+      await _maybeSpeakAssistant(displayText);
 
       if (fullText.trim().isEmpty) {
         setState(() {
@@ -2381,6 +3044,9 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           _isSending = false;
           _streamingMsgIndex = null;
         });
+      }
+      if (mounted) {
+        await _flushQueuedTranscript();
       }
     }
   }
@@ -2606,14 +3272,266 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     );
   }
 
+  Widget _buildTextInputBar() {
+    final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
+    final hasPendingAttachments = _pendingAttachments.isNotEmpty;
+    final showMic = !_hasInputText && !hasPendingAttachments;
+    final canVoice = !_isSending && !_isTranscribing;
+
+    return Padding(
+      key: const ValueKey('text-input'),
+      padding: EdgeInsets.only(
+        left: 2,
+        right: 2,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 6,
+        top: 2,
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 2),
+          _AttachmentIconButton(onTap: _openAttachmentMenu),
+          const SizedBox(width: 6),
+          const SizedBox(width: 2),
+          Expanded(
+            child: TextField(
+              controller: _inputController,
+              textInputAction: TextInputAction.send,
+              onSubmitted: (_) => _sendMessage(),
+              minLines: 1,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Nachricht an THERMOLOX …',
+                filled: true,
+                fillColor: Colors.white,
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 15,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(tokens.radiusXl),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade400,
+                    width: 1.2,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(tokens.radiusXl),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 1.6,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            icon: Icon(
+              showMic ? Icons.mic_rounded : Icons.send_rounded,
+              size: 30,
+              color: theme.colorScheme.primary,
+            ),
+            onPressed: showMic
+                ? (canVoice ? _handleMicTap : null)
+                : (_isSending ? null : () => _sendMessage()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceInputBar() {
+    final theme = Theme.of(context);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final canExit = !_isRecording && !_isTranscribing;
+
+    return Padding(
+      key: _voiceBarKey,
+      padding: EdgeInsets.only(
+        left: 8,
+        right: 8,
+        bottom: bottomInset + 10,
+        top: 6,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildVoiceActionButton(),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: canExit ? _exitVoiceMode : null,
+            icon: Icon(
+              Icons.keyboard_alt_outlined,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+            label: Text(
+              'Tastatur',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceActionButton() {
+    final theme = Theme.of(context);
+    final tokens = context.thermoloxTokens;
+    final isDisabled = _isTranscribing || _isTtsLoading;
+    final ringGlow = theme.colorScheme.primary.withOpacity(
+      _isSpeaking ? 0.85 : 0.65,
+    );
+
+    final innerColor = _isRecording
+        ? Colors.red.shade400
+        : theme.scaffoldBackgroundColor;
+    final iconColor =
+        _isRecording ? Colors.white : theme.colorScheme.primary;
+
+    Widget innerChild;
+    if (_isTranscribing) {
+      innerChild = SizedBox(
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            theme.colorScheme.primary,
+          ),
+        ),
+      );
+    } else {
+      innerChild = Icon(
+        Icons.mic_rounded,
+        size: 34,
+        color: iconColor,
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([_voiceRingCtrl, _voicePulseCtrl]),
+      builder: (context, child) {
+        final pulse = 0.96 + (_voicePulseCtrl.value * 0.08);
+        final speakScale = 1.0 + (_voiceVizLevel * 0.12);
+        final scale = _isSpeaking ? speakScale : pulse;
+        return Opacity(
+          opacity: isDisabled ? 0.6 : 1,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: isDisabled
+                ? null
+                : (_) {
+                    _voicePressActive = true;
+                    _startVoiceCapture();
+                  },
+            onPointerUp: isDisabled
+                ? null
+                : (_) {
+                    _voicePressActive = false;
+                    _stopVoiceCapture();
+                  },
+            onPointerCancel:
+                isDisabled
+                    ? null
+                    : (_) {
+                        _voicePressActive = false;
+                        _stopVoiceCapture();
+                      },
+            onPointerMove: isDisabled
+                ? null
+                : (event) {
+                    if (_isRecording &&
+                        !_isPointerInsideVoiceButton(event.position)) {
+                      _voicePressActive = false;
+                      _stopVoiceCapture();
+                    }
+                  },
+            child: Transform.scale(
+              scale: scale,
+              child: SizedBox(
+                key: _voiceButtonKey,
+                width: 120,
+                height: 120,
+                child: Center(
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: ringGlow,
+                          blurRadius: 30,
+                          spreadRadius: 4,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        RotationTransition(
+                          turns: _voiceRingCtrl,
+                          child: Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: tokens.rainbowRingGradient,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: tokens.rainbowRingHaloColor,
+                                  blurRadius: tokens.rainbowRingHaloBlur,
+                                  spreadRadius:
+                                      tokens.rainbowRingHaloSpread,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: innerColor,
+                          ),
+                          child: Center(child: innerChild),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// =======================
   ///  BUILD
   /// =======================
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
+    final double voicePadding = _voiceModeActive
+        ? (_voiceBarHeight > 0 ? _voiceBarHeight + 12.0 : 190.0)
+        : tokens.screenPadding.toDouble();
+
+    if (_voiceModeActive) {
+      _scheduleVoiceBarMeasure();
+    }
 
     return SafeArea(
       child: Column(
@@ -2633,99 +3551,52 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
           // CHAT-VERLAUF
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.symmetric(
-                horizontal: tokens.screenPadding,
-                vertical: tokens.screenPadding,
-              ),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return Align(
-                  alignment: msg.role == 'user'
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: _buildBubble(msg, index),
-                );
-              },
-            ),
-          ),
-
-          // PREVIEW-ZEILE FÜR ANHÄNGE
-          _buildAttachmentPreview(),
-
-          // INPUT-LEISTE
-          Padding(
-            padding: EdgeInsets.only(
-              left: 2,
-              right: 2,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 6,
-              top: 2,
-            ),
-            child: Row(
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                // 📎 Regenbogen-Büroklammer
-                const SizedBox(width: 2),
-                _AttachmentIconButton(onTap: _openAttachmentMenu),
-                const SizedBox(width: 6),
-
-                const SizedBox(width: 2),
-
-                // 📝 INPUT
-                Expanded(
-                  child: TextField(
-                    controller: _inputController,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      hintText: 'Nachricht an THERMOLOX …',
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintStyle: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 15,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(tokens.radiusXl),
-                        borderSide: BorderSide(
-                          color: Colors.grey.shade400,
-                          width: 1.2,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(tokens.radiusXl),
-                        borderSide: BorderSide(
-                          color: theme.colorScheme.primary,
-                          width: 1.6,
-                        ),
-                      ),
+                NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction != ScrollDirection.idle) {
+                      _autoScroll = false;
+                    }
+                    return false;
+                  },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
                     ),
+                    padding: EdgeInsets.fromLTRB(
+                      tokens.screenPadding,
+                      tokens.screenPadding,
+                      tokens.screenPadding,
+                      voicePadding,
+                    ),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index];
+                      return Align(
+                        alignment: msg.role == 'user'
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: _buildBubble(msg, index),
+                      );
+                    },
                   ),
                 ),
-
-                const SizedBox(width: 6),
-
-                // ✈ SEND
-                IconButton(
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  icon: Icon(
-                    Icons.send_rounded,
-                    size: 30,
-                    color: theme.colorScheme.primary,
+                if (_voiceModeActive)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _buildVoiceInputBar(),
                   ),
-                  onPressed: _isSending ? null : () => _sendMessage(),
-                ),
               ],
             ),
           ),
+
+          if (!_voiceModeActive) _buildAttachmentPreview(),
+          if (!_voiceModeActive) _buildTextInputBar(),
         ],
       ),
     );

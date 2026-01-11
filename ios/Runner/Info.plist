@@ -8,6 +8,10 @@
 	<string>THERMOLOX benötigt Zugriff auf deine Fotos, um Bilder deiner Räume zu laden.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>THERMOLOX benötigt Zugriff auf die Kamera, um Fotos deiner Räume aufzunehmen.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>THERMOLOX benötigt Zugriff auf das Mikrofon für Spracheingaben.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>THERMOLOX nutzt die Spracherkennung für Spracheingaben.</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
