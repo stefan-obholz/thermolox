@@ -46,3 +46,4 @@ app.*.map.json
 thermolox_flutter_full.zip
 thermolox_flutter_full.zip
 supabase.json
+secrets

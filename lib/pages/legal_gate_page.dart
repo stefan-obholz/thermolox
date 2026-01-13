@@ -93,7 +93,7 @@ class _LegalGatePageState extends State<LegalGatePage> {
                     onChanged: (value) =>
                         setState(() => _accepted = value ?? false),
                     title: Text(
-                      'Ich stimme den AGB und der Datenschutzerklaerung zu',
+                      'Ich stimme den AGB und der Datenschutzerklärung zu',
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
@@ -110,7 +110,7 @@ class _LegalGatePageState extends State<LegalGatePage> {
                       TextButton(
                         onPressed: () => _showLegalText(
                           'Datenschutz',
-                          'Hier folgt die Datenschutzerklaerung.',
+                          'Hier folgt die Datenschutzerklärung.',
                         ),
                         child: const Text('Datenschutz ansehen'),
                       ),

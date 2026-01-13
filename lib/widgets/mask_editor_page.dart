@@ -115,7 +115,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
     if (_image == null || _strokes.isEmpty) {
       ThermoloxOverlay.showSnack(
         context,
-        'Bitte maskiere mindestens eine Flaeche.',
+        'Bitte maskiere mindestens eine Fläche.',
         isError: true,
       );
       return;
@@ -141,12 +141,12 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, width, height));
-    final backgroundPaint = Paint()..color = Colors.black;
+    final backgroundPaint = Paint()..color = Colors.white;
     canvas.drawRect(Rect.fromLTWH(0, 0, width, height), backgroundPaint);
 
     for (final stroke in _strokes) {
       final paint = Paint()
-        ..color = Colors.white
+        ..blendMode = BlendMode.clear
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round
@@ -171,9 +171,10 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          TextButton(
-            onPressed: _loading ? null : _finish,
-            child: const Text('Fertig'),
+          IconButton(
+            tooltip: 'Schließen',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close),
           ),
         ],
       ),
@@ -188,7 +189,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Male die Wand, die du einfaerben moechtest.',
+            'Male die Wand, die du einfärben möchtest.',
             style: theme.textTheme.bodyMedium,
           ),
           SizedBox(height: tokens.gapSm),
@@ -261,25 +262,62 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
               ),
             ],
           ),
-          Row(
-            children: [
-              OutlinedButton.icon(
-                onPressed: _strokes.isEmpty ? null : _undo,
-                icon: const Icon(Icons.undo),
-                label: const Text('Undo'),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton.icon(
-                onPressed: _strokes.isEmpty ? null : _clear,
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Alles loeschen'),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: _loading ? null : _finish,
-                child: const Text('Maske anwenden'),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 420;
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _strokes.isEmpty ? null : _undo,
+                            icon: const Icon(Icons.undo),
+                            label: const Text('Undo'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _strokes.isEmpty ? null : _clear,
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Alles löschen'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: tokens.gapSm),
+                    FilledButton(
+                      onPressed: _loading ? null : _finish,
+                      child: const Text('Maske anwenden'),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _strokes.isEmpty ? null : _undo,
+                    icon: const Icon(Icons.undo),
+                    label: const Text('Undo'),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: _strokes.isEmpty ? null : _clear,
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Alles löschen'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: _loading ? null : _finish,
+                    child: const Text('Maske anwenden'),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

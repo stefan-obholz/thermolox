@@ -4,7 +4,7 @@ class ProjectItem {
   final String? path; // optional file path
   final String? url; // optional remote url (z. B. von einem Upload)
   final String? storagePath; // optional storage path (Supabase)
-  final String type; // 'file' | 'image' | 'color' | 'render' | 'other'
+  final String type; // 'file' | 'image' | 'color' | 'render' | 'note' | 'other'
 
   ProjectItem({
     required this.id,

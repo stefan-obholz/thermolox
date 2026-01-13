@@ -83,7 +83,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       safeArea: true,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('E-Mail bestaetigen'),
+        title: const Text('E-Mail bestätigen'),
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
@@ -110,7 +110,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           ),
           SizedBox(height: tokens.gapMd),
           Text(
-            'Bitte bestaetige deine E-Mail-Adresse',
+            'Bitte bestätige deine E-Mail-Adresse',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -118,7 +118,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           ),
           SizedBox(height: tokens.gapSm),
           Text(
-            'Wir haben dir einen Bestaetigungslink gesendet. Danach kannst du die App voll nutzen.',
+            'Wir haben dir einen Bestätigungslink gesendet. Danach kannst du die App voll nutzen.',
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -147,16 +147,16 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Naechste Schritte',
+                  'Nächste Schritte',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                 ),
                 SizedBox(height: tokens.gapSm),
                 Text(
-                  'E-Mail oeffnen und Link bestaetigen.\n'
-                  'Danach hier auf "Ich habe bestaetigt" tippen.\n'
-                  'Falls nichts ankommt, Spam-Ordner pruefen.',
+                  'E-Mail öffnen und Link bestätigen.\n'
+                  'Danach hier auf "Ich habe bestätigt" tippen.\n'
+                  'Falls nichts ankommt, Spam-Ordner prüfen.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -165,7 +165,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           SizedBox(height: tokens.gapLg),
           ElevatedButton(
             onPressed: _isLoading ? null : _refresh,
-            child: Text(isVerified ? 'Bestaetigt' : 'Ich habe bestaetigt'),
+            child: Text(isVerified ? 'Bestätigt' : 'Ich habe bestätigt'),
           ),
           SizedBox(height: tokens.gapSm),
           OutlinedButton(

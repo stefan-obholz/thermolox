@@ -130,8 +130,6 @@ class ProjectsModel extends ChangeNotifier {
       project.items.removeWhere((item) => item.type == 'file');
     } else if (type == 'color') {
       project.items.removeWhere((item) => item.type == 'color');
-    } else if (type == 'render') {
-      project.items.removeWhere((item) => item.type == 'render');
     }
     final persistedPath = await _persistLocalFile(path);
     final localPath = persistedPath ?? path;
@@ -241,6 +239,18 @@ class ProjectsModel extends ChangeNotifier {
       path: path,
       url: url,
     );
+    final project = _projects.firstWhere((e) => e.id == projectId);
+    final renders = project.items.where((i) => i.type == 'render').toList();
+    if (renders.length <= 10) return;
+
+    final overflow = renders.length - 10;
+    final toRemove = renders.take(overflow).toList();
+    for (final item in toRemove) {
+      await _repo.deleteItem(item.id);
+      project.items.removeWhere((i) => i.id == item.id);
+    }
+    await _cacheProjects();
+    notifyListeners();
   }
 
   @override

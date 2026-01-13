@@ -31,6 +31,7 @@ import '../utils/plan_modal.dart';
 import '../utils/thermolox_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/mask_editor_page.dart';
+import '../widgets/image_preview_page.dart';
 import '../pages/cart_page.dart';
 import '../theme/app_theme.dart';
 
@@ -42,6 +43,7 @@ class ChatMessage {
   final String role; // "user" oder "assistant"
   final String text;
   final List<QuickReplyButton>? buttons;
+  final bool excludeFromApi;
 
   /// Optional: Original-Inhalt für die API (Text oder Text+Bild-Content)
   final dynamic content;
@@ -55,6 +57,7 @@ class ChatMessage {
     this.buttons,
     this.content,
     this.localImagePaths,
+    this.excludeFromApi = false,
   });
 
   ChatMessage copyWith({
@@ -63,6 +66,7 @@ class ChatMessage {
     List<QuickReplyButton>? buttons,
     dynamic content,
     List<String>? localImagePaths,
+    bool? excludeFromApi,
   }) {
     return ChatMessage(
       role: role ?? this.role,
@@ -70,6 +74,7 @@ class ChatMessage {
       buttons: buttons ?? this.buttons,
       content: content ?? this.content,
       localImagePaths: localImagePaths ?? this.localImagePaths,
+      excludeFromApi: excludeFromApi ?? this.excludeFromApi,
     );
   }
 }
@@ -87,10 +92,15 @@ class QuickReplyButton {
     this.action = QuickReplyAction.send,
   });
 
-  QuickReplyButton copyWith({bool? preferred, QuickReplyAction? action}) {
+  QuickReplyButton copyWith({
+    String? label,
+    String? value,
+    bool? preferred,
+    QuickReplyAction? action,
+  }) {
     return QuickReplyButton(
-      label: label,
-      value: value,
+      label: label ?? this.label,
+      value: value ?? this.value,
       preferred: preferred ?? this.preferred,
       action: action ?? this.action,
     );
@@ -104,6 +114,15 @@ enum QuickReplyAction {
   acceptAllConsents,
   openSettings,
   declineConsents,
+  startRender,
+}
+
+enum _RoomFlowStage {
+  idle,
+  analyzing,
+  awaitingRoomConfirmation,
+  awaitingColorChoice,
+  readyToRender,
 }
 
 class _FallbackButtons {
@@ -147,6 +166,27 @@ class _SentUpload {
   }
 }
 
+class _ColorSuggestion {
+  final String direction;
+  final String name;
+  final String hex;
+  final String? note;
+
+  const _ColorSuggestion({
+    required this.direction,
+    required this.name,
+    required this.hex,
+    this.note,
+  });
+}
+
+class _RoomAnalysis {
+  final String room;
+  final String description;
+
+  const _RoomAnalysis({required this.room, required this.description});
+}
+
 /// =======================
 ///  CHATBOT WIDGET
 /// =======================
@@ -185,7 +225,43 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   static final RegExp _hexColorRegex = RegExp(
     r'#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b',
   );
+  static final RegExp _hexColorLooseRegex = RegExp(
+    r'(?<![0-9a-fA-F])#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})(?![0-9a-fA-F])',
+  );
   static const int _minVoiceMs = 650;
+  static const String _renderingHintToken = '__rendering__';
+  static const Map<String, String> _colorKeywordMap = {
+    'rot': 'Rot',
+    'bordeaux': 'Rot',
+    'weinrot': 'Rot',
+    'blau': 'Blau',
+    'hellblau': 'Blau',
+    'dunkelblau': 'Blau',
+    'gruen': 'Grün',
+    'grün': 'Grün',
+    'hellgruen': 'Grün',
+    'hellgrün': 'Grün',
+    'dunkelgruen': 'Grün',
+    'dunkelgrün': 'Grün',
+    'gelb': 'Gelb',
+    'orange': 'Orange',
+    'pink': 'Pink',
+    'rosa': 'Rosa',
+    'lila': 'Lila',
+    'violett': 'Violett',
+    'beige': 'Beige',
+    'grau': 'Grau',
+    'hellgrau': 'Grau',
+    'lichtgrau': 'Grau',
+    'dunkelgrau': 'Grau',
+    'schwarz': 'Schwarz',
+    'weiss': 'Weiß',
+    'weiß': 'Weiß',
+    'braun': 'Braun',
+    'tuerkis': 'Türkis',
+    'türkis': 'Türkis',
+    'cyan': 'Cyan',
+  };
 
   final List<ChatMessage> _messages = [];
   final TextEditingController _inputController = TextEditingController();
@@ -211,6 +287,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
 
   /// Ob der User aktuell „am unteren Rand“ des Chats ist.
   bool _autoScroll = true;
+  bool _userHasScrolled = false;
 
   /// Verhindert, dass Default-Buttons mehrfach für die gleiche Kategorie erscheinen.
   final Set<String> _shownFallbacks = {};
@@ -227,6 +304,15 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   bool _hasInputText = false;
   bool _voiceModeActive = false;
   bool _voicePressActive = false;
+  bool _virtualRoomRequested = false;
+  _RoomFlowStage _roomFlowStage = _RoomFlowStage.idle;
+  String? _roomCandidate;
+  String? _confirmedRoom;
+  ProjectItem? _roomFlowImageItem;
+  List<_ColorSuggestion> _colorSuggestions = [];
+  String? _preferredColorHint;
+
+  String? _lastDetectedHex;
   bool _isStartingRecording = false;
   bool _pendingStopAfterStart = false;
   DateTime? _recordingStartedAt;
@@ -248,6 +334,15 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   late final AudioPlayer _ttsPlayer;
   late final AnimationController _voiceRingCtrl;
   late final AnimationController _voicePulseCtrl;
+  final ImageEditService _imageEditService = const ImageEditService();
+  late final VirtualRoomCreditManager _renderCreditManager;
+  bool _isRenderBusy = false;
+  bool _renderCreditsConsumed = false;
+  Uint8List? _pendingRenderImageBytes;
+  Uint8List? _pendingRenderMaskBytes;
+  String? _pendingRenderImageUrl;
+  String? _pendingRenderPrompt;
+  ui.Size? _pendingRenderImageSize;
 
   void _resetVoiceFlags() {
     _isStartingRecording = false;
@@ -282,7 +377,11 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     await _sendMessage(quickReplyText: queued.trim());
   }
 
-  void _addAssistantMessage(String text, {List<QuickReplyButton>? buttons}) {
+  void _addAssistantMessage(
+    String text, {
+    List<QuickReplyButton>? buttons,
+    List<String>? localImagePaths,
+  }) {
     if (!mounted) return;
     setState(() {
       _messages.add(
@@ -291,6 +390,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
           text: text,
           content: text,
           buttons: buttons,
+          localImagePaths: localImagePaths,
         ),
       );
     });
@@ -387,6 +487,13 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     _lastAiAllowed = _consentService.aiAllowed;
     _consentService.addListener(_handleConsentChange);
     _inputController.addListener(_handleInputTextChanged);
+    _renderCreditManager = VirtualRoomCreditManager(
+      consume: ({required amount, required requestId}) =>
+          context.read<CreditService>().consumeCredit(
+                amount: amount,
+                requestId: requestId,
+              ),
+    );
 
     _ttsPlayer = AudioPlayer();
     _ttsPlayer.setReleaseMode(ReleaseMode.stop);
@@ -412,7 +519,14 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
       if (!_scrollController.hasClients) return;
       final pos = _scrollController.position;
       final atBottom = (pos.maxScrollExtent - pos.pixels) < 80;
-      _autoScroll = atBottom;
+      if (atBottom) {
+        _autoScroll = true;
+        _userHasScrolled = false;
+      } else if (_userHasScrolled) {
+        _autoScroll = false;
+      } else {
+        _autoScroll = true;
+      }
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -597,6 +711,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     try {
       final uri = Uri.parse('$kThermoloxApiBase/stt');
       final request = http.MultipartRequest('POST', uri);
+      request.headers.addAll(buildWorkerHeaders());
       request.fields['model'] = 'gpt-4o-mini-transcribe';
       request.fields['temperature'] = '0';
       request.fields['response_format'] = 'json';
@@ -636,6 +751,426 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     } catch (_) {
       _showSnack('Spracherkennung fehlgeschlagen.');
       return null;
+    }
+  }
+
+  void _resetRenderPending() {
+    _pendingRenderImageBytes = null;
+    _pendingRenderMaskBytes = null;
+    _pendingRenderImageUrl = null;
+    _pendingRenderPrompt = null;
+    _pendingRenderImageSize = null;
+    _renderCreditsConsumed = false;
+  }
+
+  Project? _currentProject() {
+    final projectId = _currentProjectId;
+    if (projectId == null) return null;
+    try {
+      return context.read<ProjectsModel>().projects.firstWhere(
+            (p) => p.id == projectId,
+          );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  ProjectItem? _currentProjectImageItem() {
+    final project = _currentProject();
+    if (project == null) return null;
+    try {
+      return project.items.firstWhere((i) => i.type == 'image');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _currentProjectColorHex() {
+    final project = _currentProject();
+    if (project == null) return null;
+    try {
+      final colorItem = project.items.firstWhere((i) => i.type == 'color');
+      final hex = colorItem.name.trim();
+      if (hex.isEmpty) return null;
+      return _normalizeHex(hex);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Uint8List> _loadImageBytes(ProjectItem item) async {
+    final path = item.path;
+    if (path != null && path.isNotEmpty) {
+      final file = File(path);
+      if (await file.exists()) {
+        return await file.readAsBytes();
+      }
+    }
+    final url = item.url;
+    if (url == null || url.isEmpty) {
+      throw StateError('Missing image source');
+    }
+    final res = await http.get(Uri.parse(url));
+    if (res.statusCode != 200) {
+      throw StateError('Image download failed');
+    }
+    return res.bodyBytes;
+  }
+
+  Future<Uint8List> _ensurePng(Uint8List bytes) async {
+    try {
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final data = await frame.image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      return data?.buffer.asUint8List() ?? bytes;
+    } catch (_) {
+      return bytes;
+    }
+  }
+
+  Future<ui.Size> _readImageSize(Uint8List bytes) async {
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+    return ui.Size(image.width.toDouble(), image.height.toDouble());
+  }
+
+  Future<Uint8List> _resizeToMatch(Uint8List bytes, ui.Size target) async {
+    try {
+      if (target.width <= 0 || target.height <= 0) return bytes;
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      final paint = Paint();
+      final src = Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+      final dst = Rect.fromLTWH(0, 0, target.width, target.height);
+      canvas.drawImageRect(image, src, dst, paint);
+      final picture = recorder.endRecording();
+      final outImage = await picture.toImage(
+        target.width.round(),
+        target.height.round(),
+      );
+      final data = await outImage.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      return data?.buffer.asUint8List() ?? bytes;
+    } catch (_) {
+      return bytes;
+    }
+  }
+
+  Future<String> _writeTempFile(Uint8List bytes) async {
+    final dir = await getTemporaryDirectory();
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final file = File('${dir.path}/render_$stamp.png');
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
+  }
+
+  String _buildRenderPrompt(String hex, String userHint) {
+    final hint = userHint.trim().isEmpty
+        ? ''
+        : ' Nutzerwunsch: "$userHint".';
+    return 'Edit only the masked wall areas. Paint them with color $hex.'
+        ' Ignore all unmasked areas, even if they are walls.'
+        ' Preserve texture, lighting, and perspective.'
+        ' Do not change ceiling, floor, furniture, windows, doors, or trim.'
+        '$hint';
+  }
+
+  Future<void> _showRenderCreditsPaywall() async {
+    final shouldOpen = await ThermoloxOverlay.showAppDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Visualisierungen aufgebraucht'),
+          content: const Text(
+            'Du hast keine Visualisierungen mehr. '
+            '10 neue Visualisierungen kosten 9,90€.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Später'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Visualisierungen kaufen'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldOpen == true) {
+      ThermoloxOverlay.showSnack(
+        context,
+        'Nachkauf ist noch nicht verfügbar.',
+      );
+    }
+  }
+
+  void _showRenderRetryMessage() {
+    _addAssistantMessage(
+      'Beim Rendern ist etwas schiefgelaufen. Soll ich es erneut versuchen?',
+      buttons: const [
+        QuickReplyButton(
+          label: 'Erneut versuchen',
+          value: 'Bitte erneut versuchen',
+          preferred: true,
+          action: QuickReplyAction.startRender,
+        ),
+      ],
+    );
+  }
+
+  void _showRenderHint() {
+    if (!mounted) return;
+    final exists = _messages.any((m) => m.text == _renderingHintToken);
+    if (exists) return;
+    setState(() {
+      _messages.add(
+        const ChatMessage(
+          role: 'assistant',
+          text: _renderingHintToken,
+          excludeFromApi: true,
+        ),
+      );
+    });
+    _scrollToBottom(animated: true);
+  }
+
+  void _removeRenderHint() {
+    if (!mounted) return;
+    final index =
+        _messages.indexWhere((m) => m.text == _renderingHintToken);
+    if (index < 0) return;
+    setState(() {
+      _messages.removeAt(index);
+    });
+  }
+
+  Future<void> _startVirtualRoomRenderFromChat({bool isRetry = false}) async {
+    if (_isRenderBusy) return;
+    if (!_ensureAiConsent()) return;
+
+    final planController = context.read<PlanController>();
+    if (!planController.isPro) {
+      await _showPremiumGate(featureName: 'Virtuelle Raumgestaltung');
+      return;
+    }
+    _virtualRoomRequested = true;
+
+    final projectsModel = context.read<ProjectsModel>();
+    if (_currentProjectId == null || _currentProject() == null) {
+      if (projectsModel.projects.isNotEmpty) {
+        _currentProjectId = projectsModel.projects.first.id;
+      }
+    }
+
+    final reusePending =
+        isRetry ||
+        (_pendingRenderMaskBytes != null &&
+            _pendingRenderPrompt != null &&
+            _pendingRenderImageBytes != null);
+
+    if (!reusePending) {
+      _resetRenderPending();
+      var project = _currentProject();
+      final flowImage =
+          _roomFlowStage == _RoomFlowStage.idle ? null : _roomFlowImageItem;
+      if (project == null && flowImage != null) {
+        final autoName = _autoProjectName(projectsModel);
+        try {
+          project = await projectsModel.addProject(autoName);
+          _currentProjectId = project.id;
+        } catch (_) {
+          _addAssistantMessage('Bitte anmelden, um Projekte zu speichern.');
+          return;
+        }
+      }
+      if (project == null) {
+        _addAssistantMessage(
+          'Bitte lege zuerst ein Projekt an, damit ich das Bild zuordnen kann.',
+          buttons: const [
+            QuickReplyButton(
+              label: 'Projekt starten',
+              value: 'Ich möchte ein Projekt starten',
+              preferred: true,
+            ),
+          ],
+        );
+        return;
+      }
+
+      var imageItem = _currentProjectImageItem();
+      if (imageItem == null && flowImage != null) {
+        final name = flowImage.name.isNotEmpty
+            ? flowImage.name
+            : (flowImage.path != null && flowImage.path!.isNotEmpty)
+                ? _fileNameFromPath(flowImage.path!)
+                : 'Upload';
+        try {
+          await projectsModel.addItem(
+            projectId: _currentProjectId!,
+            name: name,
+            type: 'image',
+            path: flowImage.path,
+            url: flowImage.url,
+          );
+          imageItem = _currentProjectImageItem() ?? flowImage;
+        } catch (_) {
+          _addAssistantMessage('Bitte anmelden, um Uploads zu speichern.');
+          return;
+        }
+      }
+      if (imageItem == null) {
+        _addAssistantMessage(
+          'Bitte lade zuerst ein Raumfoto hoch, damit ich die Wände einfärben kann.',
+          buttons: const [
+            QuickReplyButton(
+              label: 'Foto hochladen',
+              value: 'Ich lade ein Raumfoto hoch',
+              preferred: true,
+              action: QuickReplyAction.uploadAttachment,
+            ),
+          ],
+        );
+        return;
+      }
+
+      if (_confirmedRoom == null) {
+        await _startRoomFlowFromImage(imageItem);
+        return;
+      }
+
+      if (_roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation ||
+          _roomFlowStage == _RoomFlowStage.awaitingColorChoice ||
+          _roomFlowStage == _RoomFlowStage.analyzing) {
+        return;
+      }
+
+      var colorHex = _currentProjectColorHex();
+      if (colorHex == null) {
+        final inferred = _inferRecentHex();
+        if (inferred != null) {
+          colorHex = inferred;
+          _lastDetectedHex = inferred;
+          unawaited(_persistHexColor(inferred));
+        }
+      }
+      if (colorHex == null) {
+        await _requestColorSuggestions(_confirmedRoom ?? 'Raum');
+        return;
+      }
+      _roomFlowStage = _RoomFlowStage.readyToRender;
+
+      final imageBytes = await _loadImageBytes(imageItem);
+      try {
+        _pendingRenderImageSize = await _readImageSize(imageBytes);
+      } catch (_) {
+        _pendingRenderImageSize = null;
+      }
+      _addAssistantMessage('Markiere bitte jetzt die Wände im Foto.');
+      final maskBytes = await MaskEditorPage.open(
+        context: context,
+        imageBytes: imageBytes,
+        title: 'Wände markieren',
+      );
+      if (maskBytes == null) return;
+
+      final lastUserText = _messages.reversed
+          .firstWhere(
+            (m) => m.role == 'user',
+            orElse: () => const ChatMessage(role: 'user', text: ''),
+          )
+          .text;
+
+      _pendingRenderImageBytes = imageBytes;
+      _pendingRenderMaskBytes = maskBytes;
+      _pendingRenderImageUrl = imageItem.url;
+      _pendingRenderPrompt = _buildRenderPrompt(colorHex, lastUserText);
+    }
+
+    if (_pendingRenderMaskBytes == null ||
+        _pendingRenderPrompt == null ||
+        _pendingRenderImageBytes == null) {
+      return;
+    }
+
+    _isRenderBusy = true;
+    try {
+      if (!planController.isGodMode && !_renderCreditsConsumed) {
+        if (planController.virtualRoomCredits <= 0) {
+          _resetRenderPending();
+          await _showRenderCreditsPaywall();
+          return;
+        }
+
+        final result = await _renderCreditManager.consume(isRetry: isRetry);
+        if (result.message == 'busy') {
+          return;
+        }
+        if (result.isOk) {
+          _renderCreditsConsumed = true;
+          planController.updateCreditsBalance(result.balance);
+        } else if (result.isNotEnoughCredits) {
+          _resetRenderPending();
+          await _showRenderCreditsPaywall();
+          return;
+        } else if (result.isProRequired) {
+          _resetRenderPending();
+          await _showPremiumGate(featureName: 'Virtuelle Raumgestaltung');
+          return;
+        } else {
+          _showRenderRetryMessage();
+          return;
+        }
+      } else if (planController.isGodMode) {
+        _renderCreditsConsumed = true;
+      }
+
+      _showRenderHint();
+      final editedBytes = await _imageEditService.editImage(
+        imageUrl: null,
+        imageBytes: await _ensurePng(_pendingRenderImageBytes!),
+        maskPng: _pendingRenderMaskBytes!,
+        prompt: _pendingRenderPrompt!,
+      );
+
+      var outputBytes = editedBytes;
+      if (_pendingRenderImageSize != null) {
+        outputBytes =
+            await _resizeToMatch(editedBytes, _pendingRenderImageSize!);
+      }
+      final path = await _writeTempFile(outputBytes);
+      await context.read<ProjectsModel>().addRender(
+            projectId: _currentProjectId!,
+            name: 'Render',
+            path: path,
+          );
+
+      _resetRenderPending();
+      final renderPath = _currentProjectRenderPathOrUrl() ?? path;
+      _addAssistantMessage(
+        'Hier ist das bearbeitete Foto.',
+        localImagePaths: [renderPath],
+      );
+      _resetRoomFlow();
+    } catch (_) {
+      _showRenderRetryMessage();
+    } finally {
+      _removeRenderHint();
+      _isRenderBusy = false;
     }
   }
 
@@ -864,7 +1399,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
           _isTranscribing = false;
         });
       }
-      _showSnack('Ich konnte nichts hoeren.');
+      _showSnack('Ich konnte nichts hören.');
       try {
         await file.delete();
       } catch (_) {}
@@ -897,7 +1432,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
       if (_lastInputLevel > 0.1) {
         _showSnack('Audio erkannt, aber keine Spracherkennung.');
       } else {
-        _showSnack('Ich konnte nichts hoeren.');
+        _showSnack('Ich konnte nichts hören.');
       }
       return;
     }
@@ -941,7 +1476,10 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     try {
       final response = await http.post(
         Uri.parse('$kThermoloxApiBase/tts'),
-        headers: const {'Content-Type': 'application/json'},
+        headers: buildWorkerHeaders(
+          contentType: 'application/json',
+          accept: 'audio/mpeg',
+        ),
         body: jsonEncode({
           'text': text,
           'voice': 'onyx',
@@ -977,6 +1515,16 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   String _fileNameFromPath(String path) {
     final parts = path.split(Platform.pathSeparator);
     return parts.isNotEmpty ? parts.last : path;
+  }
+
+  String _autoProjectName(ProjectsModel model) {
+    const base = 'Projekt';
+    if (!model.existsName(base)) return base;
+    var index = 2;
+    while (model.existsName('$base $index')) {
+      index += 1;
+    }
+    return '$base $index';
   }
 
   String _normalizeHex(String hex) {
@@ -1135,6 +1683,9 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
                     if (i.type == 'color' && i.name.isNotEmpty) {
                       item['color'] = _shorten(i.name, 24);
                     }
+                    if (i.type == 'note' && i.name.isNotEmpty) {
+                      item['note'] = _shorten(i.name, 160);
+                    }
                     return item;
                   },
                 )
@@ -1168,6 +1719,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
           'rename_item',
           'move_item',
           'delete_item',
+          'start_render',
         ],
       },
       if (_productError != null) 'productError': _productError,
@@ -1224,6 +1776,7 @@ Du sprichst immer in der freundlichen Du-Form.
 Dein Ton ist ruhig, empathisch, aufmerksam und professionell.
 Du klingst maximal menschlich, niemals werblich oder technisch.
 Du formulierst klar, verständlich und emotional, ohne zu übertreiben.
+Schreibe Umlaute korrekt (ä, ö, ü, ß), nicht ae/oe/ue.
 Emojis setzt du gezielt und sparsam ein 🎨💡🏠✨
 Deine Antworten sind übersichtlich, mit Absätzen und klarer Struktur.
 Du führst das Gespräch aktiv, aber respektvoll.
@@ -1341,6 +1894,12 @@ Sage niemals, dass du Bilder nicht bearbeiten kannst.
 Leite stattdessen zur Virtuellen Raumgestaltung und fordere Foto + Farbwunsch an.
 Wenn im Projekt bereits ein Foto vorhanden ist (siehe Kontext), biete zuerst an,
 das vorhandene Foto zu verwenden oder ein neues hochzuladen.
+Sobald ein Foto vorliegt, gehst du streng in dieser Reihenfolge vor:
+1) Kurze Bildbeschreibung + Raumtyp nennen (z. B. Wohnzimmer).
+2) Raumtyp per Button bestätigen lassen („Ja, Wohnzimmer“).
+3) Danach 3 Farb-Richtungen mit HEX-Codes empfehlen.
+4) Erst nach Farbwahl vorschlagen, die Wände virtuell einzufärben.
+5) Erst nach Zustimmung rendern.
 Sage niemals, dass du das Ergebnis nicht anzeigen kannst.
 Verweise auf die Vorschau im Projekt (Vorher/Nachher), sobald die Bearbeitung gestartet ist.
 Behaupte keine fertige Bearbeitung, bevor der Nutzer die Bearbeitung gestartet hat.
@@ -1353,11 +1912,16 @@ BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto ho
 Beispiel CTA mit vorhandenem Foto:
 BUTTONS: {"buttons":[{"label":"Vorhandenes Foto verwenden","value":"Bitte verwende das vorhandene Foto aus meinem Projekt.","variant":"preferred"},{"label":"Neues Foto hochladen","value":"Ich lade ein neues Raumfoto hoch","action":"upload"}]}
 
+Beispiel CTA Render-Start:
+BUTTONS: {"buttons":[{"label":"Wände einfärben","value":"Bitte färbe die Wände in meiner gewählten Farbe.","variant":"preferred","action":"render"}]}
+
 ⸻
 
 Farbempfehlungs-Logik (WICHTIG)
 
 Wenn der Nutzer eine Farbe möchte oder „Vorschlagen“ wählt:
+Wenn der Nutzer eine konkrete Farbrichtung nennt (z. B. rot), bleibst du in
+dieser Farbfamilie und gibst nur passende Varianten aus.
 
 Du kannst Farben erzeugen und gibst sie immer als HEX-Code mit # aus.
 
@@ -1445,7 +2009,11 @@ Beispiele:
 ```skill
 {"action":"add_project_item","payload":{"projectId":"<id>","uploadId":"<uploadId>","name":"Decke","type":"image"}}
 ```
+```skill
+{"action":"add_project_item","payload":{"projectId":"<id>","type":"note","name":"- 2x Liter Farbe für 12 m2"}}
+```
 Verfügbare Skills: add_to_cart, add_project_item, create_project, rename_project, rename_item, move_item, delete_item.
+Notizen immer mit add_project_item und type "note" anlegen.
 Nach jedem Skill den Nutzer normal informieren.
 Kontext (JSON): $contextJson
 
@@ -1530,7 +2098,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   // ---- History → API-Payload (analog buildMessagesForApi in JS) ----
   List<Map<String, dynamic>> _buildMessagesForApi() {
-    final history = _messages;
+    final history = _messages.where((m) => !m.excludeFromApi).toList();
 
     final last20 = history.length > 20
         ? history.sublist(history.length - 20)
@@ -1538,10 +2106,32 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     return last20
         .map(
-          (m) => <String, dynamic>{
-            'role': m.role,
-            // JS: content: m.content ?? m.text
-            'content': m.content ?? m.text,
+          (m) {
+            dynamic content = m.content ?? m.text;
+            if (content is List) {
+              final sanitized = <Map<String, dynamic>>[];
+              for (final part in content) {
+                if (part is! Map) continue;
+                final type = part['type']?.toString();
+                if (type == 'image_url') {
+                  final url = part['image_url']?['url']?.toString();
+                  if (url == null || !_isValidImageUrlForChat(url)) {
+                    continue;
+                  }
+                }
+                sanitized.add(Map<String, dynamic>.from(part));
+              }
+              if (sanitized.isEmpty) {
+                content = m.text;
+              } else {
+                content = sanitized;
+              }
+            }
+            return <String, dynamic>{
+              'role': m.role,
+              // JS: content: m.content ?? m.text
+              'content': content,
+            };
           },
         )
         .toList();
@@ -1587,6 +2177,14 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     });
   }
 
+  void _scheduleAutoScrollIfNeeded() {
+    if (!_autoScroll) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_autoScroll) return;
+      _scrollToBottom(animated: false);
+    });
+  }
+
   void _scheduleVoiceBarMeasure() {
     if (!_voiceModeActive) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1617,6 +2215,13 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
     if (option.action == QuickReplyAction.uploadAttachment) {
+      if (messageIndex >= 0 && messageIndex < _messages.length) {
+        final contextText = _messages[messageIndex].text;
+        if (_isRoomFlowContext(contextText) ||
+            _isVirtualRoomRequestText(option.value)) {
+          _virtualRoomRequested = true;
+        }
+      }
       await _openAttachmentMenu();
       await _sendMessage(quickReplyText: option.value);
       return;
@@ -1682,6 +2287,11 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         'nicht helfen. Du kannst das jederzeit in den Einstellungen '
         'ändern.',
       );
+      return;
+    }
+    if (option.action == QuickReplyAction.startRender) {
+      _virtualRoomRequested = true;
+      await _startVirtualRoomRenderFromChat();
       return;
     }
     await _sendMessage(quickReplyText: option.value);
@@ -1817,6 +2427,13 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             actionRaw == 'consent' ||
             actionRaw == 'accept_consents' ||
             actionRaw == 'accept_all_consents';
+        final isRender =
+            actionRaw == 'render' ||
+            actionRaw == 'image_edit' ||
+            actionRaw == 'edit_image' ||
+            actionRaw == 'virtual_room' ||
+            actionRaw == 'render_image' ||
+            actionRaw == 'paint_walls';
         final action = isUpload
             ? QuickReplyAction.uploadAttachment
             : isCart
@@ -1825,6 +2442,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             ? QuickReplyAction.openSettings
             : isConsent
             ? QuickReplyAction.acceptAllConsents
+            : isRender
+            ? QuickReplyAction.startRender
             : QuickReplyAction.send;
 
         // Normalize „System in den Warenkorb legen“ → „In den Warenkorb“
@@ -1869,6 +2488,73 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
     return result;
+  }
+
+  List<String> _extractHexColorsLoose(String text) {
+    var source = text;
+    if (RegExp(r'^[\s#0-9a-fA-F.,-]+$').hasMatch(source)) {
+      source = source.replaceAll(RegExp(r'[^0-9a-fA-F#]'), '');
+    }
+    final matches = _hexColorLooseRegex.allMatches(source);
+    if (matches.isEmpty) return const [];
+    final seen = <String>{};
+    final result = <String>[];
+    for (final match in matches) {
+      final raw = match.group(0);
+      if (raw == null) continue;
+      final hasHash = raw.startsWith('#');
+      final hasDigit = RegExp(r'[0-9]').hasMatch(raw);
+      if (!hasDigit && !hasHash) continue;
+      final normalized = _normalizeHex(raw);
+      if (seen.add(normalized)) {
+        result.add(normalized);
+      }
+    }
+    return result;
+  }
+
+  String? _inferRecentHex() {
+    for (final msg in _messages.reversed) {
+      if (msg.role == 'user') {
+        final hexes = _extractHexColorsLoose(msg.text);
+        if (hexes.isNotEmpty) return hexes.first;
+      } else {
+        final source = msg.content is String ? msg.content as String : msg.text;
+        final hexes = _extractHexColors(source);
+        if (hexes.isNotEmpty) return hexes.first;
+      }
+    }
+    return _lastDetectedHex;
+  }
+
+  String? _extractColorPreference(String text) {
+    final hexes = _extractHexColorsLoose(text);
+    if (hexes.isNotEmpty) return hexes.first;
+    final lower = text.toLowerCase();
+    final compact = lower.replaceAll(RegExp(r'[\s-]'), '');
+    for (final entry in _colorKeywordMap.entries) {
+      if (lower.contains(entry.key) || compact.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
+  String? _currentColorPreference() {
+    return _preferredColorHint ?? _inferRecentHex();
+  }
+
+  Future<void> _persistHexColor(String hex) async {
+    final projectId = _currentProjectId;
+    if (projectId == null) return;
+    try {
+      await context.read<ProjectsModel>().addColorSwatch(
+            projectId: projectId,
+            hex: hex,
+          );
+    } catch (_) {
+      // Ignorieren: Farbe nur lokal merken.
+    }
   }
 
   Color _onColorForBackground(Color color) {
@@ -1962,6 +2648,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   }
 
   _FallbackButtons? _defaultButtonsForText(String text) {
+    if (_isRoomFlowBlocking()) return null;
     final lower = text.toLowerCase();
     final mentionsProject = lower.contains('projekt');
     final mentionsAdvice = lower.contains('beratung');
@@ -2024,6 +2711,26 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     }
 
     if (hasProjectImage && wantsVisualEdit) {
+      final colorHex = _currentProjectColorHex();
+      if (colorHex != null) {
+        return _FallbackButtons(
+          key: 'render_start',
+          buttons: const [
+            QuickReplyButton(
+              label: 'Wände einfärben',
+              value: 'Bitte färbe die Wände in meiner gewählten Farbe.',
+              preferred: true,
+              action: QuickReplyAction.startRender,
+            ),
+            QuickReplyButton(
+              label: 'Neues Foto hochladen',
+              value: 'Ich lade ein neues Raumfoto hoch',
+              preferred: false,
+              action: QuickReplyAction.uploadAttachment,
+            ),
+          ],
+        );
+      }
       return _FallbackButtons(
         key: 'upload_choice',
         buttons: const [
@@ -2119,12 +2826,20 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   bool _looksLikeUploadPrompt(String text) {
     final lower = text.toLowerCase();
-    return lower.contains('foto') ||
+    final hasAsset =
+        lower.contains('foto') ||
         lower.contains('bild') ||
         lower.contains('grundriss') ||
-        lower.contains('skizze') ||
-        lower.contains('hochladen') ||
-        lower.contains('upload');
+        lower.contains('skizze');
+    final hasAction =
+        lower.contains('hochlad') ||
+        lower.contains('upload') ||
+        lower.contains('aufnehm') ||
+        lower.contains('schick') ||
+        lower.contains('sende') ||
+        lower.contains('senden') ||
+        lower.contains('hinzufueg');
+    return hasAsset && hasAction;
   }
 
   bool _looksLikeResultRequest(String text) {
@@ -2150,7 +2865,76 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         lower.contains('streichen') ||
         lower.contains('farbe auf') ||
         lower.contains('wand') ||
-        lower.contains('anwenden');
+        lower.contains('anwenden') ||
+        lower.contains('raumfoto') ||
+        lower.contains('render') ||
+        lower.contains('einfaerb') ||
+        lower.contains('einfärb');
+  }
+
+  bool _isVirtualRoomRequestText(String text) {
+    final lower = text.toLowerCase();
+    return _looksLikeVisualEditPrompt(lower) ||
+        lower.contains('raumfoto') ||
+        lower.contains('foto fuer') ||
+        lower.contains('foto für') ||
+        lower.contains('waende') ||
+        lower.contains('wände');
+  }
+
+  bool _isRoomFlowContext(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('waende') ||
+        lower.contains('wände') ||
+        lower.contains('raumgestaltung') ||
+        lower.contains('virtuell') ||
+        lower.contains('render');
+  }
+
+  List<QuickReplyButton> _buildRoomSelectionButtons() {
+    const rooms = [
+      'Wohnzimmer',
+      'Schlafzimmer',
+      'Küche',
+      'Bad',
+      'Esszimmer',
+      'Kinderzimmer',
+      'Büro',
+      'Flur',
+      'Keller',
+      'Balkon',
+    ];
+    return [
+      for (var i = 0; i < rooms.length; i += 1)
+        QuickReplyButton(
+          label: rooms[i],
+          value: rooms[i],
+          preferred: i == 0,
+        ),
+    ];
+  }
+
+  String? _matchRoomLabel(String text) {
+    final lower = text.toLowerCase();
+    const aliases = <String, List<String>>{
+      'Wohnzimmer': ['wohnzimmer', 'living', 'livingroom', 'sofa'],
+      'Schlafzimmer': ['schlafzimmer', 'bedroom', 'bett'],
+      'Küche': ['küche', 'kueche', 'kitchen'],
+      'Bad': ['bad', 'badezimmer', 'bath'],
+      'Esszimmer': ['esszimmer', 'dining'],
+      'Kinderzimmer': ['kinderzimmer', 'kids', 'kind'],
+      'Büro': ['büro', 'buero', 'office'],
+      'Flur': ['flur', 'diele', 'gang'],
+      'Keller': ['keller', 'basement'],
+      'Balkon': ['balkon', 'balcony'],
+    };
+
+    for (final entry in aliases.entries) {
+      for (final token in entry.value) {
+        if (lower.contains(token)) return entry.key;
+      }
+    }
+    return null;
   }
 
   bool _looksLikeEditCompletion(String text) {
@@ -2183,6 +2967,73 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     return path.startsWith('http://') || path.startsWith('https://');
   }
 
+  bool _looksLikePng(Uint8List bytes) {
+    if (bytes.length < 8) return false;
+    return bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47 &&
+        bytes[4] == 0x0D &&
+        bytes[5] == 0x0A &&
+        bytes[6] == 0x1A &&
+        bytes[7] == 0x0A;
+  }
+
+  bool _looksLikeJpeg(Uint8List bytes) {
+    if (bytes.length < 2) return false;
+    return bytes[0] == 0xFF && bytes[1] == 0xD8;
+  }
+
+  bool _isValidImageUrlForChat(String url) {
+    if (_isRemotePath(url)) return true;
+    if (!url.startsWith('data:image/')) return false;
+    final commaIndex = url.indexOf(',');
+    if (commaIndex <= 0) return false;
+    final meta = url.substring(0, commaIndex);
+    if (!meta.contains('base64')) return false;
+    final payload = url.substring(commaIndex + 1).trim();
+    if (payload.isEmpty) return false;
+    try {
+      base64Decode(payload);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String _normalizeUmlautText(String text) {
+    if (text.isEmpty) return text;
+    var result = text;
+    const replacements = {
+      'Waende': 'Wände',
+      'waende': 'wände',
+      'Einfaerben': 'Einfärben',
+      'einfaerben': 'einfärben',
+      'Laeuft': 'Läuft',
+      'laeuft': 'läuft',
+      'Moechtest': 'Möchtest',
+      'moechtest': 'möchtest',
+      'Moechte': 'Möchte',
+      'moechte': 'möchte',
+      'Loeschen': 'Löschen',
+      'loeschen': 'löschen',
+      'Ueber': 'Über',
+      'ueber': 'über',
+      'Rueck': 'Rück',
+      'rueck': 'rück',
+      'Zurueck': 'Zurück',
+      'zurueck': 'zurück',
+      'Fuer': 'Für',
+      'fuer': 'für',
+      'Gross': 'Groß',
+      'gross': 'groß',
+    };
+    replacements.forEach((from, to) {
+      result = result.replaceAll(from, to);
+    });
+    return result;
+  }
+
   String _stripControlBlocks(String text) {
     return text
         .replaceAll(_skillBlockRegex, '')
@@ -2209,12 +3060,432 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   String _cleanAssistantDisplayText(String text) {
     var cleaned = text;
     cleaned = cleaned.replaceAll(_hexColorRegex, '');
-    cleaned = cleaned.replaceAll(RegExp(r'\bhex\b', caseSensitive: false), '');
+    cleaned = cleaned.replaceAll(RegExp(r'\(\s*\)'), '');
     cleaned = cleaned.replaceAll(RegExp(r'[\-–—:]\s*(?=\n|$)'), '');
     cleaned = cleaned.replaceAll(RegExp(r'[ \t]{2,}'), ' ');
     cleaned = cleaned.replaceAll(RegExp(r' *\n *'), '\n');
     cleaned = cleaned.replaceAll(RegExp(r'\n{3,}'), '\n\n');
     return cleaned.trim();
+  }
+
+  bool _isRoomFlowBlocking() {
+    return _roomFlowStage == _RoomFlowStage.analyzing ||
+        _roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation ||
+        _roomFlowStage == _RoomFlowStage.awaitingColorChoice;
+  }
+
+  void _resetRoomFlow({bool keepRequested = false}) {
+    _roomFlowStage = _RoomFlowStage.idle;
+    _roomCandidate = null;
+    _confirmedRoom = null;
+    _roomFlowImageItem = null;
+    _colorSuggestions = [];
+    if (!keepRequested) {
+      _virtualRoomRequested = false;
+    }
+  }
+
+  Future<String?> _fetchAssistantText(
+    List<Map<String, dynamic>> messages, {
+    double temperature = 0.2,
+  }) async {
+    final payload = <String, dynamic>{
+      'model': 'gpt-4o',
+      'temperature': temperature,
+      'messages': messages,
+    };
+
+    try {
+      final uri = Uri.parse('$kThermoloxApiBase/chat');
+      final req = http.Request('POST', uri)
+        ..headers.addAll(
+          buildWorkerHeaders(
+            contentType: 'application/json',
+            accept: 'text/event-stream',
+          ),
+        )
+        ..body = jsonEncode(payload);
+
+      final streamedRes = await http.Client().send(req);
+      if (streamedRes.statusCode != 200) {
+        return null;
+      }
+
+      final decoder = utf8.decoder;
+      String buffer = '';
+      String fullText = '';
+
+      await for (final chunk in streamedRes.stream.transform(decoder)) {
+        buffer += chunk;
+        final lines = buffer.split('\n');
+        buffer = lines.removeLast();
+
+        for (final raw in lines) {
+          final line = raw.trim();
+          if (!line.startsWith('data:')) continue;
+          final data = line.substring(5).trim();
+          if (data == '[DONE]') {
+            return fullText.trim();
+          }
+          try {
+            final json = jsonDecode(data);
+            final delta = json['choices']?[0]?['delta']?['content'] as String?;
+            if (delta != null && delta.isNotEmpty) {
+              fullText += delta;
+            }
+          } catch (_) {
+            // ignorieren
+          }
+        }
+      }
+      return fullText.trim();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Map<String, dynamic>? _decodeJsonFromText(String text) {
+    final match = RegExp(r'\{[\s\S]*\}').firstMatch(text);
+    if (match == null) return null;
+    final raw = match.group(0);
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+    return null;
+  }
+
+  Future<String> _dataUrlForImage(ProjectItem item) async {
+    final url = item.url;
+    if (url != null && url.isNotEmpty && !url.startsWith('file://')) {
+      return url;
+    }
+    final bytes = await _loadImageBytes(item);
+    final pngBytes = await _ensurePng(bytes);
+    return 'data:image/png;base64,${base64Encode(pngBytes)}';
+  }
+
+  Future<_RoomAnalysis?> _analyzeRoomFromImage(ProjectItem item) async {
+    final dataUrl = await _dataUrlForImage(item);
+    const systemPrompt =
+        'Du bist ein Bildanalyst. Antworte NUR mit JSON im Format '
+        '{"room":"Wohnzimmer","description":"Kurzer Satz was du siehst."}. '
+        'Wähle room aus: Wohnzimmer, Schlafzimmer, Küche, Bad, Esszimmer, '
+        'Kinderzimmer, Büro, Flur, Keller, Balkon. Keine weiteren Keys.';
+    final messages = [
+      {'role': 'system', 'content': systemPrompt},
+      {
+        'role': 'user',
+        'content': [
+          {
+            'type': 'text',
+            'text': 'Erkenne den Raumtyp im Foto und gib JSON zurück.',
+          },
+          {
+            'type': 'image_url',
+            'image_url': {'url': dataUrl},
+          },
+        ],
+      },
+    ];
+
+    final response = await _fetchAssistantText(messages, temperature: 0.1);
+    if (response == null || response.isEmpty) return null;
+    final decoded = _decodeJsonFromText(response);
+    if (decoded == null) return null;
+    final room = decoded['room']?.toString().trim();
+    final description = decoded['description']?.toString().trim() ?? '';
+    if (room == null || room.isEmpty) return null;
+    return _RoomAnalysis(room: room, description: description);
+  }
+
+  Future<void> _startRoomFlowFromImage(ProjectItem item) async {
+    if (_roomFlowStage == _RoomFlowStage.analyzing) return;
+    if (!await _ensureChatAccess()) return;
+    if (!_ensureAiConsent()) return;
+
+    _virtualRoomRequested = true;
+    _roomFlowImageItem = item;
+    _roomFlowStage = _RoomFlowStage.analyzing;
+    _roomCandidate = null;
+    _confirmedRoom = null;
+    _colorSuggestions = [];
+
+    _addAssistantMessage('Ich schaue mir dein Foto kurz an …');
+    final analysis = await _analyzeRoomFromImage(item);
+    if (!mounted) return;
+
+    _roomFlowStage = _RoomFlowStage.awaitingRoomConfirmation;
+    if (analysis == null) {
+      _addAssistantMessage(
+        'Ich bin mir nicht sicher, welcher Raum das ist. Welcher Raum ist es?',
+        buttons: _buildRoomSelectionButtons(),
+      );
+      return;
+    }
+
+    _roomCandidate = analysis.room;
+    final description = analysis.description.isNotEmpty
+        ? analysis.description
+        : 'Ich sehe einen Innenraum.';
+    _addAssistantMessage(
+      '$description\nIst das ein ${analysis.room}?',
+      buttons: [
+        QuickReplyButton(
+          label: 'Ja, ${analysis.room}',
+          value: analysis.room,
+          preferred: true,
+        ),
+        const QuickReplyButton(
+          label: 'Anderer Raum',
+          value: 'Anderer Raum',
+          preferred: false,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _requestColorSuggestions(String roomLabel) async {
+    const systemPrompt =
+        'Gib NUR JSON im Format {"options":[{"direction":"Warm","name":"Name","hex":"#AABBCC","note":"kurzer Satz"}]}. '
+        'Genau 3 Optionen, jede mit direction, name, hex, note. Keine weiteren Keys. '
+        'Verwende korrekte Umlaute (ä, ö, ü, ß).';
+    final preference = _currentColorPreference();
+    final hasPreference = preference != null && preference.isNotEmpty;
+    final preferenceHint = !hasPreference
+        ? ''
+        : preference!.startsWith('#')
+            ? ' Der Nutzer hat bereits den Farbton $preference genannt. '
+                'Gib drei Varianten derselben Farbfamilie (Hell/Mittel/Dunkel).'
+            : ' Der Nutzer möchte $preference. '
+                'Alle Vorschläge müssen in dieser Farbfamilie bleiben und als Hell/Mittel/Dunkel gekennzeichnet sein.';
+    final userPrompt = hasPreference
+        ? 'Gib drei Varianten für ein $roomLabel, passend zum Wunsch des Nutzers. '
+            'Nutze die Labels Hell/Mittel/Dunkel und begründe kurz (note).$preferenceHint'
+        : 'Gib 3 unterschiedliche Farbrichtungen für ein $roomLabel. '
+            'Jede Richtung kurz begründen (note).$preferenceHint';
+    final messages = [
+      {'role': 'system', 'content': systemPrompt},
+      {'role': 'user', 'content': userPrompt},
+    ];
+
+    final response = await _fetchAssistantText(messages, temperature: 0.4);
+    final decoded = response == null ? null : _decodeJsonFromText(response);
+
+    final rawList = decoded?['options'] ??
+        decoded?['colors'] ??
+        decoded?['suggestions'] ??
+        decoded?['items'];
+    final suggestions = <_ColorSuggestion>[];
+    if (rawList is List) {
+      for (final entry in rawList) {
+        if (entry is! Map) continue;
+        final direction =
+            entry['direction']?.toString().trim() ?? 'Richtung';
+        final name = entry['name']?.toString().trim() ?? 'Farbe';
+        final hexRaw =
+            entry['hex']?.toString().trim() ??
+            entry['code']?.toString().trim() ??
+            entry['color']?.toString().trim();
+        if (hexRaw == null || hexRaw.isEmpty) continue;
+        final hex = _normalizeHex(hexRaw);
+        final note = entry['note']?.toString().trim();
+        suggestions.add(
+          _ColorSuggestion(
+            direction: direction,
+            name: name,
+            hex: hex,
+            note: note,
+          ),
+        );
+      }
+    }
+
+    if (suggestions.isEmpty) {
+      suggestions.addAll(const [
+        _ColorSuggestion(
+          direction: 'Warm',
+          name: 'Sandbeige',
+          hex: '#C2A27E',
+          note: 'Bringt Wärme und wirkt gemütlich.',
+        ),
+        _ColorSuggestion(
+          direction: 'Neutral',
+          name: 'Sanftes Grau',
+          hex: '#C8C8C8',
+          note: 'Ruhig und zeitlos.',
+        ),
+        _ColorSuggestion(
+          direction: 'Akzent',
+          name: 'Salbeigrün',
+          hex: '#8FAF9A',
+          note: 'Frisch und modern.',
+        ),
+      ]);
+    }
+
+    _colorSuggestions = suggestions;
+    _roomFlowStage = _RoomFlowStage.awaitingColorChoice;
+
+    final lines = <String>[
+      hasPreference
+          ? 'Ich habe drei passende Varianten für dich:'
+          : 'Für dein $roomLabel schlage ich drei Richtungen vor:',
+    ];
+    for (var i = 0; i < suggestions.length; i += 1) {
+      final s = suggestions[i];
+      final note = s.note != null && s.note!.isNotEmpty ? ' – ${s.note}' : '';
+      lines.add('${i + 1}. ${s.direction}: ${s.name} – HEX ${s.hex}$note');
+    }
+
+    _addAssistantMessage(
+      lines.join('\n'),
+      buttons: [
+        for (var i = 0; i < suggestions.length; i += 1)
+          QuickReplyButton(
+            label: '${suggestions[i].direction}: ${suggestions[i].name}',
+            value: suggestions[i].hex,
+            preferred: i == 0,
+          ),
+      ],
+    );
+  }
+
+  Future<bool> _handleRoomFlowUserText(String text) async {
+    final lower = text.toLowerCase().trim();
+    if (_virtualRoomRequested &&
+        _roomFlowStage == _RoomFlowStage.idle &&
+        !_currentProjectHasImage() &&
+        _isVirtualRoomRequestText(lower)) {
+      _addAssistantMessage(
+        'Bitte lade zuerst ein Raumfoto hoch, damit ich starten kann.',
+        buttons: const [
+          QuickReplyButton(
+            label: 'Foto hochladen',
+            value: 'Ich lade ein Raumfoto hoch',
+            preferred: true,
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ],
+      );
+      return true;
+    }
+
+    if (_virtualRoomRequested &&
+        _roomFlowStage == _RoomFlowStage.idle &&
+        lower.contains('vorhanden') &&
+        _currentProjectHasImage()) {
+      final imageItem = _currentProjectImageItem();
+      if (imageItem != null) {
+        await _startRoomFlowFromImage(imageItem);
+        return true;
+      }
+    }
+
+    if (_roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation) {
+      if (lower.contains('anderer')) {
+        _addAssistantMessage(
+          'Alles klar. Welcher Raum ist es?',
+          buttons: _buildRoomSelectionButtons(),
+        );
+        return true;
+      }
+
+      final matched =
+          _matchRoomLabel(text) ?? _roomCandidate ?? text.trim();
+      if (matched.isEmpty) {
+        _addAssistantMessage(
+          'Bitte wähle den Raum aus.',
+          buttons: _buildRoomSelectionButtons(),
+        );
+        return true;
+      }
+
+      _confirmedRoom = matched;
+      await _requestColorSuggestions(matched);
+      return true;
+    }
+
+    if (_roomFlowStage == _RoomFlowStage.awaitingColorChoice) {
+      final hexes = _extractHexColorsLoose(text);
+      var hex = hexes.isNotEmpty ? hexes.first : null;
+      if (hex == null && _colorSuggestions.isNotEmpty) {
+        for (final s in _colorSuggestions) {
+          final nameLower = s.name.toLowerCase();
+          final dirLower = s.direction.toLowerCase();
+          if (lower.contains(nameLower) || lower.contains(dirLower)) {
+            hex = s.hex;
+            break;
+          }
+        }
+      }
+      if (hex == null) {
+        final preference = _extractColorPreference(text);
+        if (preference != null) {
+          _preferredColorHint = preference;
+        }
+        if (text.trim().isNotEmpty) {
+          await _requestColorSuggestions(_confirmedRoom ?? 'Raum');
+        } else {
+          _addAssistantMessage(
+            'Bitte wähle eine der Farben.',
+          );
+        }
+        return true;
+      }
+
+      _lastDetectedHex = hex;
+      await _persistHexColor(hex);
+      _roomFlowStage = _RoomFlowStage.readyToRender;
+      _addAssistantMessage(
+        'Soll ich die Wände jetzt in $hex einfärben?',
+        buttons: const [
+          QuickReplyButton(
+            label: 'Wände einfärben',
+            value: 'Bitte färbe die Wände in meiner gewählten Farbe.',
+            preferred: true,
+            action: QuickReplyAction.startRender,
+          ),
+        ],
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  Future<bool> _maybeStartRoomFlowAfterUpload(
+    List<_SentUpload> uploads,
+  ) async {
+    if (!_virtualRoomRequested) return false;
+    final imageUpload = uploads.firstWhere(
+      (u) =>
+          u.isImage &&
+          ((u.remoteUrl ?? '').isNotEmpty || (u.localPath ?? '').isNotEmpty),
+      orElse: () => const _SentUpload(
+        id: '',
+        name: '',
+        isImage: true,
+      ),
+    );
+    var imageItem = _currentProjectImageItem();
+    if (imageItem == null && imageUpload.id.isNotEmpty) {
+      imageItem = ProjectItem(
+        id: imageUpload.id,
+        name: imageUpload.name,
+        type: 'image',
+        path: imageUpload.localPath,
+        url: imageUpload.remoteUrl,
+      );
+    }
+    if (imageItem == null) return false;
+    final hasSource =
+        (imageItem.url != null && imageItem.url!.isNotEmpty) ||
+        (imageItem.path != null && imageItem.path!.isNotEmpty);
+    if (!hasSource) return false;
+    await _startRoomFlowFromImage(imageItem);
+    return true;
   }
 
   Future<void> _startGreetingIfNeeded() async {
@@ -2256,8 +3527,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       final uri = Uri.parse('$kThermoloxApiBase/chat');
 
       final req = http.Request('POST', uri)
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
+        ..headers.addAll(
+          buildWorkerHeaders(
+            contentType: 'application/json',
+            accept: 'text/event-stream',
+          ),
+        )
         ..body = jsonEncode(payload);
 
       final streamedRes = await http.Client().send(req);
@@ -2488,9 +3763,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         final providedName = payload['name'] as String?;
         final typeRaw = (payload['type'] as String?)?.toLowerCase();
         String resolvedType =
-            (typeRaw == 'image' || typeRaw == 'file' || typeRaw == 'other')
-            ? typeRaw!
-            : 'file';
+            (typeRaw == 'image' ||
+                    typeRaw == 'file' ||
+                    typeRaw == 'note' ||
+                    typeRaw == 'other')
+                ? typeRaw!
+                : 'file';
         String? path = payload['path'] as String?;
         String? url = payload['url'] as String?;
         String? name = providedName;
@@ -2514,6 +3792,21 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
         if ((isImageFromUpload ?? false) && resolvedType != 'image') {
           resolvedType = 'image';
+        }
+
+        if (resolvedType == 'note') {
+          final noteText =
+              (payload['note'] as String? ?? payload['text'] as String? ?? name)
+                  ?.trim();
+          if (noteText == null || noteText.isEmpty) {
+            return '⚠️ Notiz konnte nicht gespeichert werden.';
+          }
+          await projectsModel.addItem(
+            projectId: projectId,
+            name: noteText,
+            type: 'note',
+          );
+          return '📝 Notiz gespeichert.';
         }
 
         if (path == null && url == null) {
@@ -2593,19 +3886,54 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     }
 
     final feedback = <String>[];
+    var createdProjectInTurn = false;
     for (final cmd in commands) {
+      final action = (cmd['action'] ?? cmd['skill'] ?? cmd['name'])?.toString();
+      if (action == 'create_project') {
+        createdProjectInTurn = true;
+      }
       final note = await _executeSkillCommand(cmd);
       if (note != null && note.isNotEmpty) {
         feedback.add(note);
       }
     }
 
+    if (createdProjectInTurn) {
+      if (_streamingMsgIndex != null &&
+          _streamingMsgIndex! >= 0 &&
+          _streamingMsgIndex! < _messages.length &&
+          mounted) {
+        setState(() {
+          _messages.removeAt(_streamingMsgIndex!);
+        });
+      }
+      _streamingMsgIndex = null;
+      return '';
+    }
+
     final cleaned = _sanitizeAssistantText(fullText);
+    final assistantHexes = _extractHexColors(cleaned);
+    if (assistantHexes.isNotEmpty) {
+      _lastDetectedHex = assistantHexes.first;
+    }
     var displayText = _cleanAssistantDisplayText(cleaned);
+    displayText = _normalizeUmlautText(displayText);
     if (displayText.isEmpty && feedback.isNotEmpty) {
-      displayText = feedback.join('\n');
+      displayText = _normalizeUmlautText(feedback.join('\n'));
     }
     displayText = displayText.trim();
+    if (buttons.isNotEmpty) {
+      buttons = buttons
+          .map<QuickReplyButton>(
+            (b) => QuickReplyButton(
+              label: _normalizeUmlautText(b.label),
+              value: _normalizeUmlautText(b.value),
+              preferred: b.preferred,
+              action: b.action,
+            ),
+          )
+          .toList();
+    }
 
     final lastUserText = _messages.reversed
         .firstWhere(
@@ -2618,46 +3946,69 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         _looksLikeResultRequest(displayText);
     final looksLikeCompletion = _looksLikeEditCompletion(displayText);
     final shouldShowRender = renderPath != null && wantsResult;
-    final needsRenderButMissing = renderPath == null && (wantsResult || looksLikeCompletion);
+    final roomFlowBlocking = _isRoomFlowBlocking();
+    final needsRenderButMissing =
+        !roomFlowBlocking && renderPath == null && (wantsResult || looksLikeCompletion);
+    final hasColorHex = _currentProjectColorHex() != null;
 
     if (shouldShowRender) {
       displayText = 'Hier ist das bearbeitete Foto.';
       buttons = const [];
     } else if (needsRenderButMissing) {
-      displayText = _currentProjectHasImage()
-          ? 'Ich habe das Bild noch nicht fertig gerendert. Soll ich das vorhandene Foto verwenden oder ein neues aufnehmen?'
-          : 'Damit ich starten kann, brauche ich zuerst ein Foto. Möchtest du ein neues hochladen?';
-      buttons = _currentProjectHasImage()
-          ? const [
-              QuickReplyButton(
-                label: 'Vorhandenes Foto verwenden',
-                value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
-                preferred: true,
-              ),
-              QuickReplyButton(
-                label: 'Neues Foto hochladen',
-                value: 'Ich lade ein neues Raumfoto hoch',
-                preferred: false,
-                action: QuickReplyAction.uploadAttachment,
-              ),
-            ]
-          : const [
-              QuickReplyButton(
-                label: 'Foto hochladen',
-                value: 'Ich lade ein Raumfoto hoch',
-                preferred: true,
-                action: QuickReplyAction.uploadAttachment,
-              ),
-              QuickReplyButton(
-                label: 'Grundriss/Skizze',
-                value: 'Ich lade einen Grundriss oder eine Skizze hoch',
-                preferred: false,
-                action: QuickReplyAction.uploadAttachment,
-              ),
-            ];
+      if (_currentProjectHasImage() && hasColorHex) {
+        displayText =
+            'Ich habe das Bild noch nicht gerendert. Soll ich die Wände jetzt einfärben?';
+        buttons = const [
+          QuickReplyButton(
+            label: 'Wände einfärben',
+            value: 'Bitte färbe die Wände in meiner gewählten Farbe.',
+            preferred: true,
+            action: QuickReplyAction.startRender,
+          ),
+          QuickReplyButton(
+            label: 'Neues Foto hochladen',
+            value: 'Ich lade ein neues Raumfoto hoch',
+            preferred: false,
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ];
+      } else {
+        displayText = _currentProjectHasImage()
+            ? 'Ich habe das Bild noch nicht fertig gerendert. Soll ich das vorhandene Foto verwenden oder ein neues aufnehmen?'
+            : 'Damit ich starten kann, brauche ich zuerst ein Foto. Möchtest du ein neues hochladen?';
+        buttons = _currentProjectHasImage()
+            ? const [
+                QuickReplyButton(
+                  label: 'Vorhandenes Foto verwenden',
+                  value: 'Bitte verwende das vorhandene Foto aus meinem Projekt.',
+                  preferred: true,
+                ),
+                QuickReplyButton(
+                  label: 'Neues Foto hochladen',
+                  value: 'Ich lade ein neues Raumfoto hoch',
+                  preferred: false,
+                  action: QuickReplyAction.uploadAttachment,
+                ),
+              ]
+            : const [
+                QuickReplyButton(
+                  label: 'Foto hochladen',
+                  value: 'Ich lade ein Raumfoto hoch',
+                  preferred: true,
+                  action: QuickReplyAction.uploadAttachment,
+                ),
+                QuickReplyButton(
+                  label: 'Grundriss/Skizze',
+                  value: 'Ich lade einen Grundriss oder eine Skizze hoch',
+                  preferred: false,
+                  action: QuickReplyAction.uploadAttachment,
+                ),
+              ];
+      }
     }
 
-    final suppressFallback = shouldShowRender || needsRenderButMissing;
+    final suppressFallback =
+        shouldShowRender || needsRenderButMissing || roomFlowBlocking;
     if (!suppressFallback && buttons.isEmpty) {
       final fallback = _defaultButtonsForText(displayText);
       if (fallback != null) {
@@ -2784,6 +4135,19 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final rawText = quickReplyText ?? _inputController.text;
     final text = rawText.trim();
     final lower = text.toLowerCase();
+    if (text.isNotEmpty && _isVirtualRoomRequestText(lower)) {
+      _virtualRoomRequested = true;
+    }
+    if (text.isNotEmpty) {
+      final preference = _extractColorPreference(text);
+      if (preference != null) {
+        _preferredColorHint = preference;
+      }
+      if (preference != null && preference.startsWith('#')) {
+        _lastDetectedHex = preference;
+        unawaited(_persistHexColor(preference));
+      }
+    }
     if (_currentProjectId == null &&
         (lower.contains('projekt') || lower.contains('zimmer'))) {
       // neue Projekt-Intention → CTA wieder zulassen, aber nur einmal pro Turn
@@ -2795,6 +4159,13 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final hasFiles = _pendingAttachments.isNotEmpty;
 
     if (text.isEmpty && !hasFiles) return;
+
+    if (hasFiles && _currentProjectId == null) {
+      final projectsModel = context.read<ProjectsModel>();
+      if (projectsModel.projects.isNotEmpty) {
+        _currentProjectId = projectsModel.projects.first.id;
+      }
+    }
 
     final displayText = text.isNotEmpty
         ? text
@@ -2823,16 +4194,41 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
         try {
           final bytes = await File(att.path).readAsBytes();
-          final rawBase64 = base64Encode(bytes);
+          Uint8List? uploadBytes;
+          String mime;
+          if (_looksLikePng(bytes)) {
+            uploadBytes = bytes;
+            mime = 'image/png';
+          } else if (_looksLikeJpeg(bytes)) {
+            uploadBytes = bytes;
+            mime = 'image/jpeg';
+          } else {
+            final converted = await _ensurePng(bytes);
+            if (_looksLikePng(converted)) {
+              uploadBytes = converted;
+              mime = 'image/png';
+            } else {
+              setState(() {
+                _messages.add(
+                  const ChatMessage(
+                    role: 'assistant',
+                    text:
+                        '❌ Dieses Bildformat kann ich nicht verarbeiten. Bitte JPG oder PNG verwenden.',
+                  ),
+                );
+              });
+              continue;
+            }
+          }
 
-          final lower = att.path.toLowerCase();
-          final mime = lower.endsWith('.png') ? 'image/png' : 'image/jpeg';
+          final rawBase64 = base64Encode(uploadBytes);
 
           final dataUrl = 'data:$mime;base64,$rawBase64';
 
           final uploadRes = await http.post(
             Uri.parse('$kThermoloxApiBase/upload'),
-            body: {'base64': dataUrl},
+            headers: buildWorkerHeaders(contentType: 'application/json'),
+            body: jsonEncode({'base64': dataUrl}),
           );
 
           if (uploadRes.statusCode != 200) {
@@ -2851,9 +4247,21 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           final data = jsonDecode(uploadRes.body);
           final imageUrl = data['imageUrl'] as String?;
 
-          if (imageUrl != null && imageUrl.isNotEmpty) {
+          if (imageUrl != null &&
+              imageUrl.isNotEmpty &&
+              _isValidImageUrlForChat(imageUrl)) {
             uploadedUrls.add(imageUrl);
             uploadRecord = uploadRecord.copyWith(remoteUrl: imageUrl);
+          } else {
+            setState(() {
+              _messages.add(
+                const ChatMessage(
+                  role: 'assistant',
+                  text:
+                      '❌ Das hochgeladene Bild war ungültig. Bitte erneut als JPG oder PNG senden.',
+                ),
+              );
+            });
           }
         } catch (e) {
           setState(() {
@@ -2929,6 +4337,29 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
 
+    final roomFlowStarted =
+        await _maybeStartRoomFlowAfterUpload(justUploaded);
+    if (roomFlowStarted) {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+          _streamingMsgIndex = null;
+        });
+      }
+      return;
+    }
+
+    final flowHandled = await _handleRoomFlowUserText(text);
+    if (flowHandled) {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+          _streamingMsgIndex = null;
+        });
+      }
+      return;
+    }
+
     // ===== 4) Payload → Worker =====
     await _ensureProductsLoaded();
     await _ensureMemoryLoaded();
@@ -2952,8 +4383,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       final uri = Uri.parse('$kThermoloxApiBase/chat');
 
       final req = http.Request('POST', uri)
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
+        ..headers.addAll(
+          buildWorkerHeaders(
+            contentType: 'application/json',
+            accept: 'text/event-stream',
+          ),
+        )
         ..body = jsonEncode(payload);
 
       final streamedRes = await http.Client().send(req);
@@ -3092,6 +4527,47 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         ? msg.content as String
         : msg.text;
     final hexColors = !isUser ? _extractHexColors(hexSource) : const <String>[];
+    final isRenderHint = msg.text == _renderingHintToken;
+
+    if (isRenderHint) {
+      return Column(
+        crossAxisAlignment: align,
+        children: [
+          ChatBubbleAnimated(
+            isUser: false,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: bubbleMaxWidth),
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(color: bg, borderRadius: radius),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_fix_high,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Render läuft …',
+                        style:
+                            theme.textTheme.bodyMedium?.copyWith(color: fg),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    _RenderDots(color: theme.colorScheme.primary),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: align,
@@ -3126,24 +4602,44 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                               maxWidth: maxPreviewWidth,
                               maxHeight: maxPreviewHeight,
                             ),
-                            child: _isRemotePath(path)
-                                ? Image.network(
-                                    path,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        const Center(
-                                      child: Icon(Icons.broken_image_outlined),
+                            child: GestureDetector(
+                              onTap: () => _openImagePreview(path),
+                              child: _isRemotePath(path)
+                                  ? Image.network(
+                                      path,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, progress) {
+                                            if (progress == null) {
+                                              _scheduleAutoScrollIfNeeded();
+                                            }
+                                            return child;
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Center(
+                                        child:
+                                            Icon(Icons.broken_image_outlined),
+                                      ),
+                                    )
+                                  : Image.file(
+                                      File(path),
+                                      fit: BoxFit.cover,
+                                      frameBuilder:
+                                          (context, child, frame, _) {
+                                            if (frame != null) {
+                                              _scheduleAutoScrollIfNeeded();
+                                            }
+                                            return child;
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Center(
+                                        child:
+                                            Icon(Icons.broken_image_outlined),
+                                      ),
                                     ),
-                                  )
-                                : Image.file(
-                                    File(path),
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Center(
-                                      child: Icon(Icons.broken_image_outlined),
-                                    ),
-                                  ),
+                            ),
                           ),
                         ),
                       ),
@@ -3192,6 +4688,15 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   /// =======================
   ///  UI: Preview-Leiste für Anhänge
   /// =======================
+
+  void _openImagePreview(String pathOrUrl, {String? title}) {
+    if (!mounted) return;
+    openImagePreview(
+      context,
+      pathOrUrl: pathOrUrl,
+      title: title,
+    );
+  }
 
   Widget _buildAttachmentPreview() {
     if (_pendingAttachments.isEmpty) return const SizedBox.shrink();
@@ -3558,6 +5063,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                   onNotification: (notification) {
                     if (notification.direction != ScrollDirection.idle) {
                       _autoScroll = false;
+                      _userHasScrolled = true;
                     }
                     return false;
                   },
@@ -4014,6 +5520,66 @@ class _ChatBubbleAnimatedState extends State<ChatBubbleAnimated>
         position: _slide,
         child: ScaleTransition(scale: _scale, child: widget.child),
       ),
+    );
+  }
+}
+
+class _RenderDots extends StatefulWidget {
+  final Color color;
+
+  const _RenderDots({required this.color});
+
+  @override
+  State<_RenderDots> createState() => _RenderDotsState();
+}
+
+class _RenderDotsState extends State<_RenderDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final phase = (_controller.value * 2 * math.pi) +
+                (index * 0.8);
+            final scale = 0.6 + (math.sin(phase).abs() * 0.4);
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              child: Transform.scale(
+                scale: scale,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: widget.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }

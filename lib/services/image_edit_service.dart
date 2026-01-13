@@ -28,16 +28,15 @@ class ImageEditService {
       'maskBase64': _toDataUrl(maskPng),
     };
 
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      payload['imageUrl'] = imageUrl;
-    }
     if (imageBytes != null && imageBytes.isNotEmpty) {
       payload['imageBase64'] = _toDataUrl(imageBytes);
+    } else if (imageUrl != null && imageUrl.isNotEmpty) {
+      payload['imageUrl'] = imageUrl;
     }
 
     final res = await http.post(
       Uri.parse('$kThermoloxApiBase/image-edit'),
-      headers: const {'Content-Type': 'application/json'},
+      headers: buildWorkerHeaders(contentType: 'application/json'),
       body: jsonEncode(payload),
     );
 

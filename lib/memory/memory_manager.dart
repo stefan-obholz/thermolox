@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'memory_state.dart';
 import '../services/consent_service.dart';
+import '../services/thermolox_api.dart';
 import 'memory_storage.dart';
 
 class MemoryRepository {
@@ -147,7 +148,7 @@ Kein Fließtext, keine Erklärungen, nur das JSON.
     try {
       final res = await http.post(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: buildWorkerHeaders(contentType: 'application/json'),
         body: body,
       );
 

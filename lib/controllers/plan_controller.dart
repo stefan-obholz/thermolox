@@ -37,19 +37,33 @@ class PlanController extends ChangeNotifier {
   CurrentPlan? get activePlan => _activePlan;
   Map<String, CurrentPlan> get publicPlans => _publicPlans;
   UserEntitlements? get entitlements => _entitlements;
-  int get virtualRoomCredits => _entitlements?.creditsBalance ?? 0;
+  int get virtualRoomCredits {
+    final balance = _entitlements?.creditsBalance ?? 0;
+    if (isGodMode && isPro && balance < 10) return 10;
+    return balance;
+  }
 
   bool get isLoggedIn =>
       _authService.currentUser != null && !_authService.isAnonymous;
   bool get isEmailVerified => _authService.isEmailVerified;
   String? get currentUserEmail => _authService.currentUser?.email;
   String? get currentUserId => _authService.currentUser?.id;
-  bool get canDowngrade =>
+  bool get isGodMode =>
       _isGodModeUser(currentUserEmail) || _isGodModeUserId(currentUserId);
+  bool get canDowngrade => isGodMode;
 
   bool get isPro {
-    if (!isLoggedIn || !isEmailVerified) return false;
-    if (_entitlements?.proLifetime == true && !canDowngrade) return true;
+    if (!isLoggedIn) return false;
+    if (!isEmailVerified && !isGodMode) return false;
+    if (isGodMode) {
+      if (_subscriptionInfo == null) {
+        return true;
+      }
+      if (_activePlan?.plan.slug != 'pro') return false;
+      final status = _subscriptionInfo?.status;
+      return status == null || status == 'active' || status == 'lifetime';
+    }
+    if (_entitlements?.proLifetime == true) return true;
     if (_activePlan?.plan.slug != 'pro') return false;
     final status = _subscriptionInfo?.status;
     return status == null || status == 'active' || status == 'lifetime';
@@ -79,13 +93,20 @@ class PlanController extends ChangeNotifier {
       _publicPlans = _buildPublicPlans(plans, features);
 
       final user = _authService.currentUser;
-      if (user != null && _authService.isEmailVerified) {
+      final isGodMode = user != null &&
+          (_isGodModeUser(user.email) || _isGodModeUserId(user.id));
+      if (user != null && (_authService.isEmailVerified || isGodMode)) {
         _subscriptionInfo = await _planService.getCurrentUserPlanInfo();
         _entitlements = await _planService.loadEntitlements(userId: user.id) ??
             const UserEntitlements(proLifetime: false, creditsBalance: 0);
       } else {
         _subscriptionInfo = null;
         _entitlements = null;
+      }
+
+      if (_entitlements == null && isGodMode) {
+        _entitlements =
+            const UserEntitlements(proLifetime: true, creditsBalance: 10);
       }
 
       _activePlan = _resolveActivePlan();
@@ -173,6 +194,18 @@ class PlanController extends ChangeNotifier {
       return _publicPlans['pro'] ??
           _publicPlans['basic'] ??
           _publicPlans.values.first;
+    }
+    if (isGodMode && _subscriptionInfo == null) {
+      return _publicPlans['pro'] ??
+          _publicPlans['basic'] ??
+          _publicPlans.values.first;
+    }
+    if (_entitlements?.proLifetime == true && canDowngrade) {
+      if (_subscriptionInfo == null) {
+        return _publicPlans['pro'] ??
+            _publicPlans['basic'] ??
+            _publicPlans.values.first;
+      }
     }
 
     final slug = _subscriptionInfo?.planSlug ?? 'basic';

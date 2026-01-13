@@ -205,9 +205,12 @@ class ProjectsRepository {
       if (projectIds.isNotEmpty) {
         final itemRows = await _client
             .from('project_items')
-            .select('id,project_id,type,name,storage_path,url,color_hex')
+            .select(
+              'id,project_id,type,name,storage_path,url,color_hex,created_at',
+            )
             .eq('user_id', user.id)
-            .inFilter('project_id', projectIds);
+            .inFilter('project_id', projectIds)
+            .order('created_at', ascending: true);
 
         final itemsByProject = <String, List<ProjectItem>>{};
         for (final row in itemRows) {
@@ -307,19 +310,21 @@ class ProjectsRepository {
     final normalizedType = type.toLowerCase();
     final removeTypes = normalizedType == 'color'
         ? ['color']
-        : normalizedType == 'render'
-            ? ['render']
-            : normalizedType == 'image'
-                ? ['image']
-                : normalizedType == 'file'
-                    ? ['file']
+        : normalizedType == 'image'
+            ? ['image']
+            : normalizedType == 'file'
+                ? ['file']
+                : (normalizedType == 'render' || normalizedType == 'note')
+                    ? const <String>[]
                     : [normalizedType];
 
-    await _removeExistingByTypes(
-      userId: user.id,
-      projectId: projectId,
-      types: removeTypes,
-    );
+    if (removeTypes.isNotEmpty) {
+      await _removeExistingByTypes(
+        userId: user.id,
+        projectId: projectId,
+        types: removeTypes,
+      );
+    }
 
     if (normalizedType == 'color') {
       final hex = colorHex ?? name;
@@ -341,6 +346,29 @@ class ProjectsRepository {
         name: label,
         type: 'color',
         url: label,
+      );
+    }
+
+    if (normalizedType == 'note') {
+      final text = name.trim();
+      if (text.isEmpty) {
+        throw StateError('Missing note text');
+      }
+      final row = await _client
+          .from('project_items')
+          .insert({
+            'project_id': projectId,
+            'user_id': user.id,
+            'type': 'note',
+            'name': text,
+          })
+          .select('id,name,type')
+          .single();
+
+      return ProjectItem(
+        id: row['id']?.toString() ?? '',
+        name: row['name']?.toString() ?? text,
+        type: row['type']?.toString() ?? 'note',
       );
     }
 

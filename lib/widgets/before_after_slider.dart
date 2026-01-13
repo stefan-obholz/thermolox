@@ -8,6 +8,7 @@ class BeforeAfterSlider extends StatefulWidget {
   final Widget after;
   final double initialFraction;
   final BorderRadius? borderRadius;
+  final bool showArrows;
 
   const BeforeAfterSlider({
     super.key,
@@ -15,6 +16,7 @@ class BeforeAfterSlider extends StatefulWidget {
     required this.after,
     this.initialFraction = 0.5,
     this.borderRadius,
+    this.showArrows = true,
   });
 
   @override
@@ -27,12 +29,12 @@ class _BeforeAfterSliderState extends State<BeforeAfterSlider> {
   @override
   void initState() {
     super.initState();
-    _fraction = widget.initialFraction.clamp(0.05, 0.95);
+    _fraction = widget.initialFraction.clamp(0.0, 1.0);
   }
 
-  void _update(Offset localPosition, double width) {
+  void _onChanged(double value) {
     setState(() {
-      _fraction = (localPosition.dx / width).clamp(0.05, 0.95);
+      _fraction = value.clamp(0.0, 1.0);
     });
   }
 
@@ -46,64 +48,140 @@ class _BeforeAfterSliderState extends State<BeforeAfterSlider> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final handleX = width * _fraction;
+        final percent = _fraction.clamp(0.0, 1.0);
+        final handleX = width * percent;
+        const double buttonSize = 40;
+        const double buttonGap = 10;
+        final clampedX = handleX.clamp(0.0, width);
 
-        return GestureDetector(
-          onTapDown: (details) => _update(details.localPosition, width),
-          onHorizontalDragUpdate: (details) =>
-              _update(details.localPosition, width),
-          child: ClipRRect(
-            borderRadius: borderRadius,
-            child: Stack(
-              children: [
-                Positioned.fill(child: widget.before),
-                Positioned.fill(
-                  child: ClipRect(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: _fraction,
-                      child: widget.after,
+        return ClipRRect(
+          borderRadius: borderRadius,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(child: widget.before),
+              Positioned.fill(
+                child: ClipPath(
+                  clipper: _RevealClipper(percent: percent),
+                  child: widget.after,
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _CenterLinePainter(
+                      x: clampedX,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ),
+              ),
+              if (widget.showArrows) ...[
                 Positioned(
-                  left: handleX - 1,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 2,
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  left: (clampedX - buttonGap - buttonSize)
+                      .clamp(0.0, width - buttonSize),
+                  top: (constraints.maxHeight - buttonSize) / 2,
+                  child: const _ArrowButton(
+                    icon: Icons.chevron_left,
+                    size: buttonSize,
                   ),
                 ),
                 Positioned(
-                  left: handleX - 16,
-                  top: (height / 2) - 16,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withOpacity(0.92),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.drag_handle,
-                      color: theme.colorScheme.onSurface,
-                      size: 18,
-                    ),
+                  left: (clampedX + buttonGap)
+                      .clamp(0.0, width - buttonSize),
+                  top: (constraints.maxHeight - buttonSize) / 2,
+                  child: const _ArrowButton(
+                    icon: Icons.chevron_right,
+                    size: buttonSize,
                   ),
                 ),
               ],
-            ),
+              Positioned.fill(
+                child: SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 0,
+                    activeTrackColor: Colors.transparent,
+                    inactiveTrackColor: Colors.transparent,
+                    thumbColor: Colors.transparent,
+                    overlayColor: Colors.transparent,
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 0),
+                  ),
+                  child: Slider(
+                    min: 0,
+                    max: 1,
+                    value: percent,
+                    onChanged: _onChanged,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _CenterLinePainter extends CustomPainter {
+  final double x;
+  final Color color;
+
+  const _CenterLinePainter({required this.x, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2;
+    canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CenterLinePainter oldDelegate) =>
+      oldDelegate.x != x || oldDelegate.color != color;
+}
+
+class _RevealClipper extends CustomClipper<Path> {
+  final double percent;
+
+  _RevealClipper({required double percent})
+      : percent = percent.clamp(0.0, 1.0);
+
+  @override
+  Path getClip(Size size) {
+    final width = size.width * percent;
+    return Path()..addRect(Rect.fromLTWH(0, 0, width, size.height));
+  }
+
+  @override
+  bool shouldReclip(covariant _RevealClipper oldClipper) =>
+      oldClipper.percent != percent;
+}
+
+class _ArrowButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+
+  const _ArrowButton({required this.icon, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Icon(icon, color: Colors.black87),
     );
   }
 }
@@ -112,6 +190,7 @@ Future<void> showBeforeAfterDialog({
   required BuildContext context,
   required Widget before,
   required Widget after,
+  double? aspectRatio,
 }) async {
   final tokens = context.thermoloxTokens;
   await ThermoloxOverlay.showAppDialog(
@@ -129,25 +208,46 @@ Future<void> showBeforeAfterDialog({
               child: SafeArea(
                 child: Padding(
                   padding: EdgeInsets.all(tokens.screenPadding),
-                  child: Stack(
-                    children: [
-                      AspectRatio(
-                        aspectRatio: 4 / 3,
-                        child: BeforeAfterSlider(
-                          before: before,
-                          after: after,
-                          borderRadius: BorderRadius.circular(tokens.radiusSm),
-                        ),
-                      ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Navigator.pop(ctx),
-                        ),
-                      ),
-                    ],
+                  child: Material(
+                    color: Colors.transparent,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final ratio = (aspectRatio != null && aspectRatio > 0)
+                            ? aspectRatio
+                            : 4 / 3;
+                        var height = constraints.maxHeight;
+                        var width = height * ratio;
+                        if (width > constraints.maxWidth) {
+                          width = constraints.maxWidth;
+                          height = width / ratio;
+                        }
+                        return Stack(
+                          children: [
+                            Center(
+                              child: SizedBox(
+                                width: width,
+                                height: height,
+                                child: BeforeAfterSlider(
+                                  before: before,
+                                  after: after,
+                                  borderRadius:
+                                      BorderRadius.circular(tokens.radiusSm),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: IconButton(
+                                icon:
+                                    const Icon(Icons.close, color: Colors.white),
+                                onPressed: () => Navigator.pop(ctx),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

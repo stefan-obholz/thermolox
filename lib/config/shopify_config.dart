@@ -16,7 +16,7 @@ class ShopifyConfig {
       'https://$shopDomain/api/$apiVersion/graphql.json';
 
   // Produkte, die nicht in der Produktliste erscheinen sollen.
-  // Fuer das Chatbot-Selling bleiben sie weiterhin verfuegbar.
+  // Für das Chatbot-Selling bleiben sie weiterhin verfügbar.
   static const List<String> hiddenProductTitleKeywords = [
     'pro-lifetime',
   ]; // lowercase

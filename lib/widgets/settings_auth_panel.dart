@@ -134,7 +134,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
           await SupabaseService.client.auth.signOut();
           if (!mounted) return;
           _setStatus(
-            'Bitte AGB und Datenschutzerklaerung akzeptieren.',
+            'Bitte AGB und Datenschutzerklärung akzeptieren.',
             isError: true,
           );
           return;
@@ -196,13 +196,13 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Bitte bestaetigen',
+                'Bitte bestätigen',
                 style: theme.textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: tokens.gapSm),
               Text(
-                'Damit wir dein Konto aktivieren koennen, brauchen wir deine Zustimmung.',
+                'Damit wir dein Konto aktivieren können, brauchen wir deine Zustimmung.',
                 style: theme.textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -215,7 +215,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 title: Text(
-                  'Ich stimme den AGB und der Datenschutzerklaerung zu',
+                  'Ich stimme den AGB und der Datenschutzerklärung zu',
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -269,7 +269,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     final legalAccepted = legalGate.isAccepted || _acceptLegal;
 
     if (!_isValidEmail(email)) {
-      _setStatus('Bitte eine gueltige E-Mail eingeben.', isError: true);
+      _setStatus('Bitte eine gültige E-Mail eingeben.', isError: true);
       return;
     }
     if (password.trim().isEmpty) {
@@ -282,7 +282,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     }
     if (!_isLogin && !legalAccepted) {
       _setStatus(
-        'Bitte AGB und Datenschutzerklaerung akzeptieren.',
+        'Bitte AGB und Datenschutzerklärung akzeptieren.',
         isError: true,
       );
       return;
@@ -339,7 +339,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
         if (response.session == null) {
           setState(() => _emailSent = true);
           _setStatus(
-            'E-Mail wurde versendet. Bitte bestaetigen.',
+            'E-Mail wurde versendet. Bitte bestätigen.',
             isError: false,
           );
           return;
@@ -393,7 +393,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
     if (_busy) return;
     final email = _emailController.text.trim().toLowerCase();
     if (!_isValidEmail(email)) {
-      _setStatus('Bitte eine gueltige E-Mail eingeben.', isError: true);
+      _setStatus('Bitte eine gültige E-Mail eingeben.', isError: true);
       return;
     }
     setState(() {
@@ -543,7 +543,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                   title: Text(
-                    'Ich stimme den AGB und der Datenschutzerklaerung zu',
+                    'Ich stimme den AGB und der Datenschutzerklärung zu',
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
