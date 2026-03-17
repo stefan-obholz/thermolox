@@ -35,7 +35,7 @@ class ThermoloxSecondaryTabs extends StatelessWidget
               EdgeInsets.symmetric(horizontal: tokens.screenPadding),
           labelColor: theme.colorScheme.onSurface,
           unselectedLabelColor:
-              theme.colorScheme.onSurface.withOpacity(0.6),
+              theme.colorScheme.onSurface.withValues(alpha:0.6),
           indicatorSize: TabBarIndicatorSize.label,
           indicatorColor: theme.colorScheme.primary,
           tabs: labels.map((t) => Tab(text: t)).toList(),

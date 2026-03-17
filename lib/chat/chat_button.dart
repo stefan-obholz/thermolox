@@ -72,7 +72,7 @@ class _ThermoloxChatButtonState extends State<ThermoloxChatButton>
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: _openChat,
-          splashColor: theme.colorScheme.primary.withOpacity(0.18),
+          splashColor: theme.colorScheme.primary.withValues(alpha:0.18),
           highlightColor: Colors.transparent,
           child: SizedBox(
             width: 120, // größerer Hit-Bereich inkl. Glow
@@ -86,7 +86,7 @@ class _ThermoloxChatButtonState extends State<ThermoloxChatButton>
                   // 🔥 kräftiger, weicher Glow nach unten
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.65),
+                      color: theme.colorScheme.primary.withValues(alpha:0.65),
                       blurRadius: 30,
                       spreadRadius: 4,
                       offset: const Offset(0, 10),
@@ -127,13 +127,13 @@ class _ThermoloxChatButtonState extends State<ThermoloxChatButton>
                       ),
                     ),
 
-                    // 🟣 Thermolox-Logo etwas größer (~1.2x)
-                    SizedBox(
-                      width: 60, // vorher 50
+                    const SizedBox(
+                      width: 60,
                       height: 60,
-                      child: Image.asset(
-                        'assets/icons/THERMOLOX_ICON.png',
-                        fit: BoxFit.contain,
+                      child: Icon(
+                        Icons.palette,
+                        size: 32,
+                        color: AppTheme.primary,
                       ),
                     ),
                   ],

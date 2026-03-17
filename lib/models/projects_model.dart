@@ -13,6 +13,7 @@ class ProjectsModel extends ChangeNotifier {
   final ProjectsRepository _repo;
   bool _loaded = false;
   bool _loadedFromCache = false;
+  int _initGeneration = 0;
   List<Project> _projects = [];
   StreamSubscription<AuthState>? _authSub;
 
@@ -23,23 +24,33 @@ class ProjectsModel extends ChangeNotifier {
       _projects.any((p) => p.name.toLowerCase() == name.toLowerCase());
 
   ProjectsModel({ProjectsRepository? repo}) : _repo = repo ?? ProjectsRepository() {
-    _authSub = SupabaseService.client.auth.onAuthStateChange.listen((_) {
-      reload();
+    _authSub = SupabaseService.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.signedOut) {
+        reload();
+      }
     });
     _init();
   }
 
   Future<void> _init() async {
+    final generation = ++_initGeneration;
     try {
       await _repo.migrateLocalProjectsIfNeeded();
+      if (generation != _initGeneration) return;
       _projects = await _repo.loadProjects();
+      if (generation != _initGeneration) return;
       _loadedFromCache = _repo.lastLoadUsedCache;
     } catch (_) {
+      if (generation != _initGeneration) return;
       _projects = [];
       _loadedFromCache = true;
     } finally {
-      _loaded = true;
-      notifyListeners();
+      if (generation == _initGeneration) {
+        _loaded = true;
+        notifyListeners();
+      }
     }
   }
 
@@ -101,9 +112,10 @@ class ProjectsModel extends ChangeNotifier {
   }
 
   Future<void> renameProject(String id, String newName) async {
-    final p = _projects.firstWhere((e) => e.id == id);
-    p.name = newName;
-    p.title = newName;
+    final idx = _projects.indexWhere((e) => e.id == id);
+    if (idx == -1) return;
+    _projects[idx].name = newName;
+    _projects[idx].title = newName;
     await _repo.updateProjectName(id: id, newName: newName);
     await _cacheProjects();
     notifyListeners();
@@ -123,7 +135,9 @@ class ProjectsModel extends ChangeNotifier {
     String? path,
     String? url,
   }) async {
-    final project = _projects.firstWhere((e) => e.id == projectId);
+    final pIdx = _projects.indexWhere((e) => e.id == projectId);
+    if (pIdx == -1) return;
+    final project = _projects[pIdx];
     if (type == 'image') {
       project.items.removeWhere((item) => item.type == 'image');
     } else if (type == 'file') {
@@ -189,7 +203,9 @@ class ProjectsModel extends ChangeNotifier {
       }
     }
     if (item == null) return;
-    final target = _projects.firstWhere((e) => e.id == targetProjectId);
+    final tIdx = _projects.indexWhere((e) => e.id == targetProjectId);
+    if (tIdx == -1) return;
+    final target = _projects[tIdx];
     target.items.add(item);
     await _repo.moveItem(itemId: itemId, targetProjectId: targetProjectId);
     await _cacheProjects();
@@ -212,7 +228,9 @@ class ProjectsModel extends ChangeNotifier {
     required String projectId,
     required String hex,
   }) async {
-    final project = _projects.firstWhere((e) => e.id == projectId);
+    final csIdx = _projects.indexWhere((e) => e.id == projectId);
+    if (csIdx == -1) return;
+    final project = _projects[csIdx];
     final normalized = _normalizeHex(hex);
     project.items.removeWhere((item) => item.type == 'color');
     final item = await _repo.addItem(
@@ -239,7 +257,9 @@ class ProjectsModel extends ChangeNotifier {
       path: path,
       url: url,
     );
-    final project = _projects.firstWhere((e) => e.id == projectId);
+    final rIdx = _projects.indexWhere((e) => e.id == projectId);
+    if (rIdx == -1) return;
+    final project = _projects[rIdx];
     final renders = project.items.where((i) => i.type == 'render').toList();
     if (renders.length <= 10) return;
 

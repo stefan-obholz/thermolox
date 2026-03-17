@@ -46,10 +46,10 @@ class ThermoloxSegmentedTabs extends StatelessWidget
           margin: resolvedMargin,
           padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surface.withOpacity(0.9),
+            color: theme.colorScheme.surface.withValues(alpha:0.9),
             borderRadius: BorderRadius.circular(tokens.radiusPill),
             border: Border.all(
-              color: theme.colorScheme.primary.withOpacity(0.55),
+              color: theme.colorScheme.primary.withValues(alpha:0.55),
             ),
           ),
           child: TabBar(
@@ -92,7 +92,7 @@ class ThermoloxSegmentedTabs extends StatelessWidget
             unselectedLabelStyle: theme.textTheme.bodyMedium,
             labelColor: theme.colorScheme.onPrimary,
             unselectedLabelColor:
-                theme.colorScheme.onSurface.withOpacity(0.75),
+                theme.colorScheme.onSurface.withValues(alpha:0.75),
             dividerColor: Colors.transparent,
           ),
         ),

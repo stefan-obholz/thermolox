@@ -1,0 +1,468 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "custom_liquid_g7iXYz": {
+      "type": "custom-liquid",
+      "name": "THERMOLOX Products intro",
+      "settings": {
+        "custom_liquid": "<div style=\"position: relative; width: 100%; padding-top: 56.25%; overflow: hidden;\">\n  <video \n    autoplay \n    muted \n    playsinline \n    controlslist=\"nodownload\" \n    style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;\"\n    onended=\"this.pause(); this.currentTime = this.duration;\">\n    <source src=\"https://cdn.shopify.com/videos/c/o/v/3eb4687cd1a44a71a997a27eed59dbbb.mp4\" type=\"video/mp4\">\n    Your browser does not support the video tag.\n  </video>\n</div>",
+        "color_scheme": "",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "custom_liquid_4wW9aK": {
+      "type": "custom-liquid",
+      "disabled": true,
+      "name": "THERMOLOX Systems LOGO",
+      "settings": {
+        "custom_liquid": "<style>\n.thermolox-logo-wrapper {\n  text-align: center;\n}\n\n.thermolox-logo-fixed {\n  width: 45vw !important;\n  max-width: 45vw !important;\n  height: auto;\n  display: inline-block;\n}\n\n/* Auf Mobilgeräten: 80% der Bildschirmbreite */\n@media screen and (max-width: 767px) {\n  .thermolox-logo-fixed {\n    width: 80vw !important;\n    max-width: 80vw !important;\n  }\n}\n</style>\n\n<div class=\"thermolox-logo-wrapper\">\n  <img \n    src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMOLOX_LOGO_WIDE_Q.png?v=1756443829\" \n    alt=\"THERMOLOX Logo\" \n    class=\"thermolox-logo-fixed\"\n  />\n</div>",
+        "color_scheme": "",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+    "custom_liquid_Taztjb": {
+      "type": "custom-liquid",
+      "name": "3x ICONS",
+      "settings": {
+        "custom_liquid": "<style>\n.thermolox-logo-wrapper {\n  text-align: center;\n}\n\n.thermolox-logo-fixed {\n  width: 45vw !important;\n  max-width: 45vw !important;\n  height: auto;\n  display: inline-block;\n}\n\n/* Auf Mobilgeräten: 80% der Bildschirmbreite */\n@media screen and (max-width: 767px) {\n  .thermolox-logo-fixed {\n    width: 80vw !important;\n    max-width: 80vw !important;\n  }\n}\n</style>\n\n<div class=\"thermolox-logo-wrapper\">\n  <img \n    src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMOLOX_3x_ICONs.png?v=1756492590\" \n    alt=\"THERMOLOX Icons\" \n    class=\"thermolox-logo-fixed\"\n  />\n</div>",
+        "color_scheme": "",
+        "padding_top": 32,
+        "padding_bottom": 0
+      }
+    },
+    "rich_text_Xrmwjg": {
+      "type": "rich-text",
+      "blocks": {
+        "text_U9HMXh": {
+          "type": "text",
+          "settings": {
+            "text": "<h2><em><strong>„Das Thermolox-System ist das Balkonkraftwerk für Wände</strong></em></h2>"
+          }
+        },
+        "text_xYif8m": {
+          "type": "text",
+          "settings": {
+            "text": "<h1><em><strong> - nur effektiver.“</strong></em></h1>"
+          }
+        }
+      },
+      "block_order": [
+        "text_U9HMXh",
+        "text_xYif8m"
+      ],
+      "custom_css": [
+        ".rich-text__blocks > * + * {margin-top: 4px; /* Abstand in Pixel – anpassen nach Wunsch */}"
+      ],
+      "name": "Balkonkraftwerk",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "",
+        "full_width": true,
+        "padding_top": 40,
+        "padding_bottom": 52
+      }
+    },
+    "featured_product_LxkaXe": {
+      "type": "featured-product",
+      "blocks": {
+        "custom_liquid_XXqr6D": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"text-align: center; margin-bottom: -20px;\">\n  <img \n    src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMO-SEAL_LOGO.png?v=1756469139\" \n    alt=\"THERMO-SEAL Schriftzug\" \n    style=\"max-width: 100%; height: auto;\">\n</div>"
+          }
+        },
+        "price_kQw8Jn": {
+          "type": "price",
+          "settings": {}
+        },
+        "quantity_selector_dUUdtt": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "buy_buttons_akGegd": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "show_gift_card_recipient": false
+          }
+        }
+      },
+      "block_order": [
+        "custom_liquid_XXqr6D",
+        "price_kQw8Jn",
+        "quantity_selector_dUUdtt",
+        "buy_buttons_akGegd"
+      ],
+      "custom_css": [
+              ],
+      "name": "THERMO-SEAL",
+      "settings": {
+        "product": "thermolox-seal",
+        "color_scheme": "scheme-1",
+        "secondary_background": false,
+        "media_size": "medium",
+        "constrain_to_viewport": true,
+        "media_fit": "cover",
+        "media_position": "left",
+        "image_zoom": "none",
+        "hide_variants": false,
+        "enable_video_looping": false,
+        "padding_top": 100,
+        "padding_bottom": 36
+      }
+    },
+    "featured_product_a96QN4": {
+      "type": "featured-product",
+      "blocks": {
+        "custom_liquid_6WFqF9": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"text-align: center; margin-bottom: -20px;\">\n  <img \n    src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMO-COAT_LOGO.png?v=1756469150\" \n    alt=\"THERMO-COAT Logo\" \n    style=\"max-width: 100%; height: auto;\">\n</div>"
+          }
+        },
+        "price_bL9TLN": {
+          "type": "price",
+          "settings": {}
+        },
+        "quantity_selector_TzhHyk": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "buy_buttons_NBPAJy": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "show_gift_card_recipient": false
+          }
+        }
+      },
+      "block_order": [
+        "custom_liquid_6WFqF9",
+        "price_bL9TLN",
+        "quantity_selector_TzhHyk",
+        "buy_buttons_NBPAJy"
+      ],
+      "custom_css": [
+              ],
+      "name": "THERMO-COAT",
+      "settings": {
+        "product": "thermo-coat",
+        "color_scheme": "scheme-1",
+        "secondary_background": false,
+        "media_size": "medium",
+        "constrain_to_viewport": true,
+        "media_fit": "cover",
+        "media_position": "right",
+        "image_zoom": "none",
+        "hide_variants": false,
+        "enable_video_looping": false,
+        "padding_top": 100,
+        "padding_bottom": 72
+      }
+    },
+    "custom_liquid_yHmtDX": {
+      "type": "custom-liquid",
+      "name": "Abgedunkeltes Video",
+      "settings": {
+        "custom_liquid": "<div class=\"darkmode-scroll-section\">\n\n<h1 class=\"h1\"><strong>Was, wenn deine Wand wie eine Thermoskanne funktioniert?</strong></h1>\n\n  <h3></h3>\n\n  <div class=\"video-wrapper\">\n    <iframe \n      src=\"https://www.youtube.com/embed/CAyWN9ba9J8\" \n      title=\"YouTube video\" \n      frameborder=\"0\" \n      allowfullscreen>\n    </iframe>\n  </div>\n</div>\n\n<style>\n  :root {\n    --transition-speed: 1s;\n  }\n\n  body {\n    transition: filter var(--transition-speed) ease;\n  }\n\n  body img,\n  body video,\n  body iframe {\n    transition: filter var(--transition-speed) ease;\n  }\n\n  body.scroll-dark-invert {\n    filter: invert(1) hue-rotate(180deg);\n  }\n\n  body.scroll-dark-invert img,\n  body.scroll-dark-invert video,\n  body.scroll-dark-invert iframe {\n    filter: invert(1) hue-rotate(180deg);\n  }\n\n  .darkmode-scroll-section {\n    padding: 100px 20px;\n    text-align: center;\n    background-color: transparent;\n  }\n\n  .darkmode-scroll-section h2,\n  .darkmode-scroll-section p {\n    margin-bottom: 20px;\n  }\n\n  .video-wrapper {\n    position: relative;\n    width: 100%;\n    max-width: 800px;\n    margin: 0 auto;\n    aspect-ratio: 16 / 9;\n  }\n\n  .video-wrapper iframe {\n    width: 100%;\n    height: 100%;\n    border: none;\n  }\n</style>\n\n<script>\n  document.addEventListener('DOMContentLoaded', function () {\n    const section = document.querySelector('.darkmode-scroll-section');\n\n    if (!section) return;\n\n    const observer = new IntersectionObserver(\n      function (entries) {\n        entries.forEach(entry => {\n          if (entry.isIntersecting) {\n            document.body.classList.add('scroll-dark-invert');\n          } else {\n            document.body.classList.remove('scroll-dark-invert');\n          }\n        });\n      },\n      { threshold: 0.5 }\n    );\n\n    observer.observe(section);\n  });\n</script>",
+        "color_scheme": "",
+        "padding_top": 40,
+        "padding_bottom": 60
+      }
+    },
+    "rich_text_77L8AB": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_X9NGgD": {
+          "type": "heading",
+          "settings": {
+            "heading": "<strong>So sieht echte Energieeinsparung aus</strong>",
+            "heading_size": "h1"
+          }
+        }
+      },
+      "block_order": [
+        "heading_X9NGgD"
+      ],
+      "name": "Überschrift Schieber",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "",
+        "full_width": true,
+        "padding_top": 60,
+        "padding_bottom": 0
+      }
+    },
+    "custom_liquid_BTYTwW": {
+      "type": "custom-liquid",
+      "name": "Schieber",
+      "settings": {
+        "custom_liquid": "<div class=\"ba-container\">\n  <div class=\"ba-wrapper\">\n    <!-- COOL jetzt zuerst (links sichtbar) -->\n    <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_COOL.png?v=1756748492\" class=\"ba-image\" alt=\"COOL\">\n    \n    <!-- HOT jetzt überlagert (rechts) -->\n    <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_HOT.png?v=1756748493\" class=\"ba-image ba-overlay\" id=\"coolImage\" alt=\"HOT\">\n\n    <div class=\"ba-handle\" id=\"baHandle\">\n      <span class=\"ba-arrow left\">‹</span>\n      <span class=\"ba-arrow right\">›</span>\n    </div>\n\n    <input type=\"range\" min=\"0\" max=\"100\" value=\"50\" class=\"ba-slider\" id=\"slider\">\n  </div>\n</div>\n\n<style>\n.ba-container {\n  width: 100%;\n  max-width: 1400px;\n  margin: 0 auto;\n}\n\n.ba-wrapper {\n  position: relative;\n  width: 100%;\n  overflow: hidden;\n  aspect-ratio: 16/6; /* Bildhöhe definieren! */\n  background: #000;\n}\n\n.ba-image {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n}\n\n.ba-overlay {\n  z-index: 2;\n  clip-path: inset(0 50% 0 0);\n  transition: clip-path 0.2s ease-out;\n}\n\n.ba-slider {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  opacity: 0;\n  z-index: 4;\n  cursor: ew-resize;\n}\n\n.ba-handle {\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  transform: translate(-50%, -50%);\n  height: 100%;\n  width: 0;\n  z-index: 5;\n  pointer-events: none;\n}\n\n.ba-handle::before {\n  content: \"\";\n  position: absolute;\n  height: 100%;\n  width: 2px;\n  background-color: white;\n  left: 50%;\n  transform: translateX(-50%);\n}\n\n.ba-arrow {\n  position: absolute;\n  top: 50%;\n  transform: translateY(-50%);\n  background: white;\n  color: black;\n  width: 40px;\n  height: 40px;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  font-size: 22px;\n  font-weight: bold;\n  box-shadow: 0 0 8px rgba(0,0,0,0.3);\n}\n\n.ba-arrow.left {\n  left: -50px;\n}\n\n.ba-arrow.right {\n  right: -50px;\n}\n</style>\n\n<script>\ndocument.addEventListener(\"DOMContentLoaded\", function () {\n  const slider = document.getElementById(\"slider\");\n  const coolImage = document.getElementById(\"coolImage\");\n  const handle = document.getElementById(\"baHandle\");\n\n  function updateSlider(value) {\n    const percent = 100 - parseInt(value);\n    coolImage.style.clipPath = `inset(0 ${percent}% 0 0)`;\n    handle.style.left = `${value}%`;\n  }\n\n  if (slider && coolImage && handle) {\n    slider.addEventListener(\"input\", function () {\n      updateSlider(this.value);\n    });\n\n    // initial setzen\n    updateSlider(slider.value);\n  }\n});\n</script>",
+        "color_scheme": "",
+        "padding_top": 40,
+        "padding_bottom": 52
+      }
+    },
+    "rich_text_tKx9r9": {
+      "type": "rich-text",
+      "blocks": {
+        "text_dhJYVB": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des THERMOLOX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, das mit <strong>THERMO-COAT</strong> gestrichen und mit <strong>THERMO-SEAL</strong> abgedichtet wurde.</p><p>💡 Weniger Wärmeverlust bedeutet:<br/><strong>Weniger Heizkosten. Mehr Komfort. Besser fürs Klima.</strong></p><p><br/></p><p>✅ Ideal für Altbau & unsanierte Gebäude</p><p>✅ Spart bis zu 42 % Heiz- und Kühlkosten</p><p>✅ Sofortige Wirkung nach der Anwendung</p><p>✅ Ohne Handwerker oder Umbau</p><p></p><p><br/></p><p><strong>Energie sparen war noch nie so einfach.</strong></p><p>Setze auf das THERMOLOX-System – die nachhaltige, rückbaufreie und günstige Alternative zur klassischen Sanierung.</p>"
+          }
+        },
+        "button_KEUaey": {
+          "type": "button",
+          "settings": {
+            "button_label": "Jetzt entdecken",
+            "button_link": "shopify://collections/all",
+            "button_style_secondary": false,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
+          }
+        }
+      },
+      "block_order": [
+        "text_dhJYVB",
+        "button_KEUaey"
+      ],
+      "custom_css": [],
+      "name": "Energieeinsparung Text (Schieber)",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "left",
+        "color_scheme": "",
+        "full_width": true,
+        "padding_top": 0,
+        "padding_bottom": 52
+      }
+    },
+    "multicolumn_8k3Nxc": {
+      "type": "multicolumn",
+      "blocks": {
+        "column_KyQBtT": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Vorbereiten.png",
+            "title": "<strong>1. Vorbereiten</strong>",
+            "text": "<p>Säubere die Wände, Decken oder Fensterrahmen gründlich – trocken, staubfrei und fettfrei. Eine saubere Oberfläche ist die Basis für maximale Haftung und Wirkung.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "column_rmNPbg": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Streichen.png",
+            "title": "<strong>2. Streichen</strong>",
+            "text": "<p>Trage <strong>THERMO-COAT</strong> wie eine herkömmliche Innenfarbe auf Wand und Decke auf. Die spezielle Hightech-Beschichtung reflektiert die Wärmestrahlung zurück in den Raum – wie bei einer Thermoskanne.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "column_UCGRtL": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Abdichten.png",
+            "title": "<strong>3. Abdichten</strong>",
+            "text": "<p>Klebe <strong>THERMO-SEAL</strong> in Fenster- und Türspalten (1–8 mm). Das transparente Dichtband reduziert Zugluft, Staub und Schall – und sorgt für ein spürbar ruhigeres Raumklima.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "column_WGWV98": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Sparen.png",
+            "title": "<strong>4. Sparen</strong>",
+            "text": "<p>Bereits ab dem ersten Tag nach dem Trocknen sinken deine Heiz- und Kühlkosten – um bis zu 42 %. Ohne Baustelle, ohne Lärm – dafür mit sofortiger Wirkung.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "column_KyQBtT",
+        "column_rmNPbg",
+        "column_UCGRtL",
+        "column_WGWV98"
+      ],
+      "name": "Anwendung",
+      "settings": {
+        "title": "<strong>So funktioniert THERMOLOX</strong>",
+        "heading_size": "h1",
+        "image_width": "full",
+        "image_ratio": "adapt",
+        "button_label": "Mehr erfahren",
+        "button_link": "shopify://pages/anwendung",
+        "columns_desktop": 4,
+        "column_alignment": "left",
+        "background_style": "primary",
+        "color_scheme": "",
+        "columns_mobile": "1",
+        "swipe_on_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 36
+      }
+    },
+    "faq_home": {
+      "type": "collapsible-content",
+      "blocks": {
+        "hq1": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Was ist das THERMOLOX-System?",
+            "icon": "question_mark",
+            "row_content": "<p>THERMOLOX besteht aus <strong>THERMO-COAT</strong> (Hightech-Wandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und <strong>THERMO-SEAL</strong> (transparentes Dichtband). Zusammen senken sie Heiz- und Kühlkosten um bis zu 42 % – ohne Umbau.</p>"
+          }
+        },
+        "hq2": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Wie schwer ist die Anwendung?",
+            "icon": "question_mark",
+            "row_content": "<p>So einfach wie normales Streichen! THERMO-COAT wird mit Rolle oder Pinsel aufgetragen, THERMO-SEAL wird in Fenster- und Türspalten eingedrückt. Kein Handwerker nötig, kein Spezialwerkzeug, vollständig rückbaufrei.</p>"
+          }
+        },
+        "hq3": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Für welche Gebäude eignet sich das?",
+            "icon": "question_mark",
+            "row_content": "<p>Besonders effektiv bei Altbauten und unsanierten Gebäuden. Aber auch in Neubauten bringt es spürbare Verbesserungen. Ideal für Mietwohnungen – beim Auszug einfach überstreichen.</p>"
+          }
+        },
+        "hq4": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Gibt es THERMO-COAT auch in Farbe?",
+            "icon": "question_mark",
+            "row_content": "<p>Ja! Über 100 Farbtöne verfügbar. Besuche unseren ColorRoom, um Farben virtuell an deinen Wänden zu testen. Die Thermo-Wirkung bleibt bei allen Farben vollständig erhalten.</p>"
+          }
+        }
+      },
+      "block_order": ["hq1", "hq2", "hq3", "hq4"],
+      "settings": {
+        "caption": "",
+        "heading": "<strong>Häufige Fragen</strong>",
+        "heading_size": "h1",
+        "heading_alignment": "center",
+        "layout": "none",
+        "container_color_scheme": "scheme-2",
+        "color_scheme": "scheme-1",
+        "open_first_collapsible_row": true,
+        "image_ratio": "adapt",
+        "desktop_layout": "image_second",
+        "padding_top": 60,
+        "padding_bottom": 36
+      }
+    },
+    "blog_teaser": {
+      "type": "featured-blog",
+      "settings": {
+        "heading": "<strong>Ratgeber & Tipps</strong>",
+        "heading_size": "h1",
+        "blog": "news",
+        "post_limit": 3,
+        "columns_desktop": 3,
+        "show_image": true,
+        "show_date": true,
+        "show_author": false,
+        "show_view_all": true,
+        "color_scheme": "",
+        "padding_top": 60,
+        "padding_bottom": 36
+      }
+    },
+    "app_download": {
+      "type": "app-download-banner",
+      "settings": {
+        "heading": "Hol dir die THERMOLOX App",
+        "text": "Raumfarben virtuell testen, Verbrauch berechnen und direkt bestellen - alles in einer App.",
+        "color_scheme": "scheme-1",
+        "padding_top": 60,
+        "padding_bottom": 60
+      }
+    },
+    "image_with_text_jBwyWd": {
+      "type": "image-with-text",
+      "blocks": {
+        "heading_pR3gYK": {
+          "type": "heading",
+          "settings": {
+            "heading": "<strong>Wähle deine Wunschfarbe</strong>",
+            "heading_size": "h1"
+          }
+        },
+        "text_DkPHXi": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Du willst nicht nur Energie sparen, sondern deinen Raum farblich perfekt gestalten?</p><p>Im <strong>THERMOLOX ColorRoom</strong> findest du hunderte moderne Farbtöne – optimiert für THERMO-COAT und perfekt kombinierbar mit deiner Einrichtung.</p><p>Lass dich inspirieren – inklusive <strong>realer Raumvorschau</strong> mit unserer smarten Farbvisualisierung.</p>",
+            "text_style": "body"
+          }
+        },
+        "button_B667zU": {
+          "type": "button",
+          "settings": {
+            "button_label": "ColorRoom starten",
+            "button_link": "shopify://pages/colorroom",
+            "button_style_secondary": false
+          }
+        }
+      },
+      "block_order": [
+        "heading_pR3gYK",
+        "text_DkPHXi",
+        "button_B667zU"
+      ],
+      "name": "Farbpalette",
+      "settings": {
+        "image": "shopify://shop_images/Farbpalette.png",
+        "height": "adapt",
+        "desktop_image_width": "medium",
+        "layout": "image_first",
+        "image_behavior": "none",
+        "content_layout": "no-overlap",
+        "desktop_content_position": "top",
+        "desktop_content_alignment": "left",
+        "mobile_content_alignment": "left",
+        "section_color_scheme": "",
+        "color_scheme": "",
+        "padding_top": 36,
+        "padding_bottom": 36
+      }
+    },
+
+  },
+  "order": [
+    "custom_liquid_g7iXYz",
+    "custom_liquid_4wW9aK",
+    "custom_liquid_Taztjb",
+    "rich_text_Xrmwjg",
+    "featured_product_LxkaXe",
+    "featured_product_a96QN4",
+    "custom_liquid_yHmtDX",
+    "rich_text_77L8AB",
+    "custom_liquid_BTYTwW",
+    "rich_text_tKx9r9",
+    "multicolumn_8k3Nxc",
+    "faq_home",
+    "blog_teaser",
+    "app_download",
+    "image_with_text_jBwyWd",
+  ]
+}

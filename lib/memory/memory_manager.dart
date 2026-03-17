@@ -118,7 +118,7 @@ class MemoryManager {
     final uri = Uri.parse('$base/chat');
 
     final systemPrompt = '''
-Du bist der Memory-Summarizer für den THERMOLOX Chat. Halte Tokens klein.
+Du bist der Memory-Summarizer für den CLIMALOX Chat. Halte Tokens klein.
 Gib ausschließlich JSON im Format:
 {"runningSummary":"...","highlights":[{"id":"...","text":"...","tags":["a"],"score":1.0}]}
 Vorgaben:

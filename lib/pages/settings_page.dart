@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ import '../widgets/plan_card_view.dart';
 import '../widgets/settings_auth_panel.dart';
 import '../widgets/thermolox_secondary_tabs.dart';
 import '../widgets/thermolox_segmented_tabs.dart';
+import '../chat/chat_bot.dart';
 import 'auth_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -85,7 +87,10 @@ class _ProfileTabState extends State<ProfileTab> {
   UserProfile? _profile;
   String? _profileError;
   bool _loadingProfile = false;
+  bool _uploadingAvatar = false;
   String? _lastUserId;
+  Timer? _saveTimer;
+  final _profileService = ProfileService();
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _streetCtrl = TextEditingController();
@@ -94,7 +99,19 @@ class _ProfileTabState extends State<ProfileTab> {
   final _cityCtrl = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _firstNameCtrl.addListener(_onFieldChanged);
+    _lastNameCtrl.addListener(_onFieldChanged);
+    _streetCtrl.addListener(_onFieldChanged);
+    _houseNumberCtrl.addListener(_onFieldChanged);
+    _zipCtrl.addListener(_onFieldChanged);
+    _cityCtrl.addListener(_onFieldChanged);
+  }
+
+  @override
   void dispose() {
+    _saveTimer?.cancel();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _streetCtrl.dispose();
@@ -102,6 +119,35 @@ class _ProfileTabState extends State<ProfileTab> {
     _zipCtrl.dispose();
     _cityCtrl.dispose();
     super.dispose();
+  }
+
+  void _onFieldChanged() {
+    if (_loadingProfile || _lastUserId == null) return;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 1500), _saveProfile);
+  }
+
+  Future<void> _saveProfile() async {
+    final userId = _lastUserId;
+    if (userId == null) return;
+    try {
+      final data = <String, dynamic>{
+        'id': userId,
+        'first_name': _firstNameCtrl.text,
+        'last_name': _lastNameCtrl.text,
+        'street': _streetCtrl.text,
+        'house_number': _houseNumberCtrl.text,
+        'postal_code': _zipCtrl.text,
+        'city': _cityCtrl.text,
+      };
+      await _profileService.upsertProfile(UserProfile.fromMap(data));
+      if (!mounted) return;
+      ThermoloxOverlay.showSnack(context, 'Gespeichert');
+    } catch (e) {
+      if (!mounted) return;
+      ThermoloxOverlay.showSnack(context, 'Speichern fehlgeschlagen.',
+          isError: true);
+    }
   }
 
   @override
@@ -121,7 +167,28 @@ class _ProfileTabState extends State<ProfileTab> {
       ThermoloxOverlay.showSnack(context, 'Bitte ein Foto auswählen.');
       return;
     }
-    setState(() => _profileImagePath = picked.path);
+    setState(() {
+      _profileImagePath = picked.path;
+      _uploadingAvatar = true;
+    });
+    try {
+      final url = await _profileService.uploadAvatar(picked.path);
+      if (!mounted) return;
+      setState(() {
+        _profileImageUrl = url;
+        _profileImagePath = null;
+        _uploadingAvatar = false;
+      });
+      ThermoloxOverlay.showSnack(context, 'Profilbild gespeichert.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _uploadingAvatar = false);
+      ThermoloxOverlay.showSnack(
+        context,
+        'Profilbild konnte nicht hochgeladen werden.',
+        isError: true,
+      );
+    }
   }
 
   Future<void> _loadProfile(User user) async {
@@ -130,10 +197,9 @@ class _ProfileTabState extends State<ProfileTab> {
       _profileError = null;
     });
     final locale = Localizations.localeOf(context).toLanguageTag();
-    final profileService = ProfileService();
     try {
-      await profileService.seedProfileFromAuth(user: user, locale: locale);
-      final profile = await profileService.getProfile(user.id);
+      await _profileService.seedProfileFromAuth(user: user, locale: locale);
+      final profile = await _profileService.getProfile(user.id);
       if (!mounted) return;
       setState(() {
         _profile = profile;
@@ -159,6 +225,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _logout() async {
     try {
+      ThermoloxChatBot.clearCache();
       await AuthService().signOut();
       if (!mounted) return;
       context.read<PlanController>().load(force: true);
@@ -252,13 +319,15 @@ class _ProfileTabState extends State<ProfileTab> {
                       radius: 46,
                       backgroundColor: theme.colorScheme.primary.withAlpha(31),
                       backgroundImage: avatarImage,
-                      child: avatarImage == null
-                          ? Icon(
-                              Icons.person,
-                              size: 40,
-                              color: theme.colorScheme.primary,
-                            )
-                          : null,
+                      child: _uploadingAvatar
+                          ? const CircularProgressIndicator(strokeWidth: 2)
+                          : avatarImage == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: theme.colorScheme.primary,
+                                )
+                              : null,
                     ),
                     Padding(
                       padding: const EdgeInsets.all(2),
@@ -741,6 +810,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
               if (!confirm) return;
               setState(() => _isDeleting = true);
               try {
+                ThermoloxChatBot.clearCache();
                 await authService.deleteAccount();
                 if (!context.mounted) return;
                 context.read<PlanController>().load(force: true);

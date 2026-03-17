@@ -1,9 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../widgets/cart_icon_button.dart';
 import '../theme/app_theme.dart';
+import '../models/content_item.dart';
+import '../services/content_service.dart';
+import 'blog_page.dart';
+import 'content_detail_page.dart';
 import 'products_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -50,6 +55,16 @@ class HomePageState extends State<HomePage> {
       ),
       const SizedBox(height: 20),
       const ThermoloxImpactText(),
+      const SizedBox(height: 8),
+      Padding(
+        padding: textPadding,
+        child: _BlogPreviewSection(
+          onViewAll: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BlogPage()),
+          ),
+        ),
+      ),
     ];
   }
 
@@ -81,7 +96,7 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'THERMOLOX',
+          'CLIMALOX',
           style: theme.textTheme.headlineMedium?.copyWith(
             fontSize: 34,
             fontWeight: FontWeight.w800,
@@ -220,10 +235,10 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
   late final AnimationController _controller;
   late final Animation<double> _fade;
   Timer? _typingTimer;
-  String _displayText = '';
+  final ValueNotifier<String> _displayText = ValueNotifier<String>('');
   int _typingIndex = 0;
   static const String _fullText =
-      '„Das Thermolox-System ist das Balkonkraftwerk für Wände\n- nur effektiver.“';
+      '„Das CLIMALOX-System ist das Balkonkraftwerk für Wände\n- nur effektiver.”';
 
   @override
   void initState() {
@@ -243,13 +258,14 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
   @override
   void dispose() {
     _typingTimer?.cancel();
+    _displayText.dispose();
     _controller.dispose();
     super.dispose();
   }
 
   void _startTyping() {
     _typingTimer?.cancel();
-    _displayText = '';
+    _displayText.value = '';
     _typingIndex = 0;
     const step = Duration(milliseconds: 30);
     _typingTimer = Timer.periodic(step, (timer) {
@@ -257,10 +273,8 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
         timer.cancel();
         return;
       }
-      setState(() {
-        _typingIndex++;
-        _displayText = _fullText.substring(0, _typingIndex);
-      });
+      _typingIndex++;
+      _displayText.value = _fullText.substring(0, _typingIndex);
     });
   }
 
@@ -279,23 +293,27 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
                 children: [
                   SizedBox(
                     width: targetWidth,
-                    child: Image.asset(
-                      'assets/images/THERMOLOX_3x_ICONs.png',
-                      fit: BoxFit.contain,
+                    child: Center(
+                      child: Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: targetWidth,
                     height: 64, // reserve space to avoid layout shift
-                    child: Text(
-                      _displayText,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontStyle: FontStyle.italic,
-                            fontWeight: FontWeight.w600,
-                            height: 1.35,
-                          ),
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: _displayText,
+                      builder: (context, text, _) {
+                        return Text(
+                          text,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                              ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -489,17 +507,17 @@ class _ArrowButton extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.accent,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.18),
+            color: Colors.black.withValues(alpha: 0.18),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Icon(icon, color: Colors.black87),
+      child: Icon(icon, color: AppTheme.primary),
     );
   }
 }
@@ -544,7 +562,7 @@ class ThermoloxImpactText extends StatelessWidget {
         children: [
           Text(
             'Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des '
-            'THERMOLOX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
+            'CLIMALOX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
             'das mit THERMO-COAT gestrichen und mit THERMO-SEAL abgedichtet wurde.',
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.35,
@@ -580,7 +598,7 @@ class ThermoloxImpactText extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Setze auf das THERMOLOX-System – die nachhaltige, '
+            'Setze auf das CLIMALOX-System – die nachhaltige, '
             'rückbaufreie und günstige Alternative zur klassischen Sanierung.',
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.35,
@@ -606,6 +624,105 @@ class ThermoloxImpactText extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Blog Preview on Home ──
+
+class _BlogPreviewSection extends StatefulWidget {
+  final VoidCallback onViewAll;
+  const _BlogPreviewSection({required this.onViewAll});
+
+  @override
+  State<_BlogPreviewSection> createState() => _BlogPreviewSectionState();
+}
+
+class _BlogPreviewSectionState extends State<_BlogPreviewSection> {
+  late Future<List<ContentItem>> _articlesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _articlesFuture = ContentService.fetchArticles();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return FutureBuilder<List<ContentItem>>(
+      future: _articlesFuture,
+      builder: (context, snapshot) {
+        final articles = snapshot.data ?? [];
+        if (articles.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Blog & Tipps',
+                  style: const TextStyle(fontFamily: 'Times New Roman', 
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primary,
+                  ),
+                ),
+                TextButton(
+                  onPressed: widget.onViewAll,
+                  child: const Text('Alle anzeigen'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ...articles.take(2).map((article) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ContentDetailPage(item: article),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.primary.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              article.title,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: AppTheme.peachDark,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )),
+          ],
+        );
+      },
     );
   }
 }

@@ -1,0 +1,4 @@
+storeFile=../keystore/thermolox-release.jks
+storePassword=YOUR_STORE_PASSWORD
+keyAlias=thermolox
+keyPassword=YOUR_KEY_PASSWORD

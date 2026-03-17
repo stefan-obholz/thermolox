@@ -21,7 +21,7 @@ class AuthService {
 
   bool isUserVerified(User? user) {
     if (user == null) return false;
-    return user.emailConfirmedAt != null || user.confirmedAt != null;
+    return user.emailConfirmedAt != null;
   }
 
   bool isUserAnonymous(User? user) {

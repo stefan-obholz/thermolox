@@ -1,4 +1,6 @@
+import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../pages/settings_page.dart';
@@ -60,11 +62,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/icons/THERMOLOX_ICON.png',
-              width: 30,
-              height: 30,
-            ),
+            Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -118,7 +116,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
 
   @override
   Widget build(BuildContext context) {
-    const Color footerColor = Color(0xFF242833);
+    const Color footerColor = AppTheme.primary;
     const Color iconBaseColor = Colors.white;
     final canAccessProjects =
         context.watch<PlanController>().hasProjectsAccess;
@@ -137,7 +135,14 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
     const double gapMiddle = 100; // Abstand Projekte<->Shop (unter Chat-Button)
     const double navItemWidth = 70; // Breite jedes Icon-Blocks (Icon+Text)
 
-    return Scaffold(
+    return PopScope(
+      canPop: _currentIndex == 3,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          setState(() => _currentIndex = 3);
+        }
+      },
+      child: Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
 
       bottomNavigationBar: Stack(
@@ -235,6 +240,7 @@ class _ThermoloxShellState extends State<ThermoloxShell> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -267,9 +273,9 @@ class _NavIcon extends StatelessWidget {
     final effectiveEnabled = enabled;
     final tapEnabled = enabled || allowTapWhenDisabled;
     final inactiveColor =
-        effectiveEnabled ? baseColor.withOpacity(0.45) : baseColor.withOpacity(0.2);
+        effectiveEnabled ? baseColor.withValues(alpha: 0.45) : baseColor.withValues(alpha: 0.2);
     final inactiveLabel =
-        effectiveEnabled ? baseColor.withOpacity(0.60) : baseColor.withOpacity(0.3);
+        effectiveEnabled ? baseColor.withValues(alpha: 0.60) : baseColor.withValues(alpha: 0.3);
 
     return InkWell(
       onTap: tapEnabled ? () => onTap(index) : null,

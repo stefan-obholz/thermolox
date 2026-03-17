@@ -27,7 +27,7 @@ class SimplePage extends StatelessWidget {
             Text(
               description,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
+                color: AppTheme.primary.withValues(alpha: 0.7),
               ),
             ),
           ],

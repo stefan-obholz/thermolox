@@ -32,14 +32,17 @@ Color? colorFromHex(String hex) {
 }
 
 String hexFromColor(Color color) {
-  final value = color.value & 0xFFFFFF;
+  final r = (color.r * 255).round();
+  final g = (color.g * 255).round();
+  final b = (color.b * 255).round();
+  final value = (r << 16) | (g << 8) | b;
   return '#${value.toRadixString(16).padLeft(6, '0').toUpperCase()}';
 }
 
 int colorDistanceSquared(Color a, Color b) {
-  final dr = a.red - b.red;
-  final dg = a.green - b.green;
-  final db = a.blue - b.blue;
+  final dr = (a.r * 255).round() - (b.r * 255).round();
+  final dg = (a.g * 255).round() - (b.g * 255).round();
+  final db = (a.b * 255).round() - (b.b * 255).round();
   return dr * dr + dg * dg + db * db;
 }
 

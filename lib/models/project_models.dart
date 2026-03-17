@@ -15,13 +15,21 @@ class ProjectItem {
     this.storagePath,
   });
 
+  /// For color items the hex value is stored in [url] (or [name] as fallback).
+  String? get colorHex {
+    if (type != 'color') return null;
+    final candidate = url ?? name;
+    if (candidate.trim().isEmpty) return null;
+    return candidate;
+  }
+
   factory ProjectItem.fromJson(Map<String, dynamic> json) => ProjectItem(
-        id: json['id'] as String,
-        name: json['name'] as String? ?? '',
-        type: json['type'] as String? ?? 'file',
-        path: json['path'] as String?,
-        url: json['url'] as String?,
-        storagePath: json['storagePath'] as String?,
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        type: json['type']?.toString() ?? 'file',
+        path: json['path']?.toString(),
+        url: json['url']?.toString(),
+        storagePath: json['storagePath']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -50,11 +58,12 @@ class Project {
   factory Project.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>? ?? [];
     return Project(
-      id: json['id'] as String,
-      name: json['name'] as String? ?? '',
-      title: json['title'] as String?,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      title: json['title']?.toString(),
       items: rawItems
-          .map((e) => ProjectItem.fromJson(e as Map<String, dynamic>))
+          .whereType<Map<String, dynamic>>()
+          .map((e) => ProjectItem.fromJson(e))
           .toList(),
     );
   }

@@ -1,12 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/cart_model.dart';
+import '../services/shopify_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/format_price.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  bool _checkoutLoading = false;
+
+  Future<void> _startCheckout(CartModel cart) async {
+    final lineItems = <Map<String, dynamic>>[];
+    for (final item in cart.items) {
+      final variantId = item.product.variantId;
+      if (variantId == null) continue;
+      lineItems.add({'variantId': variantId, 'quantity': item.quantity});
+    }
+    if (lineItems.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Keine Produkte zum Auschecken.')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _checkoutLoading = true);
+    try {
+      final url = await ShopifyService.createCheckoutUrl(lineItems);
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw Exception('URL konnte nicht geöffnet werden.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Checkout-Fehler: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _checkoutLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +117,9 @@ class CartPage extends StatelessWidget {
                               child: Image.network(
                                 product.imageUrl!,
                                 fit: BoxFit.cover,
+                                cacheWidth: 112,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.broken_image),
                               ),
                             ),
                           )
@@ -82,7 +130,7 @@ class CartPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               borderRadius:
                                   BorderRadius.circular(tokens.radiusXs),
-                              color: Colors.grey.shade300,
+                              color: const Color(0xFFD8DEE4),
                             ),
                             alignment: Alignment.center,
                             child: const Icon(Icons.image_not_supported),
@@ -189,10 +237,19 @@ class CartPage extends StatelessWidget {
                   height: 52,
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Checkout
-                    },
-                    child: const Text('Zur Kasse'),
+                    onPressed: _checkoutLoading
+                        ? null
+                        : () => _startCheckout(cart),
+                    child: _checkoutLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Zur Kasse'),
                   ),
                 ),
               ),

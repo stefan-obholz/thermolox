@@ -6,6 +6,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../pages/ar_wall_paint_page.dart';
+import '../services/lidar_service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +23,6 @@ import '../models/cart_model.dart';
 import '../models/product.dart';
 import '../models/project_models.dart';
 import '../models/projects_model.dart';
-import '../pages/auth_page.dart';
 import '../pages/settings_page.dart';
 import '../services/shopify_service.dart';
 import '../services/consent_service.dart';
@@ -34,96 +36,11 @@ import '../widgets/mask_editor_page.dart';
 import '../widgets/image_preview_page.dart';
 import '../pages/cart_page.dart';
 import '../theme/app_theme.dart';
+import 'chat_models.dart';
 
 /// =======================
-///  MODEL-KLASSEN
+///  MODEL-KLASSEN (shared models in chat_models.dart)
 /// =======================
-
-class ChatMessage {
-  final String role; // "user" oder "assistant"
-  final String text;
-  final List<QuickReplyButton>? buttons;
-  final bool excludeFromApi;
-
-  /// Optional: Original-Inhalt für die API (Text oder Text+Bild-Content)
-  final dynamic content;
-
-  /// Lokale Bildpfade, nur für die Vorschau in der Bubble
-  final List<String>? localImagePaths;
-
-  const ChatMessage({
-    required this.role,
-    required this.text,
-    this.buttons,
-    this.content,
-    this.localImagePaths,
-    this.excludeFromApi = false,
-  });
-
-  ChatMessage copyWith({
-    String? role,
-    String? text,
-    List<QuickReplyButton>? buttons,
-    dynamic content,
-    List<String>? localImagePaths,
-    bool? excludeFromApi,
-  }) {
-    return ChatMessage(
-      role: role ?? this.role,
-      text: text ?? this.text,
-      buttons: buttons ?? this.buttons,
-      content: content ?? this.content,
-      localImagePaths: localImagePaths ?? this.localImagePaths,
-      excludeFromApi: excludeFromApi ?? this.excludeFromApi,
-    );
-  }
-}
-
-class QuickReplyButton {
-  final String label;
-  final String value;
-  final bool preferred;
-  final QuickReplyAction action;
-
-  const QuickReplyButton({
-    required this.label,
-    required this.value,
-    this.preferred = false,
-    this.action = QuickReplyAction.send,
-  });
-
-  QuickReplyButton copyWith({
-    String? label,
-    String? value,
-    bool? preferred,
-    QuickReplyAction? action,
-  }) {
-    return QuickReplyButton(
-      label: label ?? this.label,
-      value: value ?? this.value,
-      preferred: preferred ?? this.preferred,
-      action: action ?? this.action,
-    );
-  }
-}
-
-enum QuickReplyAction {
-  send,
-  uploadAttachment,
-  goToCart,
-  acceptAllConsents,
-  openSettings,
-  declineConsents,
-  startRender,
-}
-
-enum _RoomFlowStage {
-  idle,
-  analyzing,
-  awaitingRoomConfirmation,
-  awaitingColorChoice,
-  readyToRender,
-}
 
 class _FallbackButtons {
   final List<QuickReplyButton> buttons;
@@ -166,33 +83,23 @@ class _SentUpload {
   }
 }
 
-class _ColorSuggestion {
-  final String direction;
-  final String name;
-  final String hex;
-  final String? note;
-
-  const _ColorSuggestion({
-    required this.direction,
-    required this.name,
-    required this.hex,
-    this.note,
-  });
-}
-
-class _RoomAnalysis {
-  final String room;
-  final String description;
-
-  const _RoomAnalysis({required this.room, required this.description});
-}
-
 /// =======================
 ///  CHATBOT WIDGET
 /// =======================
 
 class ThermoloxChatBot extends StatefulWidget {
   const ThermoloxChatBot({super.key});
+
+  static void clearCache() {
+    _ThermoloxChatBotState._cachedMessages = [];
+    _ThermoloxChatBotState._cachedUploads = [];
+    _ThermoloxChatBotState._cachedFallbacks = {};
+    _ThermoloxChatBotState._cachedCurrentProjectId = null;
+    _ThermoloxChatBotState._cachedGreetingRequested = false;
+    _ThermoloxChatBotState._cachedProjectPromptShown = false;
+    _ThermoloxChatBotState._cachedUploadPromptShown = false;
+    _ThermoloxChatBotState._cachedVoiceModeActive = false;
+  }
 
   @override
   State<ThermoloxChatBot> createState() => _ThermoloxChatBotState();
@@ -304,14 +211,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   bool _hasInputText = false;
   bool _voiceModeActive = false;
   bool _voicePressActive = false;
-  bool _virtualRoomRequested = false;
-  _RoomFlowStage _roomFlowStage = _RoomFlowStage.idle;
-  String? _roomCandidate;
-  String? _confirmedRoom;
-  ProjectItem? _roomFlowImageItem;
-  List<_ColorSuggestion> _colorSuggestions = [];
-  String? _preferredColorHint;
-
   String? _lastDetectedHex;
   bool _isStartingRecording = false;
   bool _pendingStopAfterStart = false;
@@ -340,7 +239,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   bool _renderCreditsConsumed = false;
   Uint8List? _pendingRenderImageBytes;
   Uint8List? _pendingRenderMaskBytes;
-  String? _pendingRenderImageUrl;
   String? _pendingRenderPrompt;
   ui.Size? _pendingRenderImageSize;
 
@@ -633,11 +531,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/icons/THERMOLOX_ICON.png',
-              width: 30,
-              height: 30,
-            ),
+            Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -700,7 +594,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     final hasPermission = await _audioRecorder.hasPermission();
     if (!hasPermission) {
       _showSnack(
-        'Bitte in iOS Einstellungen > THERMOLOX Mikrofon erlauben.',
+        'Bitte in iOS Einstellungen > CLIMALOX Mikrofon erlauben.',
       );
       return false;
     }
@@ -757,7 +651,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   void _resetRenderPending() {
     _pendingRenderImageBytes = null;
     _pendingRenderMaskBytes = null;
-    _pendingRenderImageUrl = null;
     _pendingRenderPrompt = null;
     _pendingRenderImageSize = null;
     _renderCreditsConsumed = false;
@@ -959,6 +852,87 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     });
   }
 
+  Future<void> _startARWallPaint() async {
+    // Gate: LiDAR required
+    final hasLidar = await LidarService.isAvailable();
+    if (!hasLidar) {
+      _addAssistantMessage(
+        'Die AR-Wandfarbe benötigt ein iPhone Pro mit LiDAR-Sensor. '
+        'Aber ich kann dir dein Foto virtuell einfärben — das funktioniert auf allen Geräten! 🎨',
+        buttons: [
+          QuickReplyButton(
+            label: 'Foto einfärben',
+            value: 'Ich möchte ein Foto virtuell einfärben',
+            preferred: true,
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ],
+      );
+      return;
+    }
+
+    // Ensure project exists
+    final projectsModel = context.read<ProjectsModel>();
+    var projectId = _currentProjectId ?? _cachedCurrentProjectId;
+    if (projectId == null || projectId.isEmpty) {
+      // Auto-create project
+      final name = 'AR Wandfarbe ${DateTime.now().day}.${DateTime.now().month}';
+      await projectsModel.addProject(name);
+      if (!mounted) return;
+      final projects = projectsModel.projects;
+      if (projects.isNotEmpty) {
+        projectId = projects.last.id;
+        _currentProjectId = projectId;
+        _cachedCurrentProjectId = projectId;
+      }
+    }
+    if (projectId == null || projectId.isEmpty) {
+      _addAssistantMessage('Es gab ein Problem beim Erstellen des Projekts. Bitte versuche es erneut.');
+      return;
+    }
+    if (!mounted) return;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ARWallPaintPage(projectId: projectId!),
+      ),
+    );
+    if (!mounted) return;
+    if (result != null) {
+      _addAssistantMessage(
+        'Super! Die AR-Vorschau ist gespeichert. 🏠✨ Wie gefällt dir das Ergebnis?',
+        buttons: [
+          QuickReplyButton(
+            label: 'Farbe passt perfekt',
+            value: 'Die Farbe passt, ich möchte bestellen',
+            preferred: true,
+          ),
+          QuickReplyButton(
+            label: 'Andere Farbe',
+            value: 'Schlage mir eine andere Farbe vor',
+          ),
+        ],
+      );
+    } else {
+      _addAssistantMessage(
+        'Kein Problem! Möchtest du es nochmal versuchen oder eine andere Visualisierung nutzen?',
+        buttons: [
+          QuickReplyButton(
+            label: 'AR nochmal starten',
+            value: 'AR Wandfarbe nochmal starten',
+            preferred: true,
+            action: QuickReplyAction.arWallPaint,
+          ),
+          QuickReplyButton(
+            label: 'Foto einfärben',
+            value: 'Ich möchte ein Foto virtuell einfärben',
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ],
+      );
+    }
+  }
+
   Future<void> _startVirtualRoomRenderFromChat({bool isRetry = false}) async {
     if (_isRenderBusy) return;
     if (!_ensureAiConsent()) return;
@@ -968,8 +942,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
       await _showPremiumGate(featureName: 'Virtuelle Raumgestaltung');
       return;
     }
-    _virtualRoomRequested = true;
-
     final projectsModel = context.read<ProjectsModel>();
     if (_currentProjectId == null || _currentProject() == null) {
       if (projectsModel.projects.isNotEmpty) {
@@ -986,18 +958,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     if (!reusePending) {
       _resetRenderPending();
       var project = _currentProject();
-      final flowImage =
-          _roomFlowStage == _RoomFlowStage.idle ? null : _roomFlowImageItem;
-      if (project == null && flowImage != null) {
-        final autoName = _autoProjectName(projectsModel);
-        try {
-          project = await projectsModel.addProject(autoName);
-          _currentProjectId = project.id;
-        } catch (_) {
-          _addAssistantMessage('Bitte anmelden, um Projekte zu speichern.');
-          return;
-        }
-      }
       if (project == null) {
         _addAssistantMessage(
           'Bitte lege zuerst ein Projekt an, damit ich das Bild zuordnen kann.',
@@ -1012,27 +972,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
         return;
       }
 
-      var imageItem = _currentProjectImageItem();
-      if (imageItem == null && flowImage != null) {
-        final name = flowImage.name.isNotEmpty
-            ? flowImage.name
-            : (flowImage.path != null && flowImage.path!.isNotEmpty)
-                ? _fileNameFromPath(flowImage.path!)
-                : 'Upload';
-        try {
-          await projectsModel.addItem(
-            projectId: _currentProjectId!,
-            name: name,
-            type: 'image',
-            path: flowImage.path,
-            url: flowImage.url,
-          );
-          imageItem = _currentProjectImageItem() ?? flowImage;
-        } catch (_) {
-          _addAssistantMessage('Bitte anmelden, um Uploads zu speichern.');
-          return;
-        }
-      }
+      final imageItem = _currentProjectImageItem();
       if (imageItem == null) {
         _addAssistantMessage(
           'Bitte lade zuerst ein Raumfoto hoch, damit ich die Wände einfärben kann.',
@@ -1048,17 +988,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
         return;
       }
 
-      if (_confirmedRoom == null) {
-        await _startRoomFlowFromImage(imageItem);
-        return;
-      }
-
-      if (_roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation ||
-          _roomFlowStage == _RoomFlowStage.awaitingColorChoice ||
-          _roomFlowStage == _RoomFlowStage.analyzing) {
-        return;
-      }
-
       var colorHex = _currentProjectColorHex();
       if (colorHex == null) {
         final inferred = _inferRecentHex();
@@ -1069,10 +998,18 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
         }
       }
       if (colorHex == null) {
-        await _requestColorSuggestions(_confirmedRoom ?? 'Raum');
+        _addAssistantMessage(
+          'Bitte wähle zuerst eine Farbe aus, damit ich die Wände einfärben kann.',
+          buttons: const [
+            QuickReplyButton(
+              label: 'Farbe scannen',
+              value: 'Ich möchte eine Farbe scannen',
+              preferred: true,
+            ),
+          ],
+        );
         return;
       }
-      _roomFlowStage = _RoomFlowStage.readyToRender;
 
       final imageBytes = await _loadImageBytes(imageItem);
       try {
@@ -1097,7 +1034,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
 
       _pendingRenderImageBytes = imageBytes;
       _pendingRenderMaskBytes = maskBytes;
-      _pendingRenderImageUrl = imageItem.url;
       _pendingRenderPrompt = _buildRenderPrompt(colorHex, lastUserText);
     }
 
@@ -1165,7 +1101,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
         'Hier ist das bearbeitete Foto.',
         localImagePaths: [renderPath],
       );
-      _resetRoomFlow();
     } catch (_) {
       _showRenderRetryMessage();
     } finally {
@@ -1179,6 +1114,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     FocusScope.of(context).unfocus();
     setState(() {
       _voiceModeActive = true;
+      _enableVoiceOutput = true;
       _cachedVoiceModeActive = true;
     });
   }
@@ -1187,6 +1123,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     if (!_voiceModeActive) return;
     setState(() {
       _voiceModeActive = false;
+      _enableVoiceOutput = false;
       _ttsNoticeShown = false;
       _cachedVoiceModeActive = false;
     });
@@ -1517,16 +1454,6 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     return parts.isNotEmpty ? parts.last : path;
   }
 
-  String _autoProjectName(ProjectsModel model) {
-    const base = 'Projekt';
-    if (!model.existsName(base)) return base;
-    var index = 2;
-    while (model.existsName('$base $index')) {
-      index += 1;
-    }
-    return '$base $index';
-  }
-
   String _normalizeHex(String hex) {
     var h = hex.trim();
     if (h.startsWith('#')) h = h.substring(1);
@@ -1731,337 +1658,172 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     ProjectsModel projectsModel,
   ) {
     final contextJson = jsonEncode(_skillContextSnapshot(cart, projectsModel));
-    final instructions =
-        '''
-Name des Chatbots
-THERMOLOX
+    final instructions = '''
+=== CLIMALOX DESIGN – SYSTEM-PROMPT ===
 
-⸻
+Du bist CLIMALOX, der digitale Farb- und Projektberater von CLIMALOX.
+Du begleitest Nutzer ruhig, strukturiert und kompetent durch ihr Wandfarben-Projekt – von der Farbwahl bis zum Kauf.
+Du bist Planungshelfer, kein Verkäufer. Produkte sind das Ergebnis guter Planung.
+Alles außerhalb von Farbgestaltung, Projektplanung, Visualisierung und CLIMALOX-Produkten ist irrelevant.
 
-Rolle und Identität
+=== BEGRÜSSUNG (nur bei neuer Sitzung) ===
 
-Du bist THERMOLOX, der offizielle digitale Farb-, Produkt- und Projektberater von THERMOLOX Systems.
-
-Du begleitest Nutzer wie ein erfahrener Mensch durch ihr Projekt – ruhig, strukturiert, empathisch und kompetent.
-Du bist kein klassischer Verkäufer, sondern ein Planungs-, Entscheidungs- und Umsetzungshelfer.
-
-Deine Aufgabe ist es:
-• Bedürfnisse zu verstehen
-• Informationen gezielt zu sammeln
-• Projekte sinnvoll aufzubauen
-• Lösungen Schritt für Schritt zu entwickeln
-• und erst dann passende Systemlösungen anzubieten
-
-Produkte sind immer das Ergebnis guter Planung – niemals deren Ersatz.
-
-Alles außerhalb von THERMOLOX Systems, Farbgestaltung, Projektplanung, Visualisierung und Produktanwendung ist für dich irrelevant.
-
-⸻
-
-Gesprächseinstieg
-
-Diese Begrüßung erfolgt ausschließlich bei einer neuen Sitzung:
-
-Hallo 👋, ich bin THERMOLOX, Dein persönlicher Farb- und Produktberater.
-Ich helfe Dir, die perfekte Wand- und Deckenfarbe zu finden und Dein Projekt sinnvoll zu planen.
+Hallo 👋, ich bin CLIMALOX, Dein persönlicher Farb- und Projektberater.
+Ich helfe Dir, die perfekte Wandfarbe zu finden, Deinen Bedarf zu berechnen und Dein Projekt zu planen.
 Was möchtest Du als Nächstes tun? 🎨
+
+BUTTONS: {"buttons":[{"label":"Farbe finden","value":"Ich suche eine passende Wandfarbe","variant":"preferred"},{"label":"Foto einfärben","value":"Ich möchte sehen wie eine Farbe in meinem Raum aussieht"}]}
 
 Während einer laufenden Unterhaltung wird nie erneut begrüßt.
 
-⸻
+=== KOMMUNIKATION ===
+
+- Du-Form, empathisch, professionell, nie werblich
+- Umlaute korrekt: ä, ö, ü, ß
+- Emojis sparsam: 🎨💡🏠✨
+- Antworten übersichtlich mit Absätzen
+- Sprache des Nutzers übernehmen, bei Wechsel sofort mitwechseln
+- Rechtlich sicher: "Erfahrungsgemäß ...", "Viele Kunden berichten ..."
+- JEDE Antwort endet mit Frage, BUTTONS-Block oder beidem. Nie ohne.
+- Keine Nein-Buttons. Keine negativen Optionen.
+- Bei Unentschlossenheit: klare Empfehlung + bevorzugter Button
+
+=== DIE 6 FLOWS ===
+
+--- FLOW 1: Farbberatung ---
+Trigger: Farbfragen, "empfehle mir", Stil-/Stimmungsfragen, Raumnennung
+1. Bedarf verstehen (Raum, Stil, Stimmung, vorhandene Einrichtung)
+2. Projekt anlegen (falls keines existiert)
+3. 3 konkrete Farben empfehlen (Format: Name – HEX #XXXXXX + 1 Satz Wirkung)
+4. Auswahl verfeinern bis Nutzer zufrieden
+5. Visualisierung anbieten → FLOW 2 (bevorzugt) oder FLOW 3
+6. Nach Bestätigung → EXIT RAMP
+
+Farbregel: Immer HEX-Codes mit #. Nie Farben nur sprachlich beschreiben. Bei konkreter Farbrichtung in dieser Farbfamilie bleiben.
+
+--- FLOW 2: AR Wandfarbe (PRIMÄRE Visualisierung, nur App) ---
+Trigger: "an meiner Wand", "AR", "live", "Kamera", "wie sieht das aus", oder Visualisierungsschritt aus Flow 1
+WICHTIG: Dies ist IMMER die erste Wahl für Visualisierung. Flow 3 ist der Fallback.
+1. Projekt sicherstellen (falls keines existiert → anlegen)
+2. Farbe sicherstellen (falls keine gewählt → Flow 1)
+3. AR starten per Button mit action:"ar_wall_paint"
+4. Nutzer färbt Wände live ein, macht Screenshots
+5. Ergebnis besprechen → EXIT RAMP
+
+AR Wandfarbe ist nur auf Geräten mit LiDAR-Sensor verfügbar (iPhone Pro, iPad Pro). Auf anderen Geräten biete stattdessen die Virtuelle Raumgestaltung (Flow 3) an.
+Web-Fallback: Auf Web ist AR nicht verfügbar → automatisch zu Flow 3 weiterleiten.
 
-Kommunikationsstil
+CTA: BUTTONS: {"buttons":[{"label":"AR Wandfarbe starten","value":"Zeige mir die Farbe live an meiner Wand","variant":"preferred","action":"ar_wall_paint"},{"label":"Foto einfärben","value":"Ich möchte ein Foto virtuell einfärben","action":"upload"}]}
 
-Du sprichst immer in der freundlichen Du-Form.
-Dein Ton ist ruhig, empathisch, aufmerksam und professionell.
-Du klingst maximal menschlich, niemals werblich oder technisch.
-Du formulierst klar, verständlich und emotional, ohne zu übertreiben.
-Schreibe Umlaute korrekt (ä, ö, ü, ß), nicht ae/oe/ue.
-Emojis setzt du gezielt und sparsam ein 🎨💡🏠✨
-Deine Antworten sind übersichtlich, mit Absätzen und klarer Struktur.
-Du führst das Gespräch aktiv, aber respektvoll.
+--- FLOW 3: Virtuelle Raumgestaltung (Fallback zu AR) ---
+Trigger: "Foto einfärben", "virtuell", Foto-Upload, Web-Plattform
+1. Projekt sicherstellen
+2. Foto beschaffen: vorhandenes aus Projekt anbieten ODER neues hochladen
+3. Foto kurz beschreiben + Raumtyp nennen → per Button bestätigen lassen
+4. 3 Farbrichtungen mit HEX empfehlen (falls keine Farbe gewählt)
+5. Nach Farbwahl: Einfärbung anbieten per Button mit action:"render"
+6. Erst nach Zustimmung rendern. Auf Vorher/Nachher-Vorschau im Projekt verweisen.
+7. Ergebnis besprechen → EXIT RAMP
 
-Ziel jeder Antwort ist Vertrauen, Orientierung und Sicherheit – nicht Druck.
+Nie behaupten, Bilder nicht bearbeiten zu können. Nie fertige Bearbeitung behaupten, bevor gestartet.
 
-⸻
+CTA Upload: BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto hoch","variant":"preferred","action":"upload"}]}
+CTA Render: BUTTONS: {"buttons":[{"label":"Wände einfärben","value":"Bitte färbe die Wände in meiner gewählten Farbe.","variant":"preferred","action":"render"}]}
 
-Spracherkennung
+--- FLOW 4: Farb-Scan ---
+Trigger: "Farbe erkennen", "scannen", "welche Farbe ist das"
+1. Foto anfordern oder vorhandenes verwenden
+2. Dominante Farben extrahieren mit HEX
+3. Passende CLIMALOX-Farben zuordnen
+4. Optionen anbieten → EXIT RAMP oder Weiterleitung zu Flow 1/2/3
 
-Du antwortest immer in der Sprache des Nutzers.
-Wechselt der Nutzer die Sprache, wechselst du sofort mit – ohne Hinweis.
-Der Gesprächsfaden bleibt logisch, inhaltlich und emotional erhalten.
+CTA: BUTTONS: {"buttons":[{"label":"Farbe scannen","value":"Ich möchte eine Farbe aus einem Foto erkennen","variant":"preferred","action":"scan_color"}]}
 
-⸻
+--- FLOW 5: Mengenberechnung ---
+Trigger: "wie viel", "m²", Maße, "Eimer", "Liter", Mengenangaben
+1. Fläche ermitteln: Raummaße (L×B×H) oder direkte m²-Angabe
+2. Berechnung: Netto-Wandfläche × 2 Anstriche ÷ Ergiebigkeit + 10% Reserve
+3. Ergebnis präsentieren: X Eimer THERMO-COAT + Y Packungen THERMO-SEAL
+4. → EXIT RAMP
 
-Zwingende Dialogfortführung
+--- FLOW 6: Direktkauf ---
+Trigger: "bestellen", "kaufen", "Warenkorb", konkreter Produktname
+1. Produkt identifizieren (aus Kontext-Produktliste)
+2. Menge bestätigen → falls unklar, zu Flow 5
+3. System-Check: COAT + SEAL zusammen anbieten (nie isoliert)
+4. → EXIT RAMP
 
-Jede einzelne Antwort von THERMOLOX MUSS den Dialog aktiv fortführen.
+=== EXIT RAMP (nach jedem Flow-Abschluss) ===
 
-Eine Antwort gilt nur dann als vollständig, wenn sie am Ende mindestens eines enthält:
-• eine konkrete Frage
-• oder einen BUTTONS-Block
-• oder beides
+Pflicht-Prüfung in dieser Reihenfolge:
+1. Farbe gewählt? → Falls nein: zurück zur Farbwahl
+2. Menge berechnet? → Falls nein: Berechnung anbieten
+3. System präsentieren: "X Eimer THERMO-COAT [Farbname, HEX] + Y Packungen THERMO-SEAL"
+4. In den Warenkorb:
 
-Reine Abschlussaussagen ohne Frage oder Button sind verboten.
-THERMOLOX darf niemals erwarten, dass der Nutzer von sich aus weiterschreibt.
+BUTTONS: {"buttons":[{"label":"System in den Warenkorb","value":"Bitte lege das komplette System in den Warenkorb","variant":"preferred","action":"cart"}]}
 
-⸻
+5. Nach Warenkorb:
 
-Geführte Antwortvorschläge
+BUTTONS: {"buttons":[{"label":"Zur Kasse","value":"Ich möchte zur Kasse","variant":"preferred","action":"checkout"},{"label":"Weiteren Raum planen","value":"Ich möchte einen weiteren Raum planen"}]}
 
-Wann immer THERMOLOX eine Frage stellt, formuliert er – wenn sinnvoll – 1–2 mögliche Antworten vor.
+=== FLOW-WECHSEL ===
 
-Diese Antwortvorschläge dienen dazu:
-• Tipparbeit zu sparen
-• die Konversation zu strukturieren
-• das Gespräch steuerbar zu halten
+Nutzer können jederzeit den Flow wechseln. Bestätige kurz, merke dir den Stand, wechsle.
 
-Der Nutzer darf jederzeit frei tippen.
-Buttons sind eine Hilfe, keine Pflicht.
+=== PRODUKT-SYSTEM ===
 
-⸻
+CLIMALOX funktioniert ausschließlich als System:
+- THERMO-COAT (Wandfarbe) + THERMO-SEAL (Abdichtung)
+- Immer zusammen empfehlen, nie isoliert
+- Erkläre kurz, warum das System zusammengehört
 
-Gesprächsführung und Phasenlogik
+=== PRODUKT-ERGIEBIGKEIT & MENGENBERECHNUNG ===
 
-THERMOLOX arbeitet strikt in dieser Reihenfolge:
-  1. Entwurf
-  2. Planung
-  3. Berechnung
-  4. System
-  5. Warenkorb
+THERMO-COAT Ergiebigkeit:
+- 4,5 Liter Eimer
+- Ergiebigkeit: ca. 6 m² pro Liter bei 2 Anstrichen (= ca. 27 m² pro Eimer bei 2 Anstrichen)
+- Empfehlung: immer 2 Anstriche für volle Deckkraft
 
-Kein Schritt darf übersprungen werden.
+THERMO-SEAL Ergiebigkeit:
+- 6 Meter Rolle
+- Verwendung: Abdichtung aller Kanten, Ecken, Anschlüsse
+- Faustregel: Raumumfang × 1,1 = benötigte Meter
 
-⸻
+Berechnungsformel:
+- Wandfläche = (Länge + Breite) × 2 × Höhe - Fenster/Türen
+- THERMO-COAT Eimer = Wandfläche ÷ 27 (aufgerundet) + 10% Reserve
+- THERMO-SEAL Rollen = Raumumfang × 1,1 ÷ 6 (aufgerundet)
 
-Projekt-Trigger
+=== PROJEKT-TRIGGER ===
 
-Sobald der Nutzer
-• einen konkreten Raum nennt
-• oder eine konkrete Umsetzungsabsicht äußert
+Sobald ein konkreter Raum oder eine Umsetzungsabsicht genannt wird → Projekt anlegen vorschlagen.
 
-gilt dies als Projektstart.
+=== BILD-LOGIK ===
 
-In diesem Fall schlägst du sofort vor, ein Projekt anzulegen, bevor du Detailfragen stellst.
+Bei Foto-Upload: kurz beschreiben was du siehst, dann weiterführen. Dialog nie blockieren.
 
-Beispiel:
-„Das klingt nach einem konkreten Projekt. Ich lege das direkt für Dich an, damit wir sauber weiterarbeiten können.“
+=== TECHNISCHE ANWEISUNGEN ===
 
-Danach MUSS ein Button folgen.
+--- Button-Format ---
+BUTTONS: steht am Zeilenanfang. Inline-JSON, kein Markdown/Codeblock. Nur gerade ".
+Felder: label, value, variant ("preferred"|"primary"), action ("upload"|"render"|"ar_wall_paint"|"scan_color"|"cart"|"checkout"|"settings")
+Regeln: Keine Nein-Buttons. Max 1 Alternative neben Haupt-CTA. Nach Aktion menschlich bestätigen.
 
-⸻
-
-Führungs-Trigger bei Unentschlossenheit
-
-Wenn der Nutzer keine klare Richtung vorgibt oder Unsicherheit zeigt:
-
-Du formulierst neutral und natürlich, z. B.:
-„Alles klar, dann lass uns weitermachen 😊“
-
-Danach:
-• gibst du eine klare Empfehlung
-• erzeugst zwingend einen bevorzugten Button
-• keine offenen Fragen ohne Button
-
-Pflicht-CTA:
-
-BUTTONS: {"buttons":[{"label":"Empfehle mir was","value":"Empfehle mir etwas Passendes","variant":"preferred"}]}
-
-⸻
-
-Bild- und Dokumentenlogik
-
-Wenn ein Bild hochgeladen wird:
-• du sagst explizit, dass du es dir ansiehst
-• du beschreibst kurz, was du erkennst
-• du blockierst den Dialog niemals
-
-Wenn das Bild ungewöhnlich ist oder der Nutzer sagt „Das ist schon richtig“:
-• akzeptierst du die Aussage
-• wechselst sofort in den Entwurf-Modus
-• führst aktiv weiter
-
-Danach zwingend:
-
-BUTTONS: {"buttons":[{"label":"Empfehle mir was","value":"Empfehle mir etwas Passendes","variant":"preferred"}]}
-
-⸻
-
-Bildbearbeitung / Virtuelle Raumgestaltung
-
-Du kannst Bilder bearbeiten, wenn der Nutzer eine Wandfarbe im Foto sehen will.
-Sage niemals, dass du Bilder nicht bearbeiten kannst.
-Leite stattdessen zur Virtuellen Raumgestaltung und fordere Foto + Farbwunsch an.
-Wenn im Projekt bereits ein Foto vorhanden ist (siehe Kontext), biete zuerst an,
-das vorhandene Foto zu verwenden oder ein neues hochzuladen.
-Sobald ein Foto vorliegt, gehst du streng in dieser Reihenfolge vor:
-1) Kurze Bildbeschreibung + Raumtyp nennen (z. B. Wohnzimmer).
-2) Raumtyp per Button bestätigen lassen („Ja, Wohnzimmer“).
-3) Danach 3 Farb-Richtungen mit HEX-Codes empfehlen.
-4) Erst nach Farbwahl vorschlagen, die Wände virtuell einzufärben.
-5) Erst nach Zustimmung rendern.
-Sage niemals, dass du das Ergebnis nicht anzeigen kannst.
-Verweise auf die Vorschau im Projekt (Vorher/Nachher), sobald die Bearbeitung gestartet ist.
-Behaupte keine fertige Bearbeitung, bevor der Nutzer die Bearbeitung gestartet hat.
-Wenn noch kein Projekt existiert, schlage zuerst ein Projekt vor.
-Nach dem Hinweis immer Frage oder BUTTONS.
-
-Beispiel CTA:
-BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto hoch","variant":"preferred","action":"upload"}]}
-
-Beispiel CTA mit vorhandenem Foto:
-BUTTONS: {"buttons":[{"label":"Vorhandenes Foto verwenden","value":"Bitte verwende das vorhandene Foto aus meinem Projekt.","variant":"preferred"},{"label":"Neues Foto hochladen","value":"Ich lade ein neues Raumfoto hoch","action":"upload"}]}
-
-Beispiel CTA Render-Start:
-BUTTONS: {"buttons":[{"label":"Wände einfärben","value":"Bitte färbe die Wände in meiner gewählten Farbe.","variant":"preferred","action":"render"}]}
-
-⸻
-
-Farbempfehlungs-Logik (WICHTIG)
-
-Wenn der Nutzer eine Farbe möchte oder „Vorschlagen“ wählt:
-Wenn der Nutzer eine konkrete Farbrichtung nennt (z. B. rot), bleibst du in
-dieser Farbfamilie und gibst nur passende Varianten aus.
-
-Du kannst Farben erzeugen und gibst sie immer als HEX-Code mit # aus.
-
-❌ Du beschreibst keine Farben rein sprachlich
-❌ Keine vagen Begriffe wie „warm“, „erdig“, „gemütlich“ ohne Daten
-
-✅ Du empfiehlst immer konkrete Farbwerte
-
-Pflichtformat:
-• Name der Farbe (frei, intern)
-• HEX-Code
-• optional 1 kurzer Satz Wirkung
-
-Beispiel:
-• Warmes Braun – HEX #8B6A4F
-• Sanftes Sandbraun – HEX #C2A27E
-
-Nach jeder Farbempfehlung MUSS folgen:
-• eine Frage
-• und/oder Buttons zur Auswahl
-
-⸻
-
-Farb- und Mengenberechnung
-
-Du kannst:
-• Farbbedarf berechnen
-• Deckkraft berücksichtigen
-• Anzahl der Anstriche einschätzen
-• THERMO-SEAL Bedarf ableiten
-
-Bei Quadratmeterangaben gehst du von Wohnfläche aus.
-
-Nach jeder Berechnung MUSS folgen:
-• eine Entscheidungsfrage
-• oder ein Warenkorb-Button
-
-⸻
-
-Produkt- und Systemlogik
-
-THERMOLOX funktioniert ausschließlich als System.
-
-Du erklärst immer:
-• warum THERMO-COAT + THERMO-SEAL zusammengehören
-• warum nur das System die volle Performance erreicht
-
-Isolierte Produktempfehlungen ohne Systembezug sind verboten.
-
-⸻
-
-Verkaufslogik
-
-Verkauf ist ein logischer Abschluss.
-Kein harter Verkauf.
-Kein vorschneller Warenkorb-Push.
-
-Der Nutzer soll innerlich sagen:
-„Jetzt ergibt das Sinn.“
-
-⸻
-
-Gesprächsgrenzen
-
-Bei Abschweifungen leitest du freundlich zurück.
-Bei Provokation bleibst du ruhig und fokussiert.
-
-⸻
-
-Rechtlicher Rahmen
-
-Du triffst keine verbindlichen Zusagen.
-Du nutzt ausschließlich sichere Formulierungen wie:
-• Erfahrungsgemäß …
-• Viele Kunden berichten …
-• Individuelle Ergebnisse können variieren.
-
-⸻
-
-Skill-Aufrufe immer als JSON in einem ```skill``` Block senden.
-Beispiele:
+--- Skill-Format ---
 ```skill
 {"action":"add_to_cart","payload":{"productId":"<id>","quantity":2}}
 ```
 ```skill
-{"action":"add_project_item","payload":{"projectId":"<id>","uploadId":"<uploadId>","name":"Decke","type":"image"}}
+{"action":"create_project","payload":{"name":"Wohnzimmer"}}
 ```
 ```skill
-{"action":"add_project_item","payload":{"projectId":"<id>","type":"note","name":"- 2x Liter Farbe für 12 m2"}}
+{"action":"add_project_item","payload":{"projectId":"<id>","type":"note","name":"2x THERMO-COAT + 1x THERMO-SEAL für 24 m²"}}
 ```
 Verfügbare Skills: add_to_cart, add_project_item, create_project, rename_project, rename_item, move_item, delete_item.
-Notizen immer mit add_project_item und type "note" anlegen.
 Nach jedem Skill den Nutzer normal informieren.
+
 Kontext (JSON): $contextJson
-
-⸻
-⸻⸻⸻
-TECHNISCHE ANWEISUNGEN – UNVERÄNDERLICH
-⸻⸻⸻
-
-Dieser Abschnitt darf niemals verändert oder gekürzt werden.
-
-Button-Logik
-
-Buttons werden nur gerendert, wenn sie exakt so ausgegeben werden.
-
-Buttons werden immer als Inline-JSON ausgegeben.
-Kein Markdown.
-Kein Codeblock.
-
-Das Schlüsselwort BUTTONS: steht immer am Zeilenanfang.
-
-Es werden ausschließlich gerade Anführungszeichen " verwendet.
-Typografische Anführungszeichen sind verboten.
-
-Beispiel:
-
-BUTTONS: {"buttons":[{"label":"Foto hochladen","value":"Ich lade ein Raumfoto hoch","variant":"preferred","action":"upload"}]}
-
-Button-Felder
-
-label – sichtbarer Text
-value – gesendete Nutzer-Nachricht
-variant – preferred | primary
-action – upload (nur bei Uploads)
-
-Regeln
-
-• Keine Nein-Buttons
-• Maximal eine alternative Option
-• Oft nur ein klarer CTA
-• Bei Upload immer action:"upload"
-• Bei Warenkorb/Kasse immer variant:"preferred"
-• Klare Labels wie „Zum Warenkorb“ oder „System in den Warenkorb legen“
-
-Nach jeder Button-Aktion bestätigst du die Handlung klar und menschlich, bevor du fortfährst.
-
-⸻
-
-Ende des Prompts
 ''';
 
     return {'role': 'system', 'content': instructions};
@@ -2215,13 +1977,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
     if (option.action == QuickReplyAction.uploadAttachment) {
-      if (messageIndex >= 0 && messageIndex < _messages.length) {
-        final contextText = _messages[messageIndex].text;
-        if (_isRoomFlowContext(contextText) ||
-            _isVirtualRoomRequestText(option.value)) {
-          _virtualRoomRequested = true;
-        }
-      }
       await _openAttachmentMenu();
       await _sendMessage(quickReplyText: option.value);
       return;
@@ -2290,8 +2045,24 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       return;
     }
     if (option.action == QuickReplyAction.startRender) {
-      _virtualRoomRequested = true;
       await _startVirtualRoomRenderFromChat();
+      return;
+    }
+    if (option.action == QuickReplyAction.arWallPaint) {
+      await _startARWallPaint();
+      return;
+    }
+    if (option.action == QuickReplyAction.scanColor) {
+      _addAssistantMessage(
+        'Lade ein Foto hoch, und ich erkenne die Farben darin. 🎨',
+        buttons: [
+          QuickReplyButton(
+            label: 'Foto hochladen',
+            value: 'Ich lade ein Foto zum Farb-Scan hoch',
+            action: QuickReplyAction.uploadAttachment,
+          ),
+        ],
+      );
       return;
     }
     await _sendMessage(quickReplyText: option.value);
@@ -2434,9 +2205,21 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             actionRaw == 'virtual_room' ||
             actionRaw == 'render_image' ||
             actionRaw == 'paint_walls';
+        final isArWallPaint =
+            actionRaw == 'ar_wall_paint' ||
+            actionRaw == 'ar_wandfarbe' ||
+            actionRaw == 'ar_paint';
+        final isScanColor =
+            actionRaw == 'scan_color' ||
+            actionRaw == 'scanColor' ||
+            actionRaw == 'color_scan';
+        final isCheckout =
+            actionRaw == 'checkout';
         final action = isUpload
             ? QuickReplyAction.uploadAttachment
             : isCart
+            ? QuickReplyAction.goToCart
+            : isCheckout
             ? QuickReplyAction.goToCart
             : isSettings
             ? QuickReplyAction.openSettings
@@ -2444,6 +2227,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             ? QuickReplyAction.acceptAllConsents
             : isRender
             ? QuickReplyAction.startRender
+            : isArWallPaint
+            ? QuickReplyAction.arWallPaint
+            : isScanColor
+            ? QuickReplyAction.scanColor
             : QuickReplyAction.send;
 
         // Normalize „System in den Warenkorb legen“ → „In den Warenkorb“
@@ -2538,10 +2325,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
     return null;
-  }
-
-  String? _currentColorPreference() {
-    return _preferredColorHint ?? _inferRecentHex();
   }
 
   Future<void> _persistHexColor(String hex) async {
@@ -2648,7 +2431,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   }
 
   _FallbackButtons? _defaultButtonsForText(String text) {
-    if (_isRoomFlowBlocking()) return null;
     final lower = text.toLowerCase();
     final mentionsProject = lower.contains('projekt');
     final mentionsAdvice = lower.contains('beratung');
@@ -2872,69 +2654,15 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         lower.contains('einfärb');
   }
 
-  bool _isVirtualRoomRequestText(String text) {
+  bool _isARWallPaintRequest(String text) {
     final lower = text.toLowerCase();
-    return _looksLikeVisualEditPrompt(lower) ||
-        lower.contains('raumfoto') ||
-        lower.contains('foto fuer') ||
-        lower.contains('foto für') ||
-        lower.contains('waende') ||
-        lower.contains('wände');
-  }
-
-  bool _isRoomFlowContext(String text) {
-    final lower = text.toLowerCase();
-    return lower.contains('waende') ||
-        lower.contains('wände') ||
-        lower.contains('raumgestaltung') ||
-        lower.contains('virtuell') ||
-        lower.contains('render');
-  }
-
-  List<QuickReplyButton> _buildRoomSelectionButtons() {
-    const rooms = [
-      'Wohnzimmer',
-      'Schlafzimmer',
-      'Küche',
-      'Bad',
-      'Esszimmer',
-      'Kinderzimmer',
-      'Büro',
-      'Flur',
-      'Keller',
-      'Balkon',
-    ];
-    return [
-      for (var i = 0; i < rooms.length; i += 1)
-        QuickReplyButton(
-          label: rooms[i],
-          value: rooms[i],
-          preferred: i == 0,
-        ),
-    ];
-  }
-
-  String? _matchRoomLabel(String text) {
-    final lower = text.toLowerCase();
-    const aliases = <String, List<String>>{
-      'Wohnzimmer': ['wohnzimmer', 'living', 'livingroom', 'sofa'],
-      'Schlafzimmer': ['schlafzimmer', 'bedroom', 'bett'],
-      'Küche': ['küche', 'kueche', 'kitchen'],
-      'Bad': ['bad', 'badezimmer', 'bath'],
-      'Esszimmer': ['esszimmer', 'dining'],
-      'Kinderzimmer': ['kinderzimmer', 'kids', 'kind'],
-      'Büro': ['büro', 'buero', 'office'],
-      'Flur': ['flur', 'diele', 'gang'],
-      'Keller': ['keller', 'basement'],
-      'Balkon': ['balkon', 'balcony'],
-    };
-
-    for (final entry in aliases.entries) {
-      for (final token in entry.value) {
-        if (lower.contains(token)) return entry.key;
-      }
-    }
-    return null;
+    return lower.contains('ar ') ||
+        lower.contains('ar-wand') ||
+        lower.contains('live') && lower.contains('wand') ||
+        lower.contains('kamera') && lower.contains('farbe') ||
+        lower.contains('an meiner wand') ||
+        lower.contains('an der wand') ||
+        lower.contains('projizier');
   }
 
   bool _looksLikeEditCompletion(String text) {
@@ -3068,425 +2796,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     return cleaned.trim();
   }
 
-  bool _isRoomFlowBlocking() {
-    return _roomFlowStage == _RoomFlowStage.analyzing ||
-        _roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation ||
-        _roomFlowStage == _RoomFlowStage.awaitingColorChoice;
-  }
-
-  void _resetRoomFlow({bool keepRequested = false}) {
-    _roomFlowStage = _RoomFlowStage.idle;
-    _roomCandidate = null;
-    _confirmedRoom = null;
-    _roomFlowImageItem = null;
-    _colorSuggestions = [];
-    if (!keepRequested) {
-      _virtualRoomRequested = false;
-    }
-  }
-
-  Future<String?> _fetchAssistantText(
-    List<Map<String, dynamic>> messages, {
-    double temperature = 0.2,
-  }) async {
-    final payload = <String, dynamic>{
-      'model': 'gpt-4o',
-      'temperature': temperature,
-      'messages': messages,
-    };
-
-    try {
-      final uri = Uri.parse('$kThermoloxApiBase/chat');
-      final req = http.Request('POST', uri)
-        ..headers.addAll(
-          buildWorkerHeaders(
-            contentType: 'application/json',
-            accept: 'text/event-stream',
-          ),
-        )
-        ..body = jsonEncode(payload);
-
-      final streamedRes = await http.Client().send(req);
-      if (streamedRes.statusCode != 200) {
-        return null;
-      }
-
-      final decoder = utf8.decoder;
-      String buffer = '';
-      String fullText = '';
-
-      await for (final chunk in streamedRes.stream.transform(decoder)) {
-        buffer += chunk;
-        final lines = buffer.split('\n');
-        buffer = lines.removeLast();
-
-        for (final raw in lines) {
-          final line = raw.trim();
-          if (!line.startsWith('data:')) continue;
-          final data = line.substring(5).trim();
-          if (data == '[DONE]') {
-            return fullText.trim();
-          }
-          try {
-            final json = jsonDecode(data);
-            final delta = json['choices']?[0]?['delta']?['content'] as String?;
-            if (delta != null && delta.isNotEmpty) {
-              fullText += delta;
-            }
-          } catch (_) {
-            // ignorieren
-          }
-        }
-      }
-      return fullText.trim();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Map<String, dynamic>? _decodeJsonFromText(String text) {
-    final match = RegExp(r'\{[\s\S]*\}').firstMatch(text);
-    if (match == null) return null;
-    final raw = match.group(0);
-    if (raw == null) return null;
-    try {
-      final decoded = jsonDecode(raw);
-      if (decoded is Map<String, dynamic>) return decoded;
-    } catch (_) {}
-    return null;
-  }
-
-  Future<String> _dataUrlForImage(ProjectItem item) async {
-    final url = item.url;
-    if (url != null && url.isNotEmpty && !url.startsWith('file://')) {
-      return url;
-    }
-    final bytes = await _loadImageBytes(item);
-    final pngBytes = await _ensurePng(bytes);
-    return 'data:image/png;base64,${base64Encode(pngBytes)}';
-  }
-
-  Future<_RoomAnalysis?> _analyzeRoomFromImage(ProjectItem item) async {
-    final dataUrl = await _dataUrlForImage(item);
-    const systemPrompt =
-        'Du bist ein Bildanalyst. Antworte NUR mit JSON im Format '
-        '{"room":"Wohnzimmer","description":"Kurzer Satz was du siehst."}. '
-        'Wähle room aus: Wohnzimmer, Schlafzimmer, Küche, Bad, Esszimmer, '
-        'Kinderzimmer, Büro, Flur, Keller, Balkon. Keine weiteren Keys.';
-    final messages = [
-      {'role': 'system', 'content': systemPrompt},
-      {
-        'role': 'user',
-        'content': [
-          {
-            'type': 'text',
-            'text': 'Erkenne den Raumtyp im Foto und gib JSON zurück.',
-          },
-          {
-            'type': 'image_url',
-            'image_url': {'url': dataUrl},
-          },
-        ],
-      },
-    ];
-
-    final response = await _fetchAssistantText(messages, temperature: 0.1);
-    if (response == null || response.isEmpty) return null;
-    final decoded = _decodeJsonFromText(response);
-    if (decoded == null) return null;
-    final room = decoded['room']?.toString().trim();
-    final description = decoded['description']?.toString().trim() ?? '';
-    if (room == null || room.isEmpty) return null;
-    return _RoomAnalysis(room: room, description: description);
-  }
-
-  Future<void> _startRoomFlowFromImage(ProjectItem item) async {
-    if (_roomFlowStage == _RoomFlowStage.analyzing) return;
-    if (!await _ensureChatAccess()) return;
-    if (!_ensureAiConsent()) return;
-
-    _virtualRoomRequested = true;
-    _roomFlowImageItem = item;
-    _roomFlowStage = _RoomFlowStage.analyzing;
-    _roomCandidate = null;
-    _confirmedRoom = null;
-    _colorSuggestions = [];
-
-    _addAssistantMessage('Ich schaue mir dein Foto kurz an …');
-    final analysis = await _analyzeRoomFromImage(item);
-    if (!mounted) return;
-
-    _roomFlowStage = _RoomFlowStage.awaitingRoomConfirmation;
-    if (analysis == null) {
-      _addAssistantMessage(
-        'Ich bin mir nicht sicher, welcher Raum das ist. Welcher Raum ist es?',
-        buttons: _buildRoomSelectionButtons(),
-      );
-      return;
-    }
-
-    _roomCandidate = analysis.room;
-    final description = analysis.description.isNotEmpty
-        ? analysis.description
-        : 'Ich sehe einen Innenraum.';
-    _addAssistantMessage(
-      '$description\nIst das ein ${analysis.room}?',
-      buttons: [
-        QuickReplyButton(
-          label: 'Ja, ${analysis.room}',
-          value: analysis.room,
-          preferred: true,
-        ),
-        const QuickReplyButton(
-          label: 'Anderer Raum',
-          value: 'Anderer Raum',
-          preferred: false,
-        ),
-      ],
-    );
-  }
-
-  Future<void> _requestColorSuggestions(String roomLabel) async {
-    const systemPrompt =
-        'Gib NUR JSON im Format {"options":[{"direction":"Warm","name":"Name","hex":"#AABBCC","note":"kurzer Satz"}]}. '
-        'Genau 3 Optionen, jede mit direction, name, hex, note. Keine weiteren Keys. '
-        'Verwende korrekte Umlaute (ä, ö, ü, ß).';
-    final preference = _currentColorPreference();
-    final hasPreference = preference != null && preference.isNotEmpty;
-    final preferenceHint = !hasPreference
-        ? ''
-        : preference!.startsWith('#')
-            ? ' Der Nutzer hat bereits den Farbton $preference genannt. '
-                'Gib drei Varianten derselben Farbfamilie (Hell/Mittel/Dunkel).'
-            : ' Der Nutzer möchte $preference. '
-                'Alle Vorschläge müssen in dieser Farbfamilie bleiben und als Hell/Mittel/Dunkel gekennzeichnet sein.';
-    final userPrompt = hasPreference
-        ? 'Gib drei Varianten für ein $roomLabel, passend zum Wunsch des Nutzers. '
-            'Nutze die Labels Hell/Mittel/Dunkel und begründe kurz (note).$preferenceHint'
-        : 'Gib 3 unterschiedliche Farbrichtungen für ein $roomLabel. '
-            'Jede Richtung kurz begründen (note).$preferenceHint';
-    final messages = [
-      {'role': 'system', 'content': systemPrompt},
-      {'role': 'user', 'content': userPrompt},
-    ];
-
-    final response = await _fetchAssistantText(messages, temperature: 0.4);
-    final decoded = response == null ? null : _decodeJsonFromText(response);
-
-    final rawList = decoded?['options'] ??
-        decoded?['colors'] ??
-        decoded?['suggestions'] ??
-        decoded?['items'];
-    final suggestions = <_ColorSuggestion>[];
-    if (rawList is List) {
-      for (final entry in rawList) {
-        if (entry is! Map) continue;
-        final direction =
-            entry['direction']?.toString().trim() ?? 'Richtung';
-        final name = entry['name']?.toString().trim() ?? 'Farbe';
-        final hexRaw =
-            entry['hex']?.toString().trim() ??
-            entry['code']?.toString().trim() ??
-            entry['color']?.toString().trim();
-        if (hexRaw == null || hexRaw.isEmpty) continue;
-        final hex = _normalizeHex(hexRaw);
-        final note = entry['note']?.toString().trim();
-        suggestions.add(
-          _ColorSuggestion(
-            direction: direction,
-            name: name,
-            hex: hex,
-            note: note,
-          ),
-        );
-      }
-    }
-
-    if (suggestions.isEmpty) {
-      suggestions.addAll(const [
-        _ColorSuggestion(
-          direction: 'Warm',
-          name: 'Sandbeige',
-          hex: '#C2A27E',
-          note: 'Bringt Wärme und wirkt gemütlich.',
-        ),
-        _ColorSuggestion(
-          direction: 'Neutral',
-          name: 'Sanftes Grau',
-          hex: '#C8C8C8',
-          note: 'Ruhig und zeitlos.',
-        ),
-        _ColorSuggestion(
-          direction: 'Akzent',
-          name: 'Salbeigrün',
-          hex: '#8FAF9A',
-          note: 'Frisch und modern.',
-        ),
-      ]);
-    }
-
-    _colorSuggestions = suggestions;
-    _roomFlowStage = _RoomFlowStage.awaitingColorChoice;
-
-    final lines = <String>[
-      hasPreference
-          ? 'Ich habe drei passende Varianten für dich:'
-          : 'Für dein $roomLabel schlage ich drei Richtungen vor:',
-    ];
-    for (var i = 0; i < suggestions.length; i += 1) {
-      final s = suggestions[i];
-      final note = s.note != null && s.note!.isNotEmpty ? ' – ${s.note}' : '';
-      lines.add('${i + 1}. ${s.direction}: ${s.name} – HEX ${s.hex}$note');
-    }
-
-    _addAssistantMessage(
-      lines.join('\n'),
-      buttons: [
-        for (var i = 0; i < suggestions.length; i += 1)
-          QuickReplyButton(
-            label: '${suggestions[i].direction}: ${suggestions[i].name}',
-            value: suggestions[i].hex,
-            preferred: i == 0,
-          ),
-      ],
-    );
-  }
-
-  Future<bool> _handleRoomFlowUserText(String text) async {
-    final lower = text.toLowerCase().trim();
-    if (_virtualRoomRequested &&
-        _roomFlowStage == _RoomFlowStage.idle &&
-        !_currentProjectHasImage() &&
-        _isVirtualRoomRequestText(lower)) {
-      _addAssistantMessage(
-        'Bitte lade zuerst ein Raumfoto hoch, damit ich starten kann.',
-        buttons: const [
-          QuickReplyButton(
-            label: 'Foto hochladen',
-            value: 'Ich lade ein Raumfoto hoch',
-            preferred: true,
-            action: QuickReplyAction.uploadAttachment,
-          ),
-        ],
-      );
-      return true;
-    }
-
-    if (_virtualRoomRequested &&
-        _roomFlowStage == _RoomFlowStage.idle &&
-        lower.contains('vorhanden') &&
-        _currentProjectHasImage()) {
-      final imageItem = _currentProjectImageItem();
-      if (imageItem != null) {
-        await _startRoomFlowFromImage(imageItem);
-        return true;
-      }
-    }
-
-    if (_roomFlowStage == _RoomFlowStage.awaitingRoomConfirmation) {
-      if (lower.contains('anderer')) {
-        _addAssistantMessage(
-          'Alles klar. Welcher Raum ist es?',
-          buttons: _buildRoomSelectionButtons(),
-        );
-        return true;
-      }
-
-      final matched =
-          _matchRoomLabel(text) ?? _roomCandidate ?? text.trim();
-      if (matched.isEmpty) {
-        _addAssistantMessage(
-          'Bitte wähle den Raum aus.',
-          buttons: _buildRoomSelectionButtons(),
-        );
-        return true;
-      }
-
-      _confirmedRoom = matched;
-      await _requestColorSuggestions(matched);
-      return true;
-    }
-
-    if (_roomFlowStage == _RoomFlowStage.awaitingColorChoice) {
-      final hexes = _extractHexColorsLoose(text);
-      var hex = hexes.isNotEmpty ? hexes.first : null;
-      if (hex == null && _colorSuggestions.isNotEmpty) {
-        for (final s in _colorSuggestions) {
-          final nameLower = s.name.toLowerCase();
-          final dirLower = s.direction.toLowerCase();
-          if (lower.contains(nameLower) || lower.contains(dirLower)) {
-            hex = s.hex;
-            break;
-          }
-        }
-      }
-      if (hex == null) {
-        final preference = _extractColorPreference(text);
-        if (preference != null) {
-          _preferredColorHint = preference;
-        }
-        if (text.trim().isNotEmpty) {
-          await _requestColorSuggestions(_confirmedRoom ?? 'Raum');
-        } else {
-          _addAssistantMessage(
-            'Bitte wähle eine der Farben.',
-          );
-        }
-        return true;
-      }
-
-      _lastDetectedHex = hex;
-      await _persistHexColor(hex);
-      _roomFlowStage = _RoomFlowStage.readyToRender;
-      _addAssistantMessage(
-        'Soll ich die Wände jetzt in $hex einfärben?',
-        buttons: const [
-          QuickReplyButton(
-            label: 'Wände einfärben',
-            value: 'Bitte färbe die Wände in meiner gewählten Farbe.',
-            preferred: true,
-            action: QuickReplyAction.startRender,
-          ),
-        ],
-      );
-      return true;
-    }
-
-    return false;
-  }
-
-  Future<bool> _maybeStartRoomFlowAfterUpload(
-    List<_SentUpload> uploads,
-  ) async {
-    if (!_virtualRoomRequested) return false;
-    final imageUpload = uploads.firstWhere(
-      (u) =>
-          u.isImage &&
-          ((u.remoteUrl ?? '').isNotEmpty || (u.localPath ?? '').isNotEmpty),
-      orElse: () => const _SentUpload(
-        id: '',
-        name: '',
-        isImage: true,
-      ),
-    );
-    var imageItem = _currentProjectImageItem();
-    if (imageItem == null && imageUpload.id.isNotEmpty) {
-      imageItem = ProjectItem(
-        id: imageUpload.id,
-        name: imageUpload.name,
-        type: 'image',
-        path: imageUpload.localPath,
-        url: imageUpload.remoteUrl,
-      );
-    }
-    if (imageItem == null) return false;
-    final hasSource =
-        (imageItem.url != null && imageItem.url!.isNotEmpty) ||
-        (imageItem.path != null && imageItem.path!.isNotEmpty);
-    if (!hasSource) return false;
-    await _startRoomFlowFromImage(imageItem);
-    return true;
-  }
 
   Future<void> _startGreetingIfNeeded() async {
     if (_greetingRequested || !mounted || _messages.isNotEmpty) return;
@@ -3851,6 +3160,10 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         await context.read<ProjectsModel>().deleteItem(itemId);
         return '🗑️ Upload gelöscht.';
 
+      case 'start_render':
+        await _startVirtualRoomRenderFromChat();
+        return 'Rendering wird gestartet...';
+
       default:
         return null; // still unsupported, but nicht anzeigen
     }
@@ -3886,29 +3199,11 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     }
 
     final feedback = <String>[];
-    var createdProjectInTurn = false;
     for (final cmd in commands) {
-      final action = (cmd['action'] ?? cmd['skill'] ?? cmd['name'])?.toString();
-      if (action == 'create_project') {
-        createdProjectInTurn = true;
-      }
       final note = await _executeSkillCommand(cmd);
       if (note != null && note.isNotEmpty) {
         feedback.add(note);
       }
-    }
-
-    if (createdProjectInTurn) {
-      if (_streamingMsgIndex != null &&
-          _streamingMsgIndex! >= 0 &&
-          _streamingMsgIndex! < _messages.length &&
-          mounted) {
-        setState(() {
-          _messages.removeAt(_streamingMsgIndex!);
-        });
-      }
-      _streamingMsgIndex = null;
-      return '';
     }
 
     final cleaned = _sanitizeAssistantText(fullText);
@@ -3946,9 +3241,8 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         _looksLikeResultRequest(displayText);
     final looksLikeCompletion = _looksLikeEditCompletion(displayText);
     final shouldShowRender = renderPath != null && wantsResult;
-    final roomFlowBlocking = _isRoomFlowBlocking();
     final needsRenderButMissing =
-        !roomFlowBlocking && renderPath == null && (wantsResult || looksLikeCompletion);
+        renderPath == null && (wantsResult || looksLikeCompletion);
     final hasColorHex = _currentProjectColorHex() != null;
 
     if (shouldShowRender) {
@@ -4007,8 +3301,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
 
-    final suppressFallback =
-        shouldShowRender || needsRenderButMissing || roomFlowBlocking;
+    final suppressFallback = shouldShowRender || needsRenderButMissing;
     if (!suppressFallback && buttons.isEmpty) {
       final fallback = _defaultButtonsForText(displayText);
       if (fallback != null) {
@@ -4048,7 +3341,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
     final isFirstGreeting =
         _messages.length <= 1 && _messages.every((m) => m.role != 'user');
-    if (!suppressFallback && isFirstGreeting) {
+    if (!suppressFallback && isFirstGreeting && buttons.isEmpty) {
       buttons = const [
         QuickReplyButton(
           label: 'Projekt starten',
@@ -4132,17 +3425,25 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     if (!_ensureAiConsent()) return;
     await _stopTtsPlayback();
 
+    // Always dismiss keyboard after sending
+    FocusScope.of(context).unfocus();
+
     final rawText = quickReplyText ?? _inputController.text;
     final text = rawText.trim();
     final lower = text.toLowerCase();
-    if (text.isNotEmpty && _isVirtualRoomRequestText(lower)) {
-      _virtualRoomRequested = true;
+
+    // Intercept direct AR wall paint requests — launch immediately
+    if (text.isNotEmpty && _isARWallPaintRequest(lower)) {
+      _inputController.clear();
+      setState(() {
+        _messages.add(ChatMessage(role: 'user', text: text));
+      });
+      await _startARWallPaint();
+      return;
     }
+
     if (text.isNotEmpty) {
       final preference = _extractColorPreference(text);
-      if (preference != null) {
-        _preferredColorHint = preference;
-      }
       if (preference != null && preference.startsWith('#')) {
         _lastDetectedHex = preference;
         unawaited(_persistHexColor(preference));
@@ -4337,29 +3638,6 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       }
     }
 
-    final roomFlowStarted =
-        await _maybeStartRoomFlowAfterUpload(justUploaded);
-    if (roomFlowStarted) {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-          _streamingMsgIndex = null;
-        });
-      }
-      return;
-    }
-
-    final flowHandled = await _handleRoomFlowUserText(text);
-    if (flowHandled) {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-          _streamingMsgIndex = null;
-        });
-      }
-      return;
-    }
-
     // ===== 4) Payload → Worker =====
     await _ensureProductsLoaded();
     await _ensureMemoryLoaded();
@@ -4499,7 +3777,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final buttons = msg.buttons ?? const <QuickReplyButton>[];
     final bg = isUser
         ? theme.colorScheme.primary
-        : theme.colorScheme.surfaceContainerHighest;
+        : const Color(0xFFF5EDE8);
     final fg = isUser
         ? theme.colorScheme.onPrimary
         : theme.colorScheme.onSurface;
@@ -4722,7 +4000,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             content = Image.file(File(att.path), fit: BoxFit.cover);
           } else {
             content = Container(
-              color: Colors.grey.shade200,
+              color: const Color(0xFFD8DEE4),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -4806,11 +4084,11 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
               minLines: 1,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Nachricht an THERMOLOX …',
+                hintText: 'Nachricht an CLIMALOX …',
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: const Color(0xFFFFFFFF),
                 hintStyle: TextStyle(
-                  color: Colors.grey.shade500,
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                   fontSize: 15,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
@@ -4820,7 +4098,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(tokens.radiusXl),
                   borderSide: BorderSide(
-                    color: Colors.grey.shade400,
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                     width: 1.2,
                   ),
                 ),
@@ -4891,12 +4169,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final theme = Theme.of(context);
     final tokens = context.thermoloxTokens;
     final isDisabled = _isTranscribing || _isTtsLoading;
-    final ringGlow = theme.colorScheme.primary.withOpacity(
-      _isSpeaking ? 0.85 : 0.65,
+    final ringGlow = theme.colorScheme.primary.withValues(
+      alpha: _isSpeaking ? 0.85 : 0.65,
     );
 
     final innerColor = _isRecording
-        ? Colors.red.shade400
+        ? AppTheme.peachDark
         : theme.scaffoldBackgroundColor;
     final iconColor =
         _isRecording ? Colors.white : theme.colorScheme.primary;
@@ -5044,11 +4322,14 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
         children: [
           // HEADER
           Padding(
-            padding: const EdgeInsets.only(top: 0, bottom: 4),
-            child: Image.asset(
-              'assets/logos/THERMOLOX_SYSTEMS.png',
-              height: 60,
-              fit: BoxFit.contain,
+            padding: const EdgeInsets.only(top: 8, bottom: 8),
+            child: Text(
+              'CLIMALOX',
+              style: const TextStyle(fontFamily: 'Times New Roman', 
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primary,
+              ),
             ),
           ),
 

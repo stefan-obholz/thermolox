@@ -23,6 +23,9 @@ import '../widgets/before_after_slider.dart';
 import '../widgets/color_palette_sheet.dart';
 import '../widgets/image_preview_page.dart';
 import '../widgets/mask_editor_page.dart';
+import 'ar_wall_paint_page.dart';
+import '../services/ar_wall_paint_service.dart';
+import '../services/lidar_service.dart';
 
 class ProjectDetailPage extends StatefulWidget {
   final String projectId;
@@ -35,11 +38,25 @@ class ProjectDetailPage extends StatefulWidget {
 
 class _ProjectDetailPageState extends State<ProjectDetailPage> {
   String? _selectedRenderId;
+  Map<String, bool> _fileExistsCache = {};
 
-  Project _find(BuildContext context) =>
-      context.read<ProjectsModel>().projects.firstWhere(
-            (p) => p.id == widget.projectId,
-          );
+  void _refreshFileExistsCache(List<ProjectItem> items) {
+    final newCache = <String, bool>{};
+    for (final item in items) {
+      final path = item.path;
+      if (path != null && !newCache.containsKey(path)) {
+        newCache[path] = File(path).existsSync();
+      }
+    }
+    _fileExistsCache = newCache;
+  }
+
+  Project? _find(BuildContext context) {
+    final projects = context.read<ProjectsModel>().projects;
+    final idx = projects.indexWhere((p) => p.id == widget.projectId);
+    if (idx == -1) return null;
+    return projects[idx];
+  }
 
   Future<void> _renameProject(BuildContext context, Project project) async {
     final newName = await ThermoloxOverlay.promptText(
@@ -288,9 +305,17 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     final tokens = context.thermoloxTokens;
     return Consumer<ProjectsModel>(
       builder: (context, model, _) {
-        final project =
-            model.projects.firstWhere((p) => p.id == widget.projectId);
+        final project = _find(context);
+        if (project == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          });
+          return const SizedBox.shrink();
+        }
         final items = project.items;
+        _refreshFileExistsCache(items);
         final renderItems =
             items.where((item) => item.type == 'render').toList();
         ProjectItem? _findByType(String type) {
@@ -362,6 +387,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                 child: _ProjectImageCard(
                   item: mediaItem,
                   renderItem: renderItem,
+                  fileExistsCache: _fileExistsCache,
                   onTap: mediaItem == null || mediaItem.type != 'image'
                       ? null
                       : () => _openPreview(context, mediaItem),
@@ -401,6 +427,47 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                 },
               ),
               SizedBox(height: tokens.gapLg),
+              FutureBuilder<List<bool>>(
+                future: Future.wait([
+                  ARWallPaintService.isSupported(),
+                  LidarService.isAvailable(),
+                ]),
+                builder: (context, snap) {
+                  final results = snap.data;
+                  if (results == null || !results[0] || !results[1]) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: tokens.gapLg),
+                    child: _ProjectCard(
+                      child: ListTile(
+                        leading: const Icon(Icons.format_paint),
+                        title: const Text('AR Wandfarbe'),
+                        subtitle: const Text('Wände live in AR streichen'),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () async {
+                          final result = await Navigator.push<ARWallPaintResult>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ARWallPaintPage(projectId: project.id),
+                            ),
+                          );
+                          if (!context.mounted) return;
+                          if (result?.screenshotPath != null) {
+                            final model = context.read<ProjectsModel>();
+                            await model.addItem(
+                              projectId: project.id,
+                              name: 'AR Wandfarbe',
+                              type: 'ar_render',
+                              path: result!.screenshotPath,
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
               Text(
                 'Farbe',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -477,6 +544,7 @@ class _ProjectImageCard extends StatelessWidget {
   final VoidCallback? onOpenFullScreen;
   final VoidCallback? onOpenBeforeAfter;
   final VoidCallback onPick;
+  final Map<String, bool> fileExistsCache;
 
   const _ProjectImageCard({
     required this.item,
@@ -485,6 +553,7 @@ class _ProjectImageCard extends StatelessWidget {
     this.onOpenFullScreen,
     this.onOpenBeforeAfter,
     required this.onPick,
+    required this.fileExistsCache,
   });
 
   @override
@@ -493,14 +562,14 @@ class _ProjectImageCard extends StatelessWidget {
     final tokens = context.thermoloxTokens;
     final localPath = item?.path;
     final localExists =
-        localPath != null && File(localPath).existsSync();
+        localPath != null && (fileExistsCache[localPath] ?? false);
     final remoteUrl = item?.url;
     final hasImage = item != null &&
         item!.type == 'image' &&
         (localExists || remoteUrl != null);
     final renderPath = renderItem?.path;
     final renderLocalExists =
-        renderPath != null && File(renderPath).existsSync();
+        renderPath != null && (fileExistsCache[renderPath] ?? false);
     final renderUrl = renderItem?.url;
     final hasRender = hasImage &&
         renderItem != null &&
@@ -543,14 +612,14 @@ class _ProjectImageCard extends StatelessWidget {
                                 ? Icons.insert_drive_file_outlined
                                 : Icons.photo_outlined,
                             size: 36,
-                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             isFile ? (item?.name ?? 'Datei') : 'Noch kein Foto',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color:
-                                  theme.colorScheme.onSurface.withOpacity(0.6),
+                                  theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -622,14 +691,14 @@ class _ProjectColorCard extends StatelessWidget {
                             Icons.color_lens_outlined,
                             size: 32,
                             color:
-                                theme.colorScheme.onSurface.withOpacity(0.5),
+                                theme.colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Noch keine Farbe',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface
-                                  .withOpacity(0.6),
+                                  .withValues(alpha: 0.6),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -650,7 +719,7 @@ class _ProjectColorCard extends StatelessWidget {
             top: 8,
             right: 8,
             child: Material(
-              color: theme.colorScheme.surface.withOpacity(0.92),
+              color: theme.colorScheme.surface.withValues(alpha: 0.92),
               borderRadius: BorderRadius.circular(999),
               elevation: 2,
               child: InkWell(
@@ -854,7 +923,7 @@ class _ProjectNotesCardState extends State<_ProjectNotesCard> {
         borderRadius: BorderRadius.circular(tokens.radiusMd),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -867,7 +936,7 @@ class _ProjectNotesCardState extends State<_ProjectNotesCard> {
             Text(
               'Noch keine Notizen',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             )
           else
@@ -883,17 +952,17 @@ class _ProjectNotesCardState extends State<_ProjectNotesCard> {
                   decoration: InputDecoration(
                     prefixText: '- ',
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                    fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(tokens.radiusSm),
                       borderSide: BorderSide(
-                        color: theme.colorScheme.outline.withOpacity(0.4),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(tokens.radiusSm),
                       borderSide: BorderSide(
-                        color: theme.colorScheme.outline.withOpacity(0.2),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
                     contentPadding: EdgeInsets.symmetric(
@@ -922,17 +991,17 @@ class _ProjectNotesCardState extends State<_ProjectNotesCard> {
                 prefixText: '- ',
                 hintText: 'Stichpunkt hinzufügen',
                 filled: true,
-                fillColor: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(tokens.radiusSm),
                   borderSide: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.4),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.4),
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(tokens.radiusSm),
                   borderSide: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
                 contentPadding: EdgeInsets.symmetric(
@@ -1004,6 +1073,18 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   ui.Size? _pendingImageSize;
   String? _pendingPrompt;
   String? _pendingImageUrl;
+  Map<String, bool> _fileExistsCache = {};
+
+  void _refreshFileExistsCache() {
+    final newCache = <String, bool>{};
+    for (final item in widget.renderItems) {
+      final path = item.path;
+      if (path != null && !newCache.containsKey(path)) {
+        newCache[path] = File(path).existsSync();
+      }
+    }
+    _fileExistsCache = newCache;
+  }
 
   @override
   void initState() {
@@ -1018,6 +1099,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
     );
     _currentIndex = _resolveSelectedIndex();
     _renderController = PageController(initialPage: _currentIndex);
+    _refreshFileExistsCache();
   }
 
   int _resolveSelectedIndex() {
@@ -1034,6 +1116,9 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   @override
   void didUpdateWidget(covariant _VirtualRoomSection oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.renderItems != widget.renderItems) {
+      _refreshFileExistsCache();
+    }
     final nextIndex = _resolveSelectedIndex();
     if (widget.renderItems.isEmpty) {
       _currentIndex = 0;
@@ -1082,7 +1167,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
 
   Widget? _renderImage(ProjectItem item) {
     final localPath = item.path;
-    if (localPath != null && File(localPath).existsSync()) {
+    if (localPath != null && (_fileExistsCache[localPath] ?? false)) {
       return Image.file(File(localPath), fit: BoxFit.cover);
     }
     final url = item.url;
@@ -1094,7 +1179,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
 
   String? _resolvePreviewPath(ProjectItem item) {
     final localPath = item.path;
-    if (localPath != null && File(localPath).existsSync()) {
+    if (localPath != null && (_fileExistsCache[localPath] ?? false)) {
       return localPath;
     }
     final url = item.url;
@@ -1450,7 +1535,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
                               child: Icon(
                                 Icons.broken_image_outlined,
                                 color: theme.colorScheme.onSurface
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 size: 36,
                               ),
                             );
@@ -1466,14 +1551,14 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
                                       Icons.auto_awesome_outlined,
                                       size: 34,
                                       color: theme.colorScheme.onSurface
-                                          .withOpacity(0.5),
+                                          .withValues(alpha: 0.5),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Bereit zum Rendern',
                                       style: theme.textTheme.bodyMedium?.copyWith(
                                         color: theme.colorScheme.onSurface
-                                            .withOpacity(0.6),
+                                            .withValues(alpha: 0.6),
                                       ),
                                     ),
                                     if (hasPro) ...[
@@ -1482,7 +1567,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
                                         'Visualisierungen: $credits',
                                         style: theme.textTheme.bodySmall?.copyWith(
                                           color: theme.colorScheme.onSurface
-                                              .withOpacity(0.6),
+                                              .withValues(alpha: 0.6),
                                         ),
                                       ),
                                     ],
@@ -1516,7 +1601,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
               if (_isBusy && hasRenders)
                 Positioned.fill(
                   child: Container(
-                    color: theme.colorScheme.surface.withOpacity(0.65),
+                    color: theme.colorScheme.surface.withValues(alpha: 0.65),
                     child: const Center(
                       child: CircularProgressIndicator(),
                     ),
@@ -1551,7 +1636,7 @@ class _ActionPill extends StatelessWidget {
         : const EdgeInsets.all(8);
 
     return Material(
-      color: theme.colorScheme.surface.withOpacity(0.92),
+      color: theme.colorScheme.surface.withValues(alpha: 0.92),
       borderRadius: BorderRadius.circular(999),
       elevation: 2,
       child: InkWell(

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -464,11 +465,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
       shrinkWrap: widget.shrinkWrap,
       children: [
         Center(
-          child: Image.asset(
-            'assets/logos/THERMOLOX_SYSTEMS.png',
-            height: tokens.gapLg * 2,
-            fit: BoxFit.contain,
-          ),
+          child: Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
         ),
         SizedBox(height: tokens.gapMd),
         Card(
@@ -584,7 +581,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                 children: [
                   Expanded(
                     child: Divider(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      color: theme.colorScheme.onSurface.withValues(alpha:0.2),
                     ),
                   ),
                   Padding(
@@ -592,13 +589,13 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                     child: Text(
                       'oder',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withValues(alpha:0.6),
                       ),
                     ),
                   ),
                   Expanded(
                     child: Divider(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      color: theme.colorScheme.onSurface.withValues(alpha:0.2),
                     ),
                   ),
                 ],
@@ -618,7 +615,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
                 Text(
                   _debugInfo!,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha:0.6),
                   ),
                 ),
               ],

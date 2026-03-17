@@ -26,6 +26,7 @@ class PlanController extends ChangeNotifier {
   StreamSubscription? _authSub;
 
   bool _isLoading = false;
+  int _loadGeneration = 0;
   Object? _error;
   Map<String, CurrentPlan> _publicPlans = {};
   CurrentPlan? _activePlan;
@@ -84,12 +85,15 @@ class PlanController extends ChangeNotifier {
 
   Future<void> load({bool force = false}) async {
     if (_isLoading && !force) return;
+    final generation = ++_loadGeneration;
     _isLoading = true;
     notifyListeners();
 
     try {
       final plans = await _planService.loadPlans();
       final features = await _planService.loadPlanFeatures(plans);
+      if (generation != _loadGeneration) return;
+
       _publicPlans = _buildPublicPlans(plans, features);
 
       final user = _authService.currentUser;
@@ -97,8 +101,10 @@ class PlanController extends ChangeNotifier {
           (_isGodModeUser(user.email) || _isGodModeUserId(user.id));
       if (user != null && (_authService.isEmailVerified || isGodMode)) {
         _subscriptionInfo = await _planService.getCurrentUserPlanInfo();
+        if (generation != _loadGeneration) return;
         _entitlements = await _planService.loadEntitlements(userId: user.id) ??
             const UserEntitlements(proLifetime: false, creditsBalance: 0);
+        if (generation != _loadGeneration) return;
       } else {
         _subscriptionInfo = null;
         _entitlements = null;
@@ -112,6 +118,7 @@ class PlanController extends ChangeNotifier {
       _activePlan = _resolveActivePlan();
       _error = null;
     } catch (e) {
+      if (generation != _loadGeneration) return;
       _error = e;
       await AnalyticsService.instance.logEvent(
         'plan_load_failed',
@@ -124,8 +131,10 @@ class PlanController extends ChangeNotifier {
       _publicPlans = {};
       _activePlan = null;
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (generation == _loadGeneration) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 

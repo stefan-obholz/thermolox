@@ -23,7 +23,7 @@ class ProductDetailPage extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'THERMOLOX',
+          'CLIMALOX',
           style: TextStyle(
             fontSize: 34,
             fontWeight: FontWeight.w800,
@@ -47,7 +47,13 @@ class ProductDetailPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(tokens.radiusCard),
                   child: AspectRatio(
                     aspectRatio: 4 / 3,
-                    child: Image.network(product.imageUrl!, fit: BoxFit.cover),
+                    child: Image.network(
+                      product.imageUrl!,
+                      fit: BoxFit.cover,
+                      cacheWidth: 720,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image),
+                    ),
                   ),
                 ),
               ),

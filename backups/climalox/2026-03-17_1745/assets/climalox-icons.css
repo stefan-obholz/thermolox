@@ -1,0 +1,22 @@
+/* ── CLIMALOX Icon System ──
+   Replaces emoji characters in product descriptions and sections
+   with clean, consistent inline SVG icons via Phosphor Icons CDN.
+   Central file — edit here to change icons site-wide.
+*/
+
+/* Base icon styling for replaced emoji */
+.climalox-icon {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.15em;
+  margin-right: 0.3em;
+  color: #D4896F;
+}
+
+/* Slightly larger for headings */
+h2 .climalox-icon,
+h3 .climalox-icon {
+  width: 1.3em;
+  height: 1.3em;
+}

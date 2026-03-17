@@ -41,6 +41,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
   final List<_MaskStroke> _strokes = [];
   final List<Offset> _currentPoints = [];
   double _currentWidthFactor = 0.0;
+  late final _MaskPainterNotifier _paintNotifier;
 
   ui.Image? _image;
   Size _canvasSize = Size.zero;
@@ -50,7 +51,14 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
   @override
   void initState() {
     super.initState();
+    _paintNotifier = _MaskPainterNotifier();
     _decodeImage();
+  }
+
+  @override
+  void dispose() {
+    _paintNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _decodeImage() async {
@@ -84,7 +92,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
     if (_canvasSize == Size.zero) return;
     final point = _normalize(local, _canvasSize);
     _currentPoints.add(point);
-    setState(() {});
+    _paintNotifier.notify();
   }
 
   void _endStroke() {
@@ -98,17 +106,22 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
     );
     _strokes.add(stroke);
     _currentPoints.clear();
+    _paintNotifier.notify();
     setState(() {});
   }
 
   void _undo() {
     if (_strokes.isEmpty) return;
-    setState(() => _strokes.removeLast());
+    _strokes.removeLast();
+    _paintNotifier.notify();
+    setState(() {});
   }
 
   void _clear() {
     if (_strokes.isEmpty) return;
-    setState(() => _strokes.clear());
+    _strokes.clear();
+    _paintNotifier.notify();
+    setState(() {});
   }
 
   Future<void> _finish() async {
@@ -231,7 +244,8 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
                                         currentPoints: _currentPoints,
                                         currentWidthFactor: _currentWidthFactor,
                                         color: theme.colorScheme.primary
-                                            .withOpacity(0.45),
+                                            .withValues(alpha: 0.45),
+                                        repaint: _paintNotifier,
                                       ),
                                     ),
                                   ),
@@ -250,7 +264,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
               Icon(
                 Icons.brush,
                 size: 20,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               Expanded(
                 child: Slider(
@@ -370,6 +384,10 @@ class _MaskStroke {
   });
 }
 
+class _MaskPainterNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
 class _MaskPainter extends CustomPainter {
   final List<_MaskStroke> strokes;
   final List<Offset> currentPoints;
@@ -381,7 +399,8 @@ class _MaskPainter extends CustomPainter {
     required this.currentPoints,
     required this.currentWidthFactor,
     required this.color,
-  });
+    _MaskPainterNotifier? repaint,
+  }) : super(repaint: repaint);
 
   @override
   void paint(Canvas canvas, Size size) {

@@ -14,6 +14,11 @@ begin
   where bucket_id = 'project_uploads'
     and (storage.foldername(name))[1] = p_user_id::text;
 
+  -- Storage: remove avatar images.
+  delete from storage.objects
+  where bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = p_user_id::text;
+
   delete from public.analytics_events where user_id = p_user_id;
   delete from public.project_items where user_id = p_user_id;
   delete from public.projects where user_id = p_user_id;

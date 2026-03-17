@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'consent_service.dart';
@@ -25,11 +26,11 @@ class ImageEditService {
 
     final payload = <String, dynamic>{
       'prompt': prompt,
-      'maskBase64': _toDataUrl(maskPng),
+      'maskBase64': await _toDataUrl(maskPng),
     };
 
     if (imageBytes != null && imageBytes.isNotEmpty) {
-      payload['imageBase64'] = _toDataUrl(imageBytes);
+      payload['imageBase64'] = await _toDataUrl(imageBytes);
     } else if (imageUrl != null && imageUrl.isNotEmpty) {
       payload['imageUrl'] = imageUrl;
     }
@@ -38,7 +39,7 @@ class ImageEditService {
       Uri.parse('$kThermoloxApiBase/image-edit'),
       headers: buildWorkerHeaders(contentType: 'application/json'),
       body: jsonEncode(payload),
-    );
+    ).timeout(const Duration(seconds: 120));
 
     if (res.statusCode != 200) {
       throw Exception('Image edit failed: ${res.statusCode} ${res.body}');
@@ -68,14 +69,16 @@ class ImageEditService {
     }
     final url = decoded['imageUrl'] ?? decoded['url'];
     if (url is String && url.isNotEmpty) {
-      final res = await http.get(Uri.parse(url));
+      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
       if (res.statusCode == 200) return res.bodyBytes;
     }
     throw Exception('Image bytes missing in response');
   }
 
-  String _toDataUrl(Uint8List bytes) {
-    final encoded = base64Encode(bytes);
+  static String _base64EncodeIsolate(Uint8List bytes) => base64Encode(bytes);
+
+  Future<String> _toDataUrl(Uint8List bytes) async {
+    final encoded = await compute(_base64EncodeIsolate, bytes);
     return 'data:image/png;base64,$encoded';
   }
 

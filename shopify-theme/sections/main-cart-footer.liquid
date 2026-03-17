@@ -1,0 +1,373 @@
+{{ 'component-cart.css' | asset_url | stylesheet_tag }}
+{{ 'component-totals.css' | asset_url | stylesheet_tag }}
+{{ 'component-price.css' | asset_url | stylesheet_tag }}
+{{ 'component-discounts.css' | asset_url | stylesheet_tag }}
+
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div
+  class="gradient color-{{ section.settings.color_scheme }}{% if cart == empty %} is-empty{% endif %}"
+  id="main-cart-footer"
+  data-id="{{ section.id }}"
+>
+  <div class="page-width">
+    <div class="cart__footer isolate section-{{ section.id }}-padding">
+      {%- if settings.show_cart_note -%}
+        <cart-note class="cart__note field">
+          <label for="Cart-note">{{ 'sections.cart.note' | t }}</label>
+          <textarea
+            class="text-area field__input"
+            name="note"
+            form="cart"
+            id="Cart-note"
+            placeholder="{{ 'sections.cart.note' | t }}"
+          >{{ cart.note }}</textarea>
+        </cart-note>
+      {%- endif -%}
+
+      <div class="cart__blocks">
+        {% for block in section.blocks %}
+          {%- case block.type -%}
+            {%- when '@app' -%}
+              {% render block %}
+            {%- when 'subtotal' -%}
+              <div class="js-contents" {{ block.shopify_attributes }}>
+                <div>
+                  {%- if cart.cart_level_discount_applications.size > 0 -%}
+                    <ul class="discounts list-unstyled" role="list" aria-label="{{ 'customer.order.discount' | t }}">
+                      {%- for discount in cart.cart_level_discount_applications -%}
+                        <li class="discounts__discount discounts__discount--position">
+                          {{- 'icon-discount.svg' | inline_asset_content -}}
+                          {{ discount.title | escape }}
+                          (-{{ discount.total_allocated_amount | money }})
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+                </div>
+
+                <div class="totals">
+                  <h2 class="totals__total">{{ 'sections.cart.estimated_total' | t }}</h2>
+                  <p class="totals__total-value">{{ cart.total_price | money_with_currency }}</p>
+                </div>
+
+                <small class="tax-note caption-large rte">
+                  {%- if cart.duties_included and cart.taxes_included -%}
+                    {%- if shop.shipping_policy.body == blank -%}
+                      {{ 'sections.cart.duties_and_taxes_included_shipping_at_checkout_without_policy' | t }}
+                    {%- else -%}
+                      {{
+                        'sections.cart.duties_and_taxes_included_shipping_at_checkout_with_policy_html'
+                        | t: link: shop.shipping_policy.url
+                      }}
+                    {%- endif -%}
+                  {%- elsif cart.duties_included == false and cart.taxes_included -%}
+                    {%- if shop.shipping_policy.body == blank -%}
+                      {{ 'sections.cart.taxes_included_shipping_at_checkout_without_policy' | t }}
+                    {%- else -%}
+                      {{
+                        'sections.cart.taxes_included_shipping_at_checkout_with_policy_html'
+                        | t: link: shop.shipping_policy.url
+                      }}
+                    {%- endif -%}
+                  {%- elsif cart.duties_included and cart.taxes_included == false -%}
+                    {%- if shop.shipping_policy.body == blank -%}
+                      {{ 'sections.cart.duties_included_taxes_at_checkout_shipping_at_checkout_without_policy' | t }}
+                    {%- else -%}
+                      {{
+                        'sections.cart.duties_included_taxes_at_checkout_shipping_at_checkout_with_policy_html'
+                        | t: link: shop.shipping_policy.url
+                      }}
+                    {%- endif -%}
+                  {%- elsif cart.duties_included == false and cart.taxes_included == false -%}
+                    {%- if shop.shipping_policy.body == blank -%}
+                      {{ 'sections.cart.taxes_at_checkout_shipping_at_checkout_without_policy' | t }}
+                    {%- else -%}
+                      {{
+                        'sections.cart.taxes_at_checkout_shipping_at_checkout_with_policy_html'
+                        | t: link: shop.shipping_policy.url
+                      }}
+                    {%- endif -%}
+                  {%- endif -%}
+                </small>
+              </div>
+            {%- else -%}
+
+              {%- liquid
+  assign tlx_requires_waiver = false
+
+  assign tlx_sku_list = 'PRO_LIFETIME_990,THERMO-SEAL-DIGITAL' | split: ','
+  assign tlx_variant_list = '52139421335893' | split: ','
+
+  for item in cart.items
+    assign vId = item.variant_id | append: ''
+    if tlx_variant_list contains vId
+      assign tlx_requires_waiver = true
+      break
+    endif
+
+    if item.sku != blank and tlx_sku_list contains item.sku
+      assign tlx_requires_waiver = true
+      break
+    endif
+  endfor
+
+  assign tlx_waiver_value = cart.attributes.digital_waiver
+-%}
+
+{%- if tlx_requires_waiver -%}
+  <div id="TLX-Waiver" style="margin: 14px 0;">
+    <label style="display:flex; gap:10px; align-items:flex-start; font-size:14px; line-height:1.35;">
+      <input id="TLX-WaiverCheckbox" type="checkbox" {% if tlx_waiver_value != blank %}checked{% endif %} style="margin-top:3px;">
+      <span>
+        Ich stimme ausdrücklich zu, dass THERMOLOX vor Ablauf der Widerrufsfrist mit der Ausführung des digitalen Inhalts beginnt und ich dadurch mein Widerrufsrecht verliere.
+      </span>
+    </label>
+    <p id="TLX-WaiverError" style="display:none; margin:8px 0 0; font-size:13px;">
+      Bitte bestätige die Zustimmung, um fortzufahren.
+    </p>
+  </div>
+
+<style>
+  .tlx-disabled {
+    opacity: .45 !important;
+    pointer-events: none !important;
+    filter: grayscale(100%) !important;
+  }
+
+  /* PayPal Button sitzt oft in einem Wrapper – wir machen den Wrapper "taub" */
+  .tlx-paypal-blocker {
+    position: relative;
+  }
+  .tlx-paypal-blocker::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+    background: transparent;
+  }
+</style>
+
+<script>
+  (function(){
+    var checkbox = document.getElementById('TLX-WaiverCheckbox');
+    var errorEl = document.getElementById('TLX-WaiverError');
+    if(!checkbox) return;
+
+    function setError(v){ if(errorEl) errorEl.style.display = v ? 'block' : 'none'; }
+    function isoNow(){ try { return new Date().toISOString(); } catch(e){ return String(Date.now()); } }
+
+    async function persist(isAccepted){
+      await fetch('/cart/update.js', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ attributes: { digital_waiver: isAccepted ? ('accepted_at:' + isoNow()) : '' }})
+      });
+    }
+
+    function findPayPalWrappers(){
+      var list = [];
+
+      // Häufig: Shopify rendert PayPal in diesen Bereichen / ids / iframes
+      list = list.concat(Array.from(document.querySelectorAll(
+        '.additional-checkout-buttons, [data-testid*="paypal"], [id*="paypal"], [class*="paypal"], iframe[src*="paypal"], iframe[title*="PayPal"]'
+      )));
+
+      // Dedup + filter
+      list = Array.from(new Set(list)).filter(Boolean);
+      return list;
+    }
+
+    function findCheckoutButtons(){
+      var btns = [];
+      btns = btns.concat(Array.from(document.querySelectorAll(
+        'button[name="checkout"], button[type="submit"][name="checkout"], form[action*="/checkout"] button[type="submit"]'
+      )));
+      var express = document.querySelector('.additional-checkout-buttons');
+      if(express) btns = btns.concat(Array.from(express.querySelectorAll('button, a, input')));
+
+      // Dedup
+      return Array.from(new Set(btns)).filter(Boolean);
+    }
+
+    function applyDisabled(disabled){
+      // Normaler Checkout Button(s)
+      var btns = findCheckoutButtons();
+      btns.forEach(function(el){
+        try{
+          if(disabled){
+            el.classList && el.classList.add('tlx-disabled');
+            if(el.tagName === 'BUTTON' || el.tagName === 'INPUT') el.disabled = true;
+            el.setAttribute && el.setAttribute('aria-disabled','true');
+          } else {
+            el.classList && el.classList.remove('tlx-disabled');
+            if(el.tagName === 'BUTTON' || el.tagName === 'INPUT') el.disabled = false;
+            el.setAttribute && el.setAttribute('aria-disabled','false');
+          }
+        } catch(e){}
+      });
+
+      // PayPal / Express Wrapper blocken (auch wenn iframe)
+      var paypalWraps = findPayPalWrappers();
+      paypalWraps.forEach(function(w){
+        try{
+          if(disabled){
+            w.classList && w.classList.add('tlx-paypal-blocker');
+          } else {
+            w.classList && w.classList.remove('tlx-paypal-blocker');
+          }
+        } catch(e){}
+      });
+    }
+
+    // HARD GUARD: blockt JEDEN Klick auf PayPal/Express (auch wenn nachgeladen)
+    function guardClicks(e){
+      if(checkbox.checked) return;
+
+      var t = e.target;
+      if(!t) return;
+
+      // Alles was nach PayPal/Express aussieht blocken
+      var isPayPalLike =
+        !!t.closest('.additional-checkout-buttons') ||
+        !!t.closest('[data-testid*="paypal"]') ||
+        !!t.closest('[id*="paypal"]') ||
+        !!t.closest('[class*="paypal"]') ||
+        (t.tagName === 'IFRAME' && ((t.src && t.src.indexOf('paypal')>-1) || (t.title && /paypal/i.test(t.title)))) ||
+        /paypal|shop pay|shoppay|apple|google|accelerated/i.test((t.getAttribute && (t.getAttribute('aria-label')||'')) || '');
+
+      var isCheckoutLike =
+        !!t.closest('button[name="checkout"]') ||
+        !!t.closest('form[action*="/checkout"]');
+
+      if(isPayPalLike || isCheckoutLike){
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        setError(true);
+        checkbox.focus();
+        return false;
+      }
+    }
+
+    // MutationObserver: wenn PayPal nachgeladen wird, direkt blocken
+    var obs = new MutationObserver(function(){
+      applyDisabled(!checkbox.checked);
+    });
+    obs.observe(document.documentElement, { childList:true, subtree:true });
+
+    // init
+    setError(false);
+    applyDisabled(!checkbox.checked);
+
+    checkbox.addEventListener('change', async function(){
+      setError(false);
+      applyDisabled(!checkbox.checked);
+      try{ await persist(checkbox.checked); } catch(e){}
+    });
+
+    document.addEventListener('click', guardClicks, true);
+
+    // Fallback timers
+    setTimeout(function(){ applyDisabled(!checkbox.checked); }, 600);
+    setTimeout(function(){ applyDisabled(!checkbox.checked); }, 1400);
+    setTimeout(function(){ applyDisabled(!checkbox.checked); }, 2400);
+  })();
+</script>
+{%- endif -%}
+
+
+              <div class="cart__ctas" {{ block.shopify_attributes }}>
+                <button
+                  type="submit"
+                  id="checkout"
+                  class="cart__checkout-button button"
+                  name="checkout"
+                  {% if cart == empty %}
+                    disabled
+                  {% endif %}
+                  form="cart"
+                >
+                  {{ 'sections.cart.checkout' | t }}
+                </button>
+              </div>
+
+              {%- if additional_checkout_buttons -%}
+                <div class="cart__dynamic-checkout-buttons additional-checkout-buttons">
+                  {{ content_for_additional_checkout_buttons }}
+                </div>
+              {%- endif -%}
+          {%- endcase -%}
+        {% endfor %}
+
+        <div id="cart-errors"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main-cart-footer.name",
+  "class": "cart__footer-wrapper",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_padding_heading"
+    },    
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "label": "t:sections.all.padding.padding_bottom",
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "subtotal",
+      "name": "t:sections.main-cart-footer.blocks.subtotal.name",
+      "limit": 1
+    },
+    {
+      "type": "buttons",
+      "name": "t:sections.main-cart-footer.blocks.buttons.name",
+      "limit": 1
+    },
+    {
+      "type": "@app"
+    }
+  ]
+}
+{% endschema %}

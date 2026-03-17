@@ -1,0 +1,55 @@
+{% schema %}
+{
+  "name": "Before After Slider",
+  "tag": "section",
+  "class": "before-after-slider-section",
+  "settings": [],
+  "presets": [
+    {
+      "name": "Before After Slider",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
+
+<div id="before-after-container" style="position: relative; width: 100%; max-width: 1400px; margin: 0 auto;">
+  <div id="beforeAfterWrapper" style="position: relative; width: 100%; overflow: hidden;">
+    <img 
+      src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_HOT.png?v=1756748493" 
+      alt="HOT"
+      width="1920"
+      height="1080"
+      style="width: 100%; height: auto; display: block;">
+    
+    <img 
+      id="coolImage"
+      src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_COOL.png?v=1756748492" 
+      alt="COOL"
+      width="1920"
+      height="1080"
+      style="width: 100%; height: auto; position: absolute; top: 0; left: 0; clip-path: inset(0 50% 0 0); transition: clip-path 0.1s ease-out;">
+  </div>
+
+  <input 
+    type="range"
+    id="slider"
+    min="0"
+    max="100"
+    value="50"
+    style="width: 100%; margin-top: 16px; appearance: none; height: 6px; background: #ddd; border-radius: 5px; outline: none; position: relative; z-index: 10;">
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const slider = document.getElementById("slider");
+    const coolImage = document.getElementById("coolImage");
+
+    if (slider && coolImage) {
+      slider.addEventListener("input", function () {
+        const percent = 100 - parseInt(this.value);
+        coolImage.style.clipPath = `inset(0 ${percent}% 0 0)`;
+      });
+    }
+  });
+</script>

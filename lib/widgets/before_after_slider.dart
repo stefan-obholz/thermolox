@@ -71,7 +71,7 @@ class _BeforeAfterSliderState extends State<BeforeAfterSlider> {
                   child: CustomPaint(
                     painter: _CenterLinePainter(
                       x: clampedX,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha:0.7),
                     ),
                   ),
                 ),
@@ -175,7 +175,7 @@ class _ArrowButton extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.18),
+            color: Colors.black.withValues(alpha:0.18),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -202,7 +202,7 @@ Future<void> showBeforeAfterDialog({
         child: Stack(
           children: [
             Positioned.fill(
-              child: Container(color: Colors.black.withOpacity(0.85)),
+              child: Container(color: Colors.black.withValues(alpha:0.85)),
             ),
             Center(
               child: SafeArea(

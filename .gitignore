@@ -47,3 +47,8 @@ thermolox_flutter_full.zip
 thermolox_flutter_full.zip
 supabase.json
 secrets
+
+# Signing keys
+android/key.properties
+*.jks
+*.keystore

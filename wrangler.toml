@@ -1,0 +1,30 @@
+name = "thermolox-proxy"
+main = "cloudflare/worker.js"
+compatibility_date = "2026-01-22"
+
+# Cron Trigger: syncs Shopify content → Supabase every 15 min
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+CORS_ALLOW_ORIGINS = "https://thermolox.de,https://www.thermolox.de,https://thermolox.myshopify.com,https://www.thermolox.myshopify.com"
+PROMPT_MEASURE_TEXT = """
+Du erhältst 4-12 Fotos von Wänden in einem Raum. Auf jedem Foto liegt ein
+Meterstab (1m oder 2m) an der Wand. Bestimme pro Foto die volle Wandbreite und
+-höhe in Metern, als wäre die Wand frei (Möbel/Objekte/Fenster/Türen
+ignorieren). Falls nur ein Teil sichtbar ist, extrapoliere anhand sichtbarer
+Kanten/Architektur und dem Meterstab. Antworte NUR als JSON-Objekt im Format
+{"results":[{"wall_width_m":number|null,"wall_height_m":number|null,"confidence":number|null}]}.
+Die results-Liste muss die gleiche Reihenfolge und Länge wie die eingehenden
+Bilder haben. Setze null, wenn du unsicher bist. confidence im Bereich 0..1.
+"""
+PROMPT_MEASURE_LIDAR = """
+Du erhältst RoomPlan JSON (iOS). Bestimme die Raumabmessungen in Metern:
+length_m (längste Ausdehnung), width_m (kürzere Ausdehnung), height_m (Raumhöhe).
+Erkenne Türen und Fenster als openings mit width_m, height_m und count.
+Ignoriere Möbel/Objekte/Küchenzeilen. Antworte NUR als JSON im Format:
+{"length_m":number|null,"width_m":number|null,"height_m":number|null,
+"openings":[{"type":"door|window|opening","width_m":number,"height_m":number,"count":number}],
+"confidence":number|null}
+Setze null, wenn unsicher. confidence im Bereich 0..1.
+"""

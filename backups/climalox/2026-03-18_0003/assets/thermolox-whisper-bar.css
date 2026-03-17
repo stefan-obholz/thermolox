@@ -1,0 +1,98 @@
+#whisper-bar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 50px);
+  max-width: 700px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  border-radius: 50px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  border: 2px solid transparent;
+  transition: border 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#whisper-bar button {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #242833;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+#whisper-bar button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+}
+
+#whisper-duration {
+  font-size: 18px;
+  font-weight: 600;
+  color: #242833;
+}
+
+.waveform {
+  flex: 1;
+  margin: 0 12px;
+  height: 16px;
+  background: repeating-linear-gradient(
+    to right,
+    #ccc 0px,
+    #ccc 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  border-radius: 6px;
+}
+
+#whisper-bar.active {
+  opacity: 1;
+  pointer-events: auto;
+  border-color: #e44c4c;
+}
+
+/* Rotationseffekt */
+.duration.recording {
+  animation: spin-record 1s linear infinite;
+}
+
+/* Für rotierende Animation */
+@keyframes rotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#whisper-duration.recording::after {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 10px;
+  border: 2px solid #242833;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: rotate 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+.spinner.tiny {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #999;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  margin: 0 auto;
+}

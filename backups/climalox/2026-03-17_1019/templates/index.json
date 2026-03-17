@@ -1,0 +1,443 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "hero_banner": {
+      "type": "custom-liquid",
+      "name": "CLIMALOX Hero",
+      "settings": {
+        "custom_liquid": "<div style=\"position:relative;width:100%;min-height:85vh;display:flex;align-items:center;justify-content:center;text-align:center;background:linear-gradient(135deg,#FFF8F5 0%,#F9C2AC 50%,#E8A08E 100%);overflow:hidden;padding:60px 20px;\">\n  <div style=\"position:relative;z-index:2;max-width:800px;\">\n    <div style=\"font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#2D2926;margin-bottom:24px;font-weight:700;\">CLIMALOX DESIGN</div>\n    <h1 style=\"font-size:clamp(3rem,7vw,5.5rem);font-weight:400;line-height:1.1;color:#2D2926;margin-bottom:24px;\">Dein Zuhause.<br><em>Dein Style.</em></h1>\n    <p style=\"font-size:1.25rem;color:#2D2926;max-width:560px;margin:0 auto 40px;line-height:1.7;\">Wandfarben, die nicht nur wundersch\u00f6n aussehen \u2013 sondern dein Zuhause sp\u00fcrbar gem\u00fctlicher machen. Design trifft Funktion.</p>\n    <a href=\"/collections/all\" style=\"display:inline-block;padding:18px 52px;background:#2D2926;color:#FFF8F5;text-decoration:none;border-radius:40px;font-size:1.1rem;letter-spacing:1px;font-weight:600;\">Kollektion entdecken</a>\n  </div>\n</div>",
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "usp_strip": {
+      "type": "custom-liquid",
+      "name": "USP Strip",
+      "settings": {
+        "custom_liquid": "<div style=\"display:flex;justify-content:center;gap:48px;padding:40px 20px;flex-wrap:wrap;background:#FFF8F5;\">\n  <div style=\"text-align:center;max-width:200px;\">\n    <div style=\"font-size:2rem;margin-bottom:8px;\">\u2728</div>\n    <div style=\"font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;color:#2D2926;opacity:0.7;\">\u00dcber 100 Farbt\u00f6ne</div>\n  </div>\n  <div style=\"text-align:center;max-width:200px;\">\n    <div style=\"font-size:2rem;margin-bottom:8px;\">\ud83c\udfe0</div>\n    <div style=\"font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;color:#2D2926;opacity:0.7;\">Sofort wohnbereit</div>\n  </div>\n  <div style=\"text-align:center;max-width:200px;\">\n    <div style=\"font-size:2rem;margin-bottom:8px;\">\ud83c\udf3f</div>\n    <div style=\"font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;color:#2D2926;opacity:0.7;\">Energie sparend</div>\n  </div>\n  <div style=\"text-align:center;max-width:200px;\">\n    <div style=\"font-size:2rem;margin-bottom:8px;\">\ud83c\udfa8</div>\n    <div style=\"font-size:0.85rem;letter-spacing:1.5px;text-transform:uppercase;color:#2D2926;opacity:0.7;\">Individuell mischbar</div>\n  </div>\n</div>",
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "video_intro": {
+      "type": "custom-liquid",
+      "name": "Produkt-Video",
+      "settings": {
+        "custom_liquid": "<div style=\"position:relative;width:100%;padding-top:56.25%;overflow:hidden;background:#2D2926;\">\n  <video autoplay muted playsinline controlslist=\"nodownload\" onended=\"this.pause();this.currentTime=this.duration;\" style=\"position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;\">\n    <source src=\"https://cdn.shopify.com/videos/c/o/v/3eb4687cd1a44a71a997a27eed59dbbb.mp4\" type=\"video/mp4\">\n  </video>\n  <div style=\"position:absolute;bottom:0;left:0;right:0;padding:40px;background:linear-gradient(transparent,rgba(45,41,38,0.85));color:#FFF8F5;text-align:center;z-index:2;\">\n    <h2 style=\"font-size:clamp(1.3rem,3vw,2rem);font-weight:400;margin:0;color:#FFF8F5;\">Premium-Wandfarben mit Klimatechnologie</h2>\n  </div>\n</div>",
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "rich_text_claim": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_main": {
+          "type": "heading",
+          "settings": {
+            "heading": "Farbe, die mehr kann",
+            "heading_size": "h1"
+          }
+        },
+        "text_claim": {
+          "type": "text",
+          "settings": {
+            "text": "<p>CLIMALOX Design verbindet wundersch\u00f6ne Wandfarben mit intelligenter Klimatechnologie. Jeder Anstrich reflektiert W\u00e4rmestrahlung zur\u00fcck in den Raum \u2013 f\u00fcr ein Zuhause, das genauso gut aussieht, wie es sich anf\u00fchlt.</p>"
+          }
+        }
+      },
+      "block_order": ["heading_main", "text_claim"],
+      "name": "Design Claim",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "scheme-1",
+        "full_width": true,
+        "padding_top": 80,
+        "padding_bottom": 60
+      }
+    },
+    "featured_product_seal": {
+      "type": "featured-product",
+      "blocks": {
+        "custom_liquid_seal": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"text-align:center;margin-bottom:-20px;\">\n  <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMO-SEAL_LOGO.png?v=1756469139\" alt=\"THERMO-SEAL\" style=\"max-width:100%;height:auto;\">\n</div>"
+          }
+        },
+        "price_seal": {
+          "type": "price",
+          "settings": {}
+        },
+        "quantity_seal": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "buy_seal": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "show_gift_card_recipient": false
+          }
+        }
+      },
+      "block_order": ["custom_liquid_seal", "price_seal", "quantity_seal", "buy_seal"],
+      "name": "THERMO-SEAL",
+      "settings": {
+        "product": "thermolox-seal",
+        "color_scheme": "scheme-1",
+        "secondary_background": false,
+        "media_size": "medium",
+        "constrain_to_viewport": true,
+        "media_fit": "cover",
+        "media_position": "left",
+        "image_zoom": "none",
+        "hide_variants": false,
+        "enable_video_looping": false,
+        "padding_top": 80,
+        "padding_bottom": 36
+      }
+    },
+    "featured_product_coat": {
+      "type": "featured-product",
+      "blocks": {
+        "custom_liquid_coat": {
+          "type": "custom_liquid",
+          "settings": {
+            "custom_liquid": "<div style=\"text-align:center;margin-bottom:-20px;\">\n  <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMO-COAT_LOGO.png?v=1756469150\" alt=\"THERMO-COAT\" style=\"max-width:100%;height:auto;\">\n</div>"
+          }
+        },
+        "price_coat": {
+          "type": "price",
+          "settings": {}
+        },
+        "quantity_coat": {
+          "type": "quantity_selector",
+          "settings": {}
+        },
+        "buy_coat": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "show_gift_card_recipient": false
+          }
+        }
+      },
+      "block_order": ["custom_liquid_coat", "price_coat", "quantity_coat", "buy_coat"],
+      "name": "THERMO-COAT",
+      "settings": {
+        "product": "thermo-coat",
+        "color_scheme": "scheme-1",
+        "secondary_background": false,
+        "media_size": "medium",
+        "constrain_to_viewport": true,
+        "media_fit": "cover",
+        "media_position": "right",
+        "image_zoom": "none",
+        "hide_variants": false,
+        "enable_video_looping": false,
+        "padding_top": 80,
+        "padding_bottom": 60
+      }
+    },
+    "youtube_video": {
+      "type": "custom-liquid",
+      "name": "Erkl\u00e4rvideo",
+      "settings": {
+        "custom_liquid": "<div style=\"padding:80px 20px;text-align:center;background-color:#2D2926;color:#FFF8F5;\">\n  <h2 style=\"font-size:clamp(1.5rem,3vw,2.5rem);margin-bottom:32px;font-weight:400;color:#FFF8F5;\">Was, wenn deine Wand wie eine Thermoskanne funktioniert?</h2>\n  <div style=\"position:relative;width:100%;max-width:800px;margin:0 auto;aspect-ratio:16/9;border-radius:16px;overflow:hidden;\">\n    <iframe src=\"https://www.youtube.com/embed/CAyWN9ba9J8\" title=\"CLIMALOX Design Erkl\u00e4rvideo\" frameborder=\"0\" allowfullscreen style=\"width:100%;height:100%;border:none;\"></iframe>\n  </div>\n</div>",
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "design_inspiration": {
+      "type": "custom-liquid",
+      "name": "Design Inspiration",
+      "settings": {
+        "custom_liquid": "<div style=\"text-align:center;padding:80px 20px;background:#FFF8F5;\">\n  <div style=\"font-size:0.85rem;letter-spacing:2px;text-transform:uppercase;color:#D4896F;margin-bottom:16px;\">Warum CLIMALOX?</div>\n  <h2 style=\"font-size:clamp(2rem,4vw,3rem);color:#2D2926;margin-bottom:16px;font-weight:400;\">Sch\u00f6nheit trifft Wirkung</h2>\n  <p style=\"font-size:1.1rem;color:#2D2926;opacity:0.75;max-width:600px;margin:0 auto 40px;line-height:1.7;\">Unsere Wandfarben sehen nicht nur fantastisch aus \u2013 sie machen dein Zuhause sp\u00fcrbar komfortabler und senken gleichzeitig deine Energiekosten.</p>\n  <div style=\"display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1200px;margin:0 auto;\">\n    <div style=\"background:#fff;border-radius:16px;padding:40px 24px;text-align:center;\">\n      <div style=\"font-size:2.5rem;margin-bottom:16px;\">\ud83c\udfa8</div>\n      <div style=\"font-size:1.2rem;font-weight:600;color:#2D2926;margin-bottom:8px;\">\u00dcber 100 Farbt\u00f6ne</div>\n      <div style=\"font-size:0.95rem;color:#2D2926;opacity:0.7;line-height:1.6;\">Von sanftem Peach bis tiefem Anthrazit \u2013 finde den perfekten Ton f\u00fcr deinen Raum.</div>\n    </div>\n    <div style=\"background:#fff;border-radius:16px;padding:40px 24px;text-align:center;\">\n      <div style=\"font-size:2.5rem;margin-bottom:16px;\">\u2600\ufe0f</div>\n      <div style=\"font-size:1.2rem;font-weight:600;color:#2D2926;margin-bottom:8px;\">W\u00e4rmeschutz inklusive</div>\n      <div style=\"font-size:0.95rem;color:#2D2926;opacity:0.7;line-height:1.6;\">Mikro-Hohlglaskugeln reflektieren die W\u00e4rme zur\u00fcck \u2013 wie eine unsichtbare Thermoskanne.</div>\n    </div>\n    <div style=\"background:#fff;border-radius:16px;padding:40px 24px;text-align:center;\">\n      <div style=\"font-size:2.5rem;margin-bottom:16px;\">\ud83d\ude4c</div>\n      <div style=\"font-size:1.2rem;font-weight:600;color:#2D2926;margin-bottom:8px;\">Einfach selbst machen</div>\n      <div style=\"font-size:0.95rem;color:#2D2926;opacity:0.7;line-height:1.6;\">Streichen wie normale Wandfarbe. Kein Handwerker, kein Spezialwerkzeug. Einfach sch\u00f6n.</div>\n    </div>\n  </div>\n</div>",
+        "color_scheme": "scheme-1",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "before_after_heading": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_ba": {
+          "type": "heading",
+          "settings": {
+            "heading": "<strong>Der Unterschied ist sp\u00fcrbar \u2013 und sichtbar</strong>",
+            "heading_size": "h1"
+          }
+        }
+      },
+      "block_order": ["heading_ba"],
+      "name": "\u00dcberschrift Schieber",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "scheme-1",
+        "full_width": true,
+        "padding_top": 60,
+        "padding_bottom": 0
+      }
+    },
+    "before_after_slider": {
+      "type": "custom-liquid",
+      "name": "Before/After Schieber",
+      "settings": {
+        "custom_liquid": "<div style=\"width:100%;max-width:1400px;margin:0 auto;\">\n  <div style=\"position:relative;width:100%;overflow:hidden;aspect-ratio:16/6;background:#000;border-radius:16px;\">\n    <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_COOL.png?v=1756748492\" alt=\"Mit CLIMALOX\" style=\"position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;\">\n    <img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/HAUS_SCHIEBER_HOT.png?v=1756748493\" id=\"coolImage\" alt=\"Ohne CLIMALOX\" style=\"position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:2;clip-path:inset(0 50% 0 0);\">\n    <div id=\"baHandle\" style=\"position:absolute;top:0;left:50%;height:100%;width:2px;background:white;z-index:5;pointer-events:none;\">\n      <span style=\"position:absolute;top:50%;left:-20px;transform:translateY(-50%);background:white;color:black;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;box-shadow:0 0 8px rgba(0,0,0,0.3);\">\u2039</span>\n      <span style=\"position:absolute;top:50%;right:-20px;transform:translateY(-50%);background:white;color:black;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:bold;box-shadow:0 0 8px rgba(0,0,0,0.3);\">\u203a</span>\n    </div>\n    <input type=\"range\" min=\"0\" max=\"100\" value=\"50\" id=\"slider\" style=\"position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;z-index:6;cursor:ew-resize;\">\n  </div>\n</div>\n<script>\ndocument.addEventListener(\"DOMContentLoaded\",function(){var s=document.getElementById(\"slider\"),c=document.getElementById(\"coolImage\"),h=document.getElementById(\"baHandle\");function u(v){var p=100-parseInt(v);c.style.clipPath=\"inset(0 \"+p+\"% 0 0)\";h.style.left=v+\"%\";}if(s&&c&&h){s.addEventListener(\"input\",function(){u(this.value);});u(s.value);}});\n</script>",
+        "color_scheme": "scheme-1",
+        "padding_top": 40,
+        "padding_bottom": 0
+      }
+    },
+    "before_after_text": {
+      "type": "rich-text",
+      "blocks": {
+        "text_ba": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Unser W\u00e4rmebild-Vergleich zeigt die Wirkung: Links ein unbehandeltes Geb\u00e4ude \u2013 rechts ein Haus mit <strong>CLIMALOX Design</strong> Wandfarbe und <strong>THERMO-SEAL</strong> Dichtband.</p><p>\ud83d\udca1 Weniger W\u00e4rmeverlust bedeutet:<br/><strong>Weniger Heizkosten. Mehr Komfort. Besser f\u00fcrs Klima.</strong></p><p><br/></p><p>\u2705 Ideal f\u00fcr Altbau & Mietwohnungen</p><p>\u2705 Spart bis zu 42 % Heiz- und K\u00fchlkosten</p><p>\u2705 Sofortige Wirkung nach dem Trocknen</p><p>\u2705 Ohne Handwerker, vollst\u00e4ndig r\u00fcckbaufrei</p><p><br/></p><p><strong>Sch\u00f6n wohnen und Energie sparen \u2013 das ist CLIMALOX Design.</strong></p>"
+          }
+        },
+        "button_ba": {
+          "type": "button",
+          "settings": {
+            "button_label": "Jetzt entdecken",
+            "button_link": "shopify://collections/all",
+            "button_style_secondary": false,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
+          }
+        }
+      },
+      "block_order": ["text_ba", "button_ba"],
+      "name": "Energieeinsparung Text",
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "left",
+        "color_scheme": "scheme-1",
+        "full_width": true,
+        "padding_top": 0,
+        "padding_bottom": 52
+      }
+    },
+    "how_it_works": {
+      "type": "multicolumn",
+      "blocks": {
+        "step_1": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Vorbereiten.png",
+            "title": "<strong>1. Farbton w\u00e4hlen</strong>",
+            "text": "<p>St\u00f6bere durch unsere Farbwelt und finde den perfekten Ton f\u00fcr dein Projekt. Im ColorRoom kannst du Farben direkt an deiner Wand testen.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "step_2": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Streichen.png",
+            "title": "<strong>2. Streichen & genie\u00dfen</strong>",
+            "text": "<p>Trage CLIMALOX Design wie jede andere Wandfarbe auf. Rolle, Pinsel \u2013 was dir liegt. Das Ergebnis: wundersch\u00f6ne W\u00e4nde mit unsichtbarem W\u00e4rmeschutz.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "step_3": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Abdichten.png",
+            "title": "<strong>3. Abdichten & abrunden</strong>",
+            "text": "<p>Mit THERMO-SEAL dichtest du Fenster und T\u00fcren ab \u2013 transparent, unauff\u00e4llig und sofort wirksam. Weniger Zugluft, mehr Wohlf\u00fchlen.</p>",
+            "link_label": "",
+            "link": ""
+          }
+        },
+        "step_4": {
+          "type": "column",
+          "settings": {
+            "image": "shopify://shop_images/Sparen.png",
+            "title": "<strong>4. Wohlf\u00fchlen & sparen</strong>",
+            "text": "<p>Ab dem ersten Tag sp\u00fcrst du den Unterschied \u2013 gem\u00fctlichere R\u00e4ume und bis zu 42% weniger Heizkosten. Sch\u00f6n, oder?</p>",
+            "link_label": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": ["step_1", "step_2", "step_3", "step_4"],
+      "name": "So funktioniert's",
+      "settings": {
+        "title": "<strong>So einfach geht\u2019s</strong>",
+        "heading_size": "h1",
+        "image_width": "full",
+        "image_ratio": "adapt",
+        "button_label": "Alle Produkte ansehen",
+        "button_link": "shopify://collections/all",
+        "columns_desktop": 4,
+        "column_alignment": "center",
+        "background_style": "primary",
+        "color_scheme": "scheme-2",
+        "columns_mobile": "1",
+        "swipe_on_mobile": true,
+        "padding_top": 80,
+        "padding_bottom": 60
+      }
+    },
+    "colorroom_section": {
+      "type": "image-with-text",
+      "blocks": {
+        "heading_color": {
+          "type": "heading",
+          "settings": {
+            "heading": "<strong>Finde deinen Farbton</strong>",
+            "heading_size": "h1"
+          }
+        },
+        "text_color": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Entdecke \u00fcber 100 handverlesene Farbt\u00f6ne und teste sie direkt virtuell an deinen W\u00e4nden. Unser <strong>ColorRoom</strong> hilft dir, die perfekte Farbe f\u00fcr jeden Raum zu finden \u2013 bevor du auch nur einen Pinsel in die Hand nimmst.</p><p>Lass dich inspirieren \u2013 inklusive <strong>realer Raumvorschau</strong> mit unserer smarten Farbvisualisierung.</p>",
+            "text_style": "body"
+          }
+        },
+        "button_color": {
+          "type": "button",
+          "settings": {
+            "button_label": "ColorRoom \u00f6ffnen",
+            "button_link": "shopify://pages/colorroom",
+            "button_style_secondary": false
+          }
+        }
+      },
+      "block_order": ["heading_color", "text_color", "button_color"],
+      "name": "ColorRoom",
+      "settings": {
+        "image": "shopify://shop_images/Farbpalette.png",
+        "height": "adapt",
+        "desktop_image_width": "medium",
+        "layout": "image_first",
+        "image_behavior": "none",
+        "content_layout": "no-overlap",
+        "desktop_content_position": "middle",
+        "desktop_content_alignment": "left",
+        "mobile_content_alignment": "left",
+        "section_color_scheme": "scheme-1",
+        "color_scheme": "scheme-1",
+        "padding_top": 60,
+        "padding_bottom": 60
+      }
+    },
+    "faq_home": {
+      "type": "collapsible-content",
+      "blocks": {
+        "hq1": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Was macht CLIMALOX Design besonders?",
+            "icon": "question_mark",
+            "row_content": "<p>Unsere Wandfarben vereinen wundersch\u00f6nes Design mit intelligenter Klimatechnologie. Mikro-Hohlglaskugeln in der Farbe reflektieren W\u00e4rmestrahlung zur\u00fcck in den Raum \u2013 das spart Energie, ohne dass du es siehst.</p>"
+          }
+        },
+        "hq2": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Kann ich die Farben wirklich selbst streichen?",
+            "icon": "question_mark",
+            "row_content": "<p>Absolut! CLIMALOX Design wird genauso einfach verarbeitet wie jede andere Wandfarbe. Rolle oder Pinsel \u2013 das Ergebnis ist immer gleichm\u00e4\u00dfig und sch\u00f6n. Kein Profi n\u00f6tig.</p>"
+          }
+        },
+        "hq3": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Wie viele Farbt\u00f6ne gibt es?",
+            "icon": "question_mark",
+            "row_content": "<p>\u00dcber 100 sorgf\u00e4ltig kuratierte Farbt\u00f6ne \u2013 von sanften Naturfarben bis hin zu ausdrucksstarken Statements. Die W\u00e4rmeschutz-Wirkung bleibt bei allen T\u00f6nen vollst\u00e4ndig erhalten.</p>"
+          }
+        },
+        "hq4": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Was ist THERMO-SEAL?",
+            "icon": "question_mark",
+            "row_content": "<p>THERMO-SEAL ist unser transparentes Dichtband f\u00fcr Fenster- und T\u00fcrspalten. Es reduziert Zugluft, Staub und L\u00e4rm \u2013 kaum sichtbar, sofort sp\u00fcrbar. Die perfekte Erg\u00e4nzung zu deiner neuen Wandfarbe.</p>"
+          }
+        }
+      },
+      "block_order": ["hq1", "hq2", "hq3", "hq4"],
+      "settings": {
+        "caption": "",
+        "heading": "<strong>H\u00e4ufige Fragen</strong>",
+        "heading_size": "h1",
+        "heading_alignment": "center",
+        "layout": "none",
+        "container_color_scheme": "scheme-2",
+        "color_scheme": "scheme-1",
+        "open_first_collapsible_row": true,
+        "image_ratio": "adapt",
+        "desktop_layout": "image_second",
+        "padding_top": 60,
+        "padding_bottom": 36
+      }
+    },
+    "blog_teaser": {
+      "type": "featured-blog",
+      "settings": {
+        "heading": "<strong>Inspiration & Tipps</strong>",
+        "heading_size": "h1",
+        "blog": "news",
+        "post_limit": 3,
+        "columns_desktop": 3,
+        "show_image": true,
+        "show_date": true,
+        "show_author": false,
+        "show_view_all": true,
+        "color_scheme": "scheme-1",
+        "padding_top": 60,
+        "padding_bottom": 36
+      }
+    },
+    "app_download": {
+      "type": "app-download-banner",
+      "settings": {
+        "heading": "Hol dir die CLIMALOX Design App",
+        "text": "Farben virtuell an deinen W\u00e4nden testen, Projekte planen und direkt bestellen \u2013 alles in einer App.",
+        "color_scheme": "scheme-5",
+        "padding_top": 60,
+        "padding_bottom": 60
+      }
+    }
+  },
+  "order": [
+    "hero_banner",
+    "usp_strip",
+    "video_intro",
+    "rich_text_claim",
+    "featured_product_seal",
+    "featured_product_coat",
+    "youtube_video",
+    "design_inspiration",
+    "before_after_heading",
+    "before_after_slider",
+    "before_after_text",
+    "how_it_works",
+    "colorroom_section",
+    "faq_home",
+    "blog_teaser",
+    "app_download"
+  ]
+}

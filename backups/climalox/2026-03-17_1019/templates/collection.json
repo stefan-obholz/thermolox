@@ -1,0 +1,107 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "custom_liquid_cYNCQA": {
+      "type": "custom-liquid",
+      "custom_css": [
+        ".flogo {display: flex; justify-content: center; align-items: center; margin: 20px 0 -150px 0; position: relative; z-index: 5;}",
+        ".flogo img {width: 120px; height: auto;}",
+        "@media (max-width: 768px) {.flogo {margin: -40px 0 15px 0; } .flogo img {width: 90px; }}"
+      ],
+      "name": "t:sections.custom-liquid.presets.name",
+      "settings": {
+        "custom_liquid": "<div class=\"flogo\"><img src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMOLOX_ICON_0bd2f309-88b4-4e09-956e-804bda1cbd73.png?v=1756381141\" alt=\"Thermolox Logo\" /></div>",
+        "color_scheme": "",
+        "padding_top": 0,
+        "padding_bottom": 0
+      }
+    },
+    "image_banner_jUNwrx": {
+      "type": "image-banner",
+      "blocks": {
+        "heading_iJPtqN": {
+          "type": "heading",
+          "settings": {
+            "heading": "<strong>DAS SMARTE ENERGIESPARSYSTEM</strong>",
+            "heading_size": "h1"
+          }
+        },
+        "text_YM4cQt": {
+          "type": "text",
+          "settings": {
+            "text": "<strong>Einfach selbst anwenden</strong>",
+            "text_style": "subtitle"
+          }
+        }
+      },
+      "block_order": [
+        "heading_iJPtqN",
+        "text_YM4cQt"
+      ],
+      "custom_css": [
+        "h2 {margin: 60px 0 0px;}",
+        "@media (max-width: 768px) {h2 {margin: 100px 0 80px; }}"
+      ],
+      "name": "ÜBERSCHRIFT",
+      "settings": {
+        "image": "shopify://shop_images/BANNER_HINTERGRUND_THERMOLOX.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "ambient",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": false,
+        "color_scheme": "scheme-3",
+        "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
+        "show_text_below": false
+      }
+    },
+    "banner": {
+      "type": "main-collection-banner",
+      "disabled": true,
+      "settings": {
+        "show_collection_description": false,
+        "show_collection_image": false,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "product-grid": {
+      "type": "main-collection-product-grid",
+      "custom_css": [
+        "button:hover,.button:hover,.btn:hover {transform: translateY(-2px) rotate(0deg) !important;}"
+      ],
+      "settings": {
+        "products_per_page": 16,
+        "columns_desktop": 4,
+        "columns_mobile": "2",
+        "color_scheme": "scheme-1",
+        "image_ratio": "adapt",
+        "image_shape": "default",
+        "show_secondary_image": false,
+        "show_vendor": false,
+        "show_rating": false,
+        "quick_add": "none",
+        "enable_filtering": false,
+        "filter_type": "vertical",
+        "enable_sorting": false,
+        "padding_top": 52,
+        "padding_bottom": 36
+      }
+    }
+  },
+  "order": [
+    "custom_liquid_cYNCQA",
+    "image_banner_jUNwrx",
+    "banner",
+    "product-grid"
+  ]
+}

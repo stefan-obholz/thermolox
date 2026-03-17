@@ -101,7 +101,14 @@ class _ProductsPageState extends State<ProductsPage> {
             return const Center(child: Text('Noch keine Produkte gefunden.'));
           }
 
-          return ListView.separated(
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {
+                _productsFuture = ShopifyService.fetchProducts();
+              });
+              await _productsFuture;
+            },
+            child: ListView.separated(
             padding: EdgeInsets.symmetric(
               vertical: tokens.screenPadding,
             ),
@@ -134,6 +141,9 @@ class _ProductsPageState extends State<ProductsPage> {
                                 child: Image.network(
                                   product.imageUrl!,
                                   fit: BoxFit.cover,
+                                  cacheWidth: 144,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.broken_image),
                                 ),
                               ),
                             ),
@@ -145,7 +155,7 @@ class _ProductsPageState extends State<ProductsPage> {
                             decoration: BoxDecoration(
                               borderRadius:
                                   BorderRadius.circular(tokens.radiusSm),
-                              color: Colors.grey.shade300,
+                              color: const Color(0xFFD8DEE4),
                             ),
                             alignment: Alignment.center,
                             child: const Icon(Icons.image_not_supported),
@@ -192,6 +202,7 @@ class _ProductsPageState extends State<ProductsPage> {
                 ),
               );
             },
+          ),
           );
         },
       ),

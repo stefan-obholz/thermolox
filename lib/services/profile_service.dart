@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:postgrest/postgrest.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -231,6 +234,55 @@ class ProfileService {
 
     if (payload.length <= 1) return;
     await _upsertProfileData(payload);
+  }
+
+  static const _avatarBucket = 'avatars';
+
+  /// Uploads a profile image to Supabase Storage and updates the profile's
+  /// `avatar_url` column. Returns the public URL of the uploaded image.
+  Future<String> uploadAvatar(String filePath) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw StateError('Not authenticated');
+
+    final ext = p.extension(filePath).toLowerCase();
+    final storagePath = '${user.id}/avatar$ext';
+    final bytes = await File(filePath).readAsBytes();
+    final contentType = _contentTypeForImage(ext);
+
+    await _client.storage.from(_avatarBucket).uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(contentType: contentType, upsert: true),
+        );
+
+    final publicUrl =
+        _client.storage.from(_avatarBucket).getPublicUrl(storagePath);
+
+    // Append a cache-buster so the new image is picked up immediately.
+    final url = '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+    await _upsertProfileData({
+      'id': user.id,
+      'avatar_url': url,
+    });
+
+    return url;
+  }
+
+  static String _contentTypeForImage(String ext) {
+    switch (ext) {
+      case '.png':
+        return 'image/png';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.webp':
+        return 'image/webp';
+      case '.heic':
+        return 'image/heic';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
   bool needsConsents(UserProfile? profile) {

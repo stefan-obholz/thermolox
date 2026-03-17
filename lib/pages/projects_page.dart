@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/plan_controller.dart';
@@ -14,8 +15,28 @@ import '../widgets/attachment_sheet.dart';
 import '../widgets/cart_icon_button.dart';
 import 'project_detail_page.dart';
 
-class ProjectsPage extends StatelessWidget {
+class ProjectsPage extends StatefulWidget {
   const ProjectsPage({super.key});
+
+  @override
+  State<ProjectsPage> createState() => _ProjectsPageState();
+}
+
+class _ProjectsPageState extends State<ProjectsPage> {
+  Map<String, bool> _fileExistsCache = {};
+
+  void _refreshFileExistsCache(List<Project> projects) {
+    final newCache = <String, bool>{};
+    for (final p in projects) {
+      for (final item in p.items) {
+        final path = item.path;
+        if (path != null && !newCache.containsKey(path)) {
+          newCache[path] = File(path).existsSync();
+        }
+      }
+    }
+    _fileExistsCache = newCache;
+  }
 
   Future<bool> _ensureProjectAccess(BuildContext context) async {
     final planController = context.read<PlanController>();
@@ -27,11 +48,7 @@ class ProjectsPage extends StatelessWidget {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/icons/THERMOLOX_ICON.png',
-              width: 30,
-              height: 30,
-            ),
+            Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -162,6 +179,7 @@ class ProjectsPage extends StatelessWidget {
           }
 
           final projects = model.projects;
+          _refreshFileExistsCache(projects);
           if (projects.isEmpty) {
             return Center(
               child: Opacity(
@@ -169,7 +187,7 @@ class ProjectsPage extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.folder_open, size: 64, color: Colors.grey),
+                    Icon(Icons.folder_open, size: 64, color: AppTheme.primary.withValues(alpha: 0.4)),
                     const SizedBox(height: 12),
                     const Text('Noch keine Projekte'),
                     const SizedBox(height: 8),
@@ -216,7 +234,7 @@ class ProjectsPage extends StatelessWidget {
               final thumb = mediaItem ?? colorItem;
               final localPath = thumb?.path;
               final localExists =
-                  localPath != null && File(localPath).existsSync();
+                  localPath != null && (_fileExistsCache[localPath] ?? false);
               final remoteUrl = thumb?.url;
               final hasImageThumb = thumb != null &&
                   thumb.type == 'image' &&
@@ -243,7 +261,7 @@ class ProjectsPage extends StatelessWidget {
                         color: theme.colorScheme.surface,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha:0.06),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -259,14 +277,18 @@ class ProjectsPage extends StatelessWidget {
                                   ? Image.file(
                                       File(localPath!),
                                       fit: BoxFit.cover,
+                                      cacheWidth: 400,
                                     )
                                   : Image.network(
                                       remoteUrl!,
                                       fit: BoxFit.cover,
+                                      cacheWidth: 400,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image),
                                     )
                             else if (isFileThumb)
                               Container(
-                                color: Colors.grey.shade200,
+                                color: const Color(0xFFD8DEE4),
                                 child: const Icon(
                                   Icons.insert_drive_file,
                                   size: 42,
@@ -282,7 +304,7 @@ class ProjectsPage extends StatelessWidget {
                               )
                             else
                               Container(
-                                color: Colors.grey.shade200,
+                                color: const Color(0xFFD8DEE4),
                                 child: const Icon(Icons.folder, size: 42),
                               ),
                             Positioned(
@@ -291,7 +313,7 @@ class ProjectsPage extends StatelessWidget {
                               bottom: 0,
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                color: Colors.black.withOpacity(0.35),
+                                color: Colors.black.withValues(alpha:0.35),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

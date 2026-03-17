@@ -17,5 +17,6 @@ Map<String, String> buildWorkerHeaders({
   if (kWorkerAppToken.isNotEmpty) {
     headers['X-Worker-Token'] = kWorkerAppToken;
   }
+  headers['X-Platform'] = 'app';
   return headers;
 }

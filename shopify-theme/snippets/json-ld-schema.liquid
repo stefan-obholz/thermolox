@@ -1,0 +1,149 @@
+{%- if request.page_type == 'product' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.title | json }},
+  "description": {{ product.description | strip_html | truncate: 500 | json }},
+  "url": "{{ shop.url }}{{ product.url }}",
+  "brand": {
+    "@type": "Brand",
+    "name": {{ product.vendor | json }}
+  },
+  {%- if product.featured_image -%}
+  "image": "https:{{ product.featured_image | image_url: width: 1200 }}",
+  {%- endif -%}
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ shop.url }}{{ product.url }}",
+    "priceCurrency": "{{ cart.currency.iso_code }}",
+    "price": "{{ product.price | money_without_currency | strip_html }}",
+    "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": {
+      "@type": "Organization",
+      "name": {{ shop.name | json }}
+    }
+  }
+}
+</script>
+{%- endif -%}
+
+{%- if request.page_type == 'index' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  "url": "{{ shop.url }}",
+  "description": {{ shop.description | json }},
+  {%- if settings.logo -%}
+  "logo": "https:{{ settings.logo | image_url: width: 600 }}",
+  {%- endif -%}
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer service",
+    "email": "stefan.obholz@obholz-solutions.de"
+  }
+}
+</script>
+{%- endif -%}
+
+{%- if page.template_suffix == 'faq' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Was ist das THERMOLOX-System?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Das THERMOLOX-System besteht aus THERMO-COAT (einer Hightech-Innenwandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und THERMO-SEAL (einem transparenten Dichtband für Fenster- und Türspalten). Zusammen reduzieren sie den Wärmeverlust um bis zu 42 %."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Wie funktioniert THERMO-COAT?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "THERMO-COAT enthält mikroskopisch kleine Hohlglaskugeln, die Wärmestrahlung reflektieren – ähnlich wie eine Thermoskanne. Die Farbe wird wie normale Wandfarbe aufgetragen und bildet nach dem Trocknen eine unsichtbare Wärmebarriere."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Für welche Gebäude eignet sich THERMOLOX?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Besonders effektiv bei Altbauten und unsanierten Gebäuden. Ideal für Mietwohnungen, da vollständig rückbaufrei."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Wie viel kann ich sparen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bis zu 42 % bei Heiz- und Kühlkosten. Bei einem typischen Altbau mit 80 m2 Wohnfläche und 1.500 EUR Heizkosten pro Jahr sind 400-600 EUR Ersparnis realistisch."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Kann ich THERMO-COAT in jeder Farbe bekommen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja! THERMO-COAT kann mit speziellen Pigmenten in über 100 Farbtönen gemischt werden. Die Thermo-Wirkung bleibt bei allen Farben vollständig erhalten."
+      }
+    }
+  ]
+}
+</script>
+{%- endif -%}
+
+{%- if request.page_type == 'article' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{ article.title | json }},
+  "description": {{ article.excerpt_or_content | strip_html | truncate: 300 | json }},
+  "url": "{{ shop.url }}{{ article.url }}",
+  "datePublished": "{{ article.published_at | date: '%Y-%m-%dT%H:%M:%S%z' }}",
+  "dateModified": "{{ article.updated_at | date: '%Y-%m-%dT%H:%M:%S%z' }}",
+  {%- if article.image -%}
+  "image": "https:{{ article.image | image_url: width: 1200 }}",
+  {%- endif -%}
+  "author": {
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    "url": "{{ shop.url }}"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": {{ shop.name | json }},
+    "url": "{{ shop.url }}"
+    {%- if settings.logo -%}
+    ,"logo": {
+      "@type": "ImageObject",
+      "url": "https:{{ settings.logo | image_url: width: 600 }}"
+    }
+    {%- endif -%}
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ shop.url }}{{ article.url }}"
+  }
+}
+</script>
+{%- endif -%}
+
+{%- if request.page_type == 'collection' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": {{ collection.title | json }},
+  "description": {{ collection.description | strip_html | json }},
+  "url": "{{ shop.url }}{{ collection.url }}"
+}
+</script>
+{%- endif -%}

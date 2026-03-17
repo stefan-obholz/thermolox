@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/design_token_service.dart';
 
 @immutable
 class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
@@ -247,59 +248,67 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
 class AppTheme {
   AppTheme._();
 
-  // ---------- Farben ----------
-  static const Color primary = Color(0xFF7B3AED); // Thermolox-Lila
-  static const Color accent = Color(0xFFFF6B3D); // CTA / Highlight
+  // ---------- Farben (aus DesignTokenService / Supabase) ----------
+  static Color get primary => DesignTokenService.foreground;
+  static Color get accent => DesignTokenService.primary;
 
-  static const Color backgroundLight = Color(0xFFF5F5F8);
+  static Color get backgroundLight => DesignTokenService.backgroundWarm;
   static const Color surfaceLight = Color(0xFFFFFFFF);
 
-  static const Color textLight = Color(0xFF111111);
+  static Color get textLight => DesignTokenService.foreground;
   static const Color textMutedLight = Color(0xFF7B7B8A);
 
   static const Color glassLight = Color(0xCCFFFFFF);
 
-  static const double radiusSm = 10;
-  static const double radiusMd = 16;
-  static const double radiusLg = 24;
-  static const double radiusXl = 32;
+  // Brand palette
+  static Color get peachDark => DesignTokenService.primaryHover;
+  static const Color taubenblau = Color(0xFFD8DEE4);
+  static Color get creme => DesignTokenService.backgroundWarm;
 
-  static const String fontFamilyBody = 'Comfortaa';
-  static const String fontFamilyHeading = 'DINNextCondensed';
+  static double get radiusSm => 10;
+  static double get radiusMd => 16;
+  static double get radiusLg => 24;
+  static double get radiusXl => 32;
+
+  static String get fontFamilyBody => DesignTokenService.fontBody;
+  static String get fontFamilyHeading => DesignTokenService.fontHeading;
 
   static TextTheme _buildTextTheme(Color primaryText, Color mutedText) {
+    final heading = fontFamilyHeading;
     return TextTheme(
-      headlineLarge: GoogleFonts.robotoCondensed(
+      headlineLarge: TextStyle(
+        fontFamily: heading,
         fontSize: 28,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
         color: primaryText,
       ),
-      headlineMedium: GoogleFonts.robotoCondensed(
+      headlineMedium: TextStyle(
+        fontFamily: heading,
         fontSize: 22,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
         color: primaryText,
       ),
-      bodyLarge: GoogleFonts.comfortaa(
+      bodyLarge: GoogleFonts.lato(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         height: 1.4,
         color: primaryText,
       ),
-      bodyMedium: GoogleFonts.comfortaa(
+      bodyMedium: GoogleFonts.lato(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.4,
         color: primaryText,
       ),
-      bodySmall: GoogleFonts.comfortaa(
+      bodySmall: GoogleFonts.lato(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         height: 1.3,
         color: mutedText,
       ),
-      labelLarge: GoogleFonts.comfortaa(
+      labelLarge: GoogleFonts.lato(
         fontSize: 14,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
@@ -312,25 +321,23 @@ class AppTheme {
   static ThemeData get theme => _buildTheme();
 
   static ThemeData _buildTheme() {
-    const bg = backgroundLight;
+    final bg = backgroundLight;
     const surface = surfaceLight;
-    const text = textLight;
+    final text = textLight;
     const textMuted = textMutedLight;
 
     final textTheme = _buildTextTheme(text, textMuted);
-    final outlineColor = primary.withOpacity(0.35);
-    final outlineColorSoft = primary.withOpacity(0.2);
+    final outlineColor = primary.withValues(alpha: 0.35);
+    final outlineColorSoft = primary.withValues(alpha: 0.2);
 
     final colorScheme = ColorScheme(
       brightness: Brightness.light,
       primary: primary,
-      onPrimary: Colors.white,
+      onPrimary: creme,
       secondary: accent,
-      onSecondary: Colors.white,
+      onSecondary: primary,
       error: Colors.redAccent,
       onError: Colors.white,
-      background: bg,
-      onBackground: text,
       surface: surface,
       onSurface: text,
     );
@@ -349,14 +356,15 @@ class AppTheme {
         ThermoloxTokens.light,
       ],
 
-      // 🟣 Buttons (THERMOLOX-Lila, weißer Text)
+      // Buttons (CLIMALOX – Peach pill, dark text)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
+          backgroundColor: accent,
+          foregroundColor: primary,
+          elevation: 0,
           textStyle: buttonTextStyle,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(DesignTokenService.buttonRadius),
           ),
         ),
       ),
@@ -368,7 +376,7 @@ class AppTheme {
           textStyle: buttonTextStyle,
           side: BorderSide(color: outlineColor, width: 1.2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radiusMd),
+            borderRadius: BorderRadius.circular(DesignTokenService.buttonRadius),
           ),
         ),
       ),
@@ -377,7 +385,7 @@ class AppTheme {
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
-          textStyle: MaterialStatePropertyAll(buttonTextStyle),
+          textStyle: WidgetStatePropertyAll(buttonTextStyle),
         ),
       ),
 
@@ -392,15 +400,15 @@ class AppTheme {
       ),
 
       // Icons
-      iconTheme: const IconThemeData(color: textLight),
+      iconTheme: IconThemeData(color: textLight),
 
       cardTheme: CardThemeData(
         color: surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusLg),
-          side: BorderSide(color: outlineColorSoft, width: 1.2),
+          borderRadius: BorderRadius.circular(DesignTokenService.cardRadius),
         ),
-        elevation: 0,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
       ),
 
       // Textfelder
@@ -430,7 +438,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusMd),
-          borderSide: const BorderSide(
+          borderSide: BorderSide(
             color: primary,
             width: 1.4,
           ),
@@ -459,7 +467,7 @@ class AppTheme {
       // Snackbars
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.black87,
+        backgroundColor: primary,
         contentTextStyle: TextStyle(
           color: Colors.white,
           fontFamily: fontFamilyBody,
@@ -470,8 +478,8 @@ class AppTheme {
         ),
       ),
 
-      dividerColor: Colors.black.withOpacity(0.06),
-      splashColor: primary.withOpacity(0.12),
+      dividerColor: Colors.black.withValues(alpha: 0.06),
+      splashColor: primary.withValues(alpha: 0.12),
       highlightColor: Colors.transparent,
     );
   }

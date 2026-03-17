@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
@@ -16,6 +19,51 @@ class EmailVerificationPage extends StatefulWidget {
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   bool _isLoading = false;
+  Timer? _pollTimer;
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _startPolling();
+    _listenAuthChanges();
+  }
+
+  void _startPolling() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      if (!mounted) return;
+      try {
+        final auth = context.read<AuthService>();
+        await auth.refreshSession();
+        if (!mounted) return;
+        final user = auth.currentUser;
+        if (auth.isUserVerified(user)) {
+          _pollTimer?.cancel();
+          setState(() {});
+        }
+      } catch (_) {
+        // Silently ignore refresh errors during polling.
+      }
+    });
+  }
+
+  void _listenAuthChanges() {
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (!mounted) return;
+      final auth = context.read<AuthService>();
+      if (auth.isUserVerified(data.session?.user)) {
+        _pollTimer?.cancel();
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _resend() async {
     final auth = context.read<AuthService>();
@@ -99,7 +147,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               height: 84,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
               ),
               child: Icon(
                 Icons.mark_email_read_outlined,
@@ -140,7 +188,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(tokens.radiusMd),
               border: Border.all(
-                color: Theme.of(context).dividerColor.withOpacity(0.25),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.25),
               ),
             ),
             child: Column(
@@ -155,7 +203,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 SizedBox(height: tokens.gapSm),
                 Text(
                   'E-Mail öffnen und Link bestätigen.\n'
-                  'Danach hier auf "Ich habe bestätigt" tippen.\n'
+                  'Die App erkennt die Bestätigung automatisch.\n'
                   'Falls nichts ankommt, Spam-Ordner prüfen.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -212,7 +260,7 @@ class _DebugPanel extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(tokens.radiusMd),
         border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.25),
+          color: Theme.of(context).dividerColor.withValues(alpha: 0.25),
         ),
       ),
       child: Column(

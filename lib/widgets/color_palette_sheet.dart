@@ -114,7 +114,7 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.08),
+                          .withValues(alpha:0.08),
                     ),
                   ),
                 ),
@@ -143,7 +143,7 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.08),
+                              .withValues(alpha:0.08),
                         ),
                       ),
                       child: isSelected

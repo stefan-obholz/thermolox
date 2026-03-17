@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>THERMOLOX speichert gerenderte Bilder in deiner Fotomediathek.</string>
+	<string>CLIMALOX speichert gerenderte Bilder in deiner Fotomediathek.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>THERMOLOX benötigt Zugriff auf deine Fotos, um Bilder deiner Räume zu laden.</string>
+	<string>CLIMALOX benötigt Zugriff auf deine Fotos, um Bilder deiner Räume zu laden.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>THERMOLOX benötigt Zugriff auf die Kamera, um Fotos deiner Räume aufzunehmen.</string>
+	<string>CLIMALOX benötigt Zugriff auf die Kamera für AR-Wandfarbe und Raumfotos.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>THERMOLOX benötigt Zugriff auf das Mikrofon für Spracheingaben.</string>
+	<string>CLIMALOX benötigt Zugriff auf das Mikrofon für Spracheingaben.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>THERMOLOX nutzt die Spracherkennung für Spracheingaben.</string>
+	<string>CLIMALOX nutzt die Spracherkennung für Spracheingaben.</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
@@ -19,7 +19,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>THERMOLOX</string>
+	<string>CLIMALOX</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,7 +27,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>thermolox</string>
+	<string>CLIMALOX</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -43,7 +43,7 @@
 			<string>thermolox</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>thermolox</string>
+				<string>climalox</string>
 			</array>
 		</dict>
 	</array>
