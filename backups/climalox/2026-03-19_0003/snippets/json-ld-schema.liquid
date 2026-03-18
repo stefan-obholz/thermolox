@@ -1,0 +1,62 @@
+{% if template.name == 'index' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CLIMALOX",
+  "url": "{{ shop.url }}",
+  "logo": "{{ 'CLIMALOX LOGO.png' | asset_url }}",
+  "description": "Premium-Wandfarben mit patentierter Klimatechnologie – wunderschön, energiesparend, wohngesund",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "DE"
+  },
+  "sameAs": []
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "CLIMALOX",
+  "url": "{{ shop.url }}",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ shop.url }}/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Was ist CLIMALOX?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CLIMALOX sind Premium-Wandfarben mit patentierter Klimatechnologie. Mikro-Hohlglaskugeln reflektieren über 50% der Wärmestrahlung zurück in den Raum – für bis zu 42% weniger Heizkosten."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Sind CLIMALOX Wandfarben lösemittelfrei?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja, alle CLIMALOX Wandfarben sind 100% lösemittelfrei, geruchsarm und allergikerfreundlich. Sie sind sofort nach dem Streichen wohnbereit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Wie viele Farbtöne gibt es?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CLIMALOX bietet über 130 kuratierte Farbtöne in 11 Kollektionen – von sanften Naturtönen bis zu kraftvollen Designerfarben."
+      }
+    }
+  ]
+}
+</script>
+{% endif %}

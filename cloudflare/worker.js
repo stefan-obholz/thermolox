@@ -355,11 +355,11 @@ h4, .h4 { font-size: 1.5rem !important; }
    PREMIUM SPACING: generous whitespace between all sections.
 */
 
-/* ── Premium whitespace ── */
-section, [aria-label] {
-  padding-top: 100px !important;
-  padding-bottom: 100px !important;
-}
+/* ── Premium whitespace ──
+   REMOVED global section padding override - it was breaking
+   USP strip, marquee, and other sections with specific padding.
+   Each section controls its own padding via inline styles.
+*/
 
 /* ── Scroll reveal animation ── */
 .cx-reveal {
@@ -430,7 +430,7 @@ section, [aria-label] {
   width: 72px; height: 72px; border-radius: 50%;
   background: var(--climalox-primary);
   display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 24px;
+  margin: 0 auto 12px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .cx-step-circle:hover {
@@ -536,10 +536,6 @@ section, [aria-label] {
 
 /* ═══════ RESPONSIVE ═══════ */
 @media screen and (max-width: 749px) {
-  section, [aria-label] {
-    padding-top: 60px !important;
-    padding-bottom: 60px !important;
-  }
   .cx-section-heading { font-size: clamp(1.8rem, 6vw, 2.4rem) !important; }
   .cx-section-sub { font-size: 1.05rem !important; }
   .cx-card-title { font-size: 1.3rem !important; }

@@ -1,0 +1,62 @@
+/* ═══════ CLIMALOX ANIMATIONS ═══════
+   Zentrale Animation-Styles. Alles über CSS, gesteuert per JS.
+   Klassen: cx-reveal, cx-counting, cx-parallax-img, cx-lift
+*/
+
+/* ── 1. Scroll Reveal: fade + slide up ── */
+.cx-reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cx-reveal.cx-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children: each child delays slightly */
+.cx-reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cx-reveal-stagger.cx-visible > *:nth-child(1) { transition-delay: 0s; opacity: 1; transform: translateY(0); }
+.cx-reveal-stagger.cx-visible > *:nth-child(2) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+.cx-reveal-stagger.cx-visible > *:nth-child(3) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+.cx-reveal-stagger.cx-visible > *:nth-child(4) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+.cx-reveal-stagger.cx-visible > *:nth-child(5) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+
+/* ── 2. Counter animation (handled by JS, this is the number style) ── */
+.cx-counting {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 3. Parallax float on images ── */
+.cx-parallax-img {
+  will-change: transform;
+}
+
+/* ── 4. Smooth 3D Lift hover ── */
+.cx-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.cx-lift:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1) !important;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cx-reveal,
+  .cx-reveal-stagger > *,
+  .cx-parallax-img,
+  .cx-lift {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
