@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/project_measurement.dart';
 import 'consent_service.dart';
-import 'thermolox_api.dart';
+import 'everloxx_api.dart';
 import '../utils/safe_json.dart';
 
 class LidarMeasurementResult {
@@ -62,7 +62,7 @@ class LidarMeasurementService {
     };
 
     final res = await http.post(
-      Uri.parse('$kThermoloxApiBase/measure/lidar'),
+      Uri.parse('$kEverloxxApiBase/measure/lidar'),
       headers: buildWorkerHeaders(contentType: 'application/json'),
       body: jsonEncode(payload),
     );

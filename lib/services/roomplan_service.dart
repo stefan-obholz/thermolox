@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class RoomPlanService {
-  static const MethodChannel _channel = MethodChannel('thermolox/roomplan');
+  static const MethodChannel _channel = MethodChannel('everloxx/roomplan');
 
   static Future<bool> isSupported() async {
     if (kIsWeb) return false;

@@ -12,14 +12,14 @@ class DesignTokenService {
   // ── Hardcoded fallback (matches Supabase seed) ──
   static const _defaults = {
     'colors': {
-      'primary': '#F9C2AC',
-      'primaryHover': '#D4896F',
+      'primary': '#efd2a7',
+      'primaryHover': '#efd2a7',
       'background': '#FFFFFF',
       'backgroundWarm': '#FFF8F5',
       'foreground': '#2D2926',
       'foregroundLight': '#FFF8F5',
       'dark': '#1A1614',
-      'accent': '#F9C2AC',
+      'accent': '#efd2a7',
       'border': '#E8D5CC',
     },
     'fonts': {
@@ -29,11 +29,11 @@ class DesignTokenService {
       'bodyWeight': 400,
     },
     'brand': {
-      'name': 'CLIMALOX',
-      'nameFull': 'CLIMALOX',
+      'name': 'EVERLOXX',
+      'nameFull': 'EVERLOXX',
       'tagline': 'Dein Zuhause. Dein Style.',
     },
-    'icons': {'color': '#D4896F'},
+    'icons': {'color': '#efd2a7'},
     'buttons': {'radius': 40},
     'cards': {'radius': 12},
   };
@@ -76,23 +76,23 @@ class DesignTokenService {
 
   // ── Typed accessors ──
 
-  static Color get primary => _hex('colors.primary', '#F9C2AC');
-  static Color get primaryHover => _hex('colors.primaryHover', '#D4896F');
+  static Color get primary => _hex('colors.primary', '#efd2a7');
+  static Color get primaryHover => _hex('colors.primaryHover', '#efd2a7');
   static Color get background => _hex('colors.background', '#FFFFFF');
   static Color get backgroundWarm => _hex('colors.backgroundWarm', '#FFF8F5');
   static Color get foreground => _hex('colors.foreground', '#2D2926');
   static Color get foregroundLight => _hex('colors.foregroundLight', '#FFF8F5');
   static Color get dark => _hex('colors.dark', '#1A1614');
-  static Color get accent => _hex('colors.accent', '#F9C2AC');
-  static Color get iconColor => _hex('icons.color', '#D4896F');
+  static Color get accent => _hex('colors.accent', '#efd2a7');
+  static Color get iconColor => _hex('icons.color', '#efd2a7');
 
   static String get fontHeading => _str('fonts.heading', 'Times New Roman');
   static String get fontBody => _str('fonts.body', 'Lato');
   static int get headingWeight => _int('fonts.headingWeight', 700);
   static int get bodyWeight => _int('fonts.bodyWeight', 400);
 
-  static String get brandName => _str('brand.name', 'CLIMALOX');
-  static String get brandNameFull => _str('brand.nameFull', 'CLIMALOX');
+  static String get brandName => _str('brand.name', 'EVERLOXX');
+  static String get brandNameFull => _str('brand.nameFull', 'EVERLOXX');
   static String get brandTagline => _str('brand.tagline', 'Dein Zuhause. Dein Style.');
 
   static double get buttonRadius => _double('buttons.radius', 40);

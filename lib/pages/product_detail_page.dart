@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../models/cart_model.dart';
 import '../theme/app_theme.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../utils/format_price.dart';
 import '../widgets/cart_icon_button.dart';
 
@@ -17,13 +17,13 @@ class ProductDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cart = context.watch<CartModel>();
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'CLIMALOX',
+          'EVERLOXX',
           style: TextStyle(
             fontSize: 34,
             fontWeight: FontWeight.w800,
@@ -95,7 +95,7 @@ class ProductDetailPage extends StatelessWidget {
               ),
               onPressed: () {
                 cart.add(product);
-                ThermoloxOverlay.showSnack(
+                EverloxxOverlay.showSnack(
                   context,
                   'Produkt zum Warenkorb hinzugefügt.',
                 );

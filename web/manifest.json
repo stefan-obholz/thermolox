@@ -1,11 +1,11 @@
 {
-    "name": "CLIMALOX",
-    "short_name": "CLIMALOX",
+    "name": "EVERLOXX",
+    "short_name": "EVERLOXX",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFF8F5",
     "theme_color": "#2D2926",
-    "description": "CLIMALOX - Premium Wandfarben",
+    "description": "EVERLOXX - Premium Wandfarben",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

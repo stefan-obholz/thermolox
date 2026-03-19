@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'consent_service.dart';
-import 'thermolox_api.dart';
+import 'everloxx_api.dart';
 
 class ImageEditService {
   const ImageEditService();
@@ -36,7 +36,7 @@ class ImageEditService {
     }
 
     final res = await http.post(
-      Uri.parse('$kThermoloxApiBase/image-edit'),
+      Uri.parse('$kEverloxxApiBase/image-edit'),
       headers: buildWorkerHeaders(contentType: 'application/json'),
       body: jsonEncode(payload),
     ).timeout(const Duration(seconds: 120));

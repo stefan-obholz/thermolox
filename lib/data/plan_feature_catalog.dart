@@ -6,7 +6,7 @@ class PlanFeatureDescriptor {
 }
 
 const planFeatureOrder = <PlanFeatureDescriptor>[
-  PlanFeatureDescriptor('chatbot', 'CLIMALOX Chatbot'),
+  PlanFeatureDescriptor('chatbot', 'EVERLOXX Chatbot'),
   PlanFeatureDescriptor('color_advice', 'Farbberatung'),
   PlanFeatureDescriptor('project_folder', 'Projektmappe'),
   PlanFeatureDescriptor('project_consulting', 'Projektberatung'),
@@ -14,7 +14,7 @@ const planFeatureOrder = <PlanFeatureDescriptor>[
 ];
 
 const planFeatureLabels = <String, String>{
-  'chatbot': 'CLIMALOX Chatbot',
+  'chatbot': 'EVERLOXX Chatbot',
   'color_advice': 'Farbberatung',
   'project_folder': 'Projektmappe',
   'project_consulting': 'Projektberatung',

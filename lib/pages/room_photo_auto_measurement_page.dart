@@ -47,7 +47,7 @@ class _RoomPhotoAutoMeasurementPageState
   bool get _readyToCalculate => _photos.length >= widget.minPhotos;
 
   Future<void> _addPhoto() async {
-    final pick = await pickThermoloxAttachment(
+    final pick = await pickEverloxxAttachment(
       context,
       allowFiles: false,
     );

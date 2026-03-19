@@ -11,7 +11,7 @@ import '../models/palette_color.dart';
 import '../services/ar_wall_paint_service.dart';
 import '../services/lidar_service.dart';
 import '../services/palette_service.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../widgets/color_palette_sheet.dart';
 
 /// Result returned when leaving the AR wall paint page.
@@ -36,7 +36,7 @@ class ARWallPaintPage extends StatefulWidget {
 
 class _ARWallPaintPageState extends State<ARWallPaintPage>
     with WidgetsBindingObserver {
-  static const _channel = MethodChannel('thermolox/ar_wall_paint');
+  static const _channel = MethodChannel('everloxx/ar_wall_paint');
 
   String? _selectedColorHex;
   final Map<String, String> _wallColors = {};
@@ -122,7 +122,7 @@ class _ARWallPaintPageState extends State<ARWallPaintPage>
 
   void _onWallTapped(String anchorId) {
     if (_selectedColorHex == null) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Wähle zuerst eine Farbe aus.',
       );
@@ -170,7 +170,7 @@ class _ARWallPaintPageState extends State<ARWallPaintPage>
     final bytes = await ARWallPaintService.takeScreenshot();
     if (bytes == null || bytes.isEmpty) {
       if (mounted) {
-        ThermoloxOverlay.showSnack(
+        EverloxxOverlay.showSnack(
           context,
           'Screenshot konnte nicht erstellt werden.',
           isError: true,
@@ -187,7 +187,7 @@ class _ARWallPaintPageState extends State<ARWallPaintPage>
 
     if (mounted) {
       setState(() => _savedScreenshotPath = file.path);
-      ThermoloxOverlay.showSnack(context, 'Screenshot gespeichert');
+      EverloxxOverlay.showSnack(context, 'Screenshot gespeichert');
     }
   }
 
@@ -277,11 +277,11 @@ class _ARWallPaintPageState extends State<ARWallPaintPage>
             Positioned.fill(
               child: Platform.isIOS
                   ? UiKitView(
-                      viewType: 'thermolox/ar_wall_paint',
+                      viewType: 'everloxx/ar_wall_paint',
                       creationParamsCodec: const StandardMessageCodec(),
                     )
                   : AndroidView(
-                      viewType: 'thermolox/ar_wall_paint',
+                      viewType: 'everloxx/ar_wall_paint',
                       creationParamsCodec: const StandardMessageCodec(),
                     ),
             )
@@ -301,7 +301,7 @@ class _ARWallPaintPageState extends State<ARWallPaintPage>
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
-                        'Für die AR-Wandfarbe braucht CLIMALOX Zugriff auf deine Kamera. Bitte erlaube den Zugriff in den Einstellungen.',
+                        'Für die AR-Wandfarbe braucht EVERLOXX Zugriff auf deine Kamera. Bitte erlaube den Zugriff in den Einstellungen.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),

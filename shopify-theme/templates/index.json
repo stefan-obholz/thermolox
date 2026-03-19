@@ -11,7 +11,7 @@
   "sections": {
     "custom_liquid_g7iXYz": {
       "type": "custom-liquid",
-      "name": "THERMOLOX Products intro",
+      "name": "EVERLOXX Products intro",
       "settings": {
         "custom_liquid": "<div style=\"position: relative; width: 100%; padding-top: 56.25%; overflow: hidden;\">\n  <video \n    autoplay \n    muted \n    playsinline \n    controlslist=\"nodownload\" \n    style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;\"\n    onended=\"this.pause(); this.currentTime = this.duration;\">\n    <source src=\"https://cdn.shopify.com/videos/c/o/v/3eb4687cd1a44a71a997a27eed59dbbb.mp4\" type=\"video/mp4\">\n    Your browser does not support the video tag.\n  </video>\n</div>",
         "color_scheme": "",
@@ -22,7 +22,7 @@
     "custom_liquid_4wW9aK": {
       "type": "custom-liquid",
       "disabled": true,
-      "name": "THERMOLOX Systems LOGO",
+      "name": "EVERLOXX Systems LOGO",
       "settings": {
         "custom_liquid": "<style>\n.thermolox-logo-wrapper {\n  text-align: center;\n}\n\n.thermolox-logo-fixed {\n  width: 45vw !important;\n  max-width: 45vw !important;\n  height: auto;\n  display: inline-block;\n}\n\n/* Auf Mobilgeräten: 80% der Bildschirmbreite */\n@media screen and (max-width: 767px) {\n  .thermolox-logo-fixed {\n    width: 80vw !important;\n    max-width: 80vw !important;\n  }\n}\n</style>\n\n<div class=\"thermolox-logo-wrapper\">\n  <img \n    src=\"https://cdn.shopify.com/s/files/1/0974/3178/1717/files/THERMOLOX_LOGO_WIDE_Q.png?v=1756443829\" \n    alt=\"THERMOLOX Logo\" \n    class=\"thermolox-logo-fixed\"\n  />\n</div>",
         "color_scheme": "",
@@ -46,7 +46,7 @@
         "text_U9HMXh": {
           "type": "text",
           "settings": {
-            "text": "<h2><em><strong>„Das Thermolox-System ist das Balkonkraftwerk für Wände</strong></em></h2>"
+            "text": "<h2><em><strong>„Das Everloxx-System ist das Balkonkraftwerk für Wände</strong></em></h2>"
           }
         },
         "text_xYif8m": {
@@ -221,7 +221,7 @@
         "text_dhJYVB": {
           "type": "text",
           "settings": {
-            "text": "<p>Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des THERMOLOX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, das mit <strong>THERMO-COAT</strong> gestrichen und mit <strong>THERMO-SEAL</strong> abgedichtet wurde.</p><p>💡 Weniger Wärmeverlust bedeutet:<br/><strong>Weniger Heizkosten. Mehr Komfort. Besser fürs Klima.</strong></p><p><br/></p><p>✅ Ideal für Altbau & unsanierte Gebäude</p><p>✅ Spart bis zu 42 % Heiz- und Kühlkosten</p><p>✅ Sofortige Wirkung nach der Anwendung</p><p>✅ Ohne Handwerker oder Umbau</p><p></p><p><br/></p><p><strong>Energie sparen war noch nie so einfach.</strong></p><p>Setze auf das THERMOLOX-System – die nachhaltige, rückbaufreie und günstige Alternative zur klassischen Sanierung.</p>"
+            "text": "<p>Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des EVERLOXX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, das mit <strong>THERMO-COAT</strong> gestrichen und mit <strong>THERMO-SEAL</strong> abgedichtet wurde.</p><p>💡 Weniger Wärmeverlust bedeutet:<br/><strong>Weniger Heizkosten. Mehr Komfort. Besser fürs Klima.</strong></p><p><br/></p><p>✅ Ideal für Altbau & unsanierte Gebäude</p><p>✅ Spart bis zu 42 % Heiz- und Kühlkosten</p><p>✅ Sofortige Wirkung nach der Anwendung</p><p>✅ Ohne Handwerker oder Umbau</p><p></p><p><br/></p><p><strong>Energie sparen war noch nie so einfach.</strong></p><p>Setze auf das EVERLOXX-System – die nachhaltige, rückbaufreie und günstige Alternative zur klassischen Sanierung.</p>"
           }
         },
         "button_KEUaey": {
@@ -303,7 +303,7 @@
       ],
       "name": "Anwendung",
       "settings": {
-        "title": "<strong>So funktioniert THERMOLOX</strong>",
+        "title": "<strong>So funktioniert EVERLOXX</strong>",
         "heading_size": "h1",
         "image_width": "full",
         "image_ratio": "adapt",
@@ -325,9 +325,9 @@
         "hq1": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Was ist das THERMOLOX-System?",
+            "heading": "Was ist das EVERLOXX-System?",
             "icon": "question_mark",
-            "row_content": "<p>THERMOLOX besteht aus <strong>THERMO-COAT</strong> (Hightech-Wandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und <strong>THERMO-SEAL</strong> (transparentes Dichtband). Zusammen senken sie Heiz- und Kühlkosten um bis zu 42 % – ohne Umbau.</p>"
+            "row_content": "<p>EVERLOXX besteht aus <strong>THERMO-COAT</strong> (Hightech-Wandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und <strong>THERMO-SEAL</strong> (transparentes Dichtband). Zusammen senken sie Heiz- und Kühlkosten um bis zu 42 % – ohne Umbau.</p>"
           }
         },
         "hq2": {
@@ -391,7 +391,7 @@
     "app_download": {
       "type": "app-download-banner",
       "settings": {
-        "heading": "Hol dir die THERMOLOX App",
+        "heading": "Hol dir die EVERLOXX App",
         "text": "Raumfarben virtuell testen, Verbrauch berechnen und direkt bestellen - alles in einer App.",
         "color_scheme": "scheme-1",
         "padding_top": 60,
@@ -411,7 +411,7 @@
         "text_DkPHXi": {
           "type": "text",
           "settings": {
-            "text": "<p>Du willst nicht nur Energie sparen, sondern deinen Raum farblich perfekt gestalten?</p><p>Im <strong>THERMOLOX ColorRoom</strong> findest du hunderte moderne Farbtöne – optimiert für THERMO-COAT und perfekt kombinierbar mit deiner Einrichtung.</p><p>Lass dich inspirieren – inklusive <strong>realer Raumvorschau</strong> mit unserer smarten Farbvisualisierung.</p>",
+            "text": "<p>Du willst nicht nur Energie sparen, sondern deinen Raum farblich perfekt gestalten?</p><p>Im <strong>EVERLOXX ColorRoom</strong> findest du hunderte moderne Farbtöne – optimiert für THERMO-COAT und perfekt kombinierbar mit deiner Einrichtung.</p><p>Lass dich inspirieren – inklusive <strong>realer Raumvorschau</strong> mit unserer smarten Farbvisualisierung.</p>",
             "text_style": "body"
           }
         },

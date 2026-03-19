@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link_service.dart';
 import '../theme/app_theme.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   const EmailVerificationPage({super.key});
@@ -69,7 +69,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     final auth = context.read<AuthService>();
     final email = auth.currentUser?.email;
     if (email == null || email.isEmpty) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Keine E-Mail gefunden.',
         isError: true,
@@ -80,12 +80,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     setState(() => _isLoading = true);
     try {
       await auth.resendSignupEmail(email: email);
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'E-Mail wurde erneut versendet.',
       );
     } catch (e) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'E-Mail konnte nicht versendet werden.',
         isError: true,
@@ -100,12 +100,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     setState(() => _isLoading = true);
     try {
       await auth.refreshSession();
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Status aktualisiert.',
       );
     } catch (e) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Aktualisierung fehlgeschlagen.',
         isError: true,
@@ -121,13 +121,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final auth = context.read<AuthService>();
     final user = auth.currentUser;
     final email = user?.email ?? '';
     final isVerified = auth.isUserVerified(user);
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       safeArea: true,
       appBar: AppBar(
         centerTitle: true,
@@ -249,7 +249,7 @@ class _DebugPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final lastLink = DeepLinkService.lastDeepLink ?? 'none';
     final lastSource = DeepLinkService.lastDeepLinkSource ?? 'n/a';
     final lastAt = DeepLinkService.lastDeepLinkAt?.toIso8601String() ?? 'n/a';

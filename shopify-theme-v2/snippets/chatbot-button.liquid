@@ -1,5 +1,5 @@
 <style>
-/* CLIMALOX Design Chat Button */
+/* EVERLOXX Chat Button */
 #chat-toggle-btn {
   position: fixed;
   bottom: 24px;
@@ -26,15 +26,15 @@
   border-radius: 50%;
   background: linear-gradient(
     270deg,
-    #F9C2AC,
+    #efd2a7,
     #E8A08E,
-    #D4896F,
-    #F9C2AC,
+    #efd2a7,
+    #efd2a7,
     #FFD5C2,
-    #F9C2AC,
+    #efd2a7,
     #E8A08E,
-    #D4896F,
-    #F9C2AC
+    #efd2a7,
+    #efd2a7
   );
   background-size: 2000% 2000%;
   animation: gradientFlow 18s linear infinite;
@@ -53,7 +53,7 @@
   50%      { transform: scale(1.06); }
 }
 
-/* 🛡️ CLIMALOX Logo */
+/* EVERLOXX Logo */
 #chat-toggle-btn::after {
   content: "";
   position: absolute;
@@ -130,7 +130,7 @@ body.chat-open #chat-toggle-btn {
 <!-- 💭 Overlay + Chatbot -->
 <div id="chatbot-overlay" aria-hidden="true">
   <div id="chatbot-popup">
-    {% section 'climalox-chatbot' %}
+    {% section 'everloxx-chatbot' %}
   </div>
 </div>
 
@@ -139,16 +139,16 @@ document.addEventListener("DOMContentLoaded",()=>{
   const btn=document.getElementById("chat-toggle-btn");
   const overlay=document.getElementById("chatbot-overlay");
 
-  function loadAndBootCLIMALOX(){
-    if(window.__climaloxBootedOnce||document.getElementById("chat-window")) return;
-    window.__climaloxBootedOnce=true;
+  function loadAndBootEVERLOXX(){
+    if(window.__everloxxBootedOnce||document.getElementById("chat-window")) return;
+    window.__everloxxBootedOnce=true;
     const s=document.createElement("script");
-    s.src="{{ 'climalox-chatbot.js' | asset_url }}?v="+Date.now();
+    s.src="{{ 'everloxx-chatbot.js' | asset_url }}?v="+Date.now();
     s.async=true;
     s.onload=()=>{
       const evt=new Event("DOMContentLoaded",{bubbles:true,cancelable:true});
       document.dispatchEvent(evt);
-      console.log("[CLIMALOX] Chatbot initialisiert.");
+      console.log("[EVERLOXX] Chatbot initialisiert.");
     };
     document.body.appendChild(s);
   }
@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   function openChat(){
     overlay.classList.add("active");
     document.body.classList.add("chat-open");
-    setTimeout(loadAndBootCLIMALOX,300);
+    setTimeout(loadAndBootEVERLOXX,300);
   }
   function closeChat(){
     overlay.classList.remove("active");

@@ -22,17 +22,17 @@ CREATE POLICY "Public read design_tokens" ON design_tokens
 CREATE POLICY "Service write design_tokens" ON design_tokens
   FOR ALL USING (auth.role() = 'service_role');
 
--- Seed: CLIMALOX Design Tokens
+-- Seed: EVERLOXX Design Tokens
 INSERT INTO design_tokens (tokens, is_active) VALUES ('{
   "colors": {
-    "primary": "#F9C2AC",
-    "primaryHover": "#D4896F",
+    "primary": "#efd2a7",
+    "primaryHover": "#efd2a7",
     "background": "#FFFFFF",
     "backgroundWarm": "#FFF8F5",
     "foreground": "#2D2926",
     "foregroundLight": "#FFF8F5",
     "dark": "#1A1614",
-    "accent": "#F9C2AC",
+    "accent": "#efd2a7",
     "border": "#E8D5CC",
     "borderDark": "#4A4542",
     "shadow": "#2D2926",
@@ -50,13 +50,13 @@ INSERT INTO design_tokens (tokens, is_active) VALUES ('{
     "bodyScale": 1.0
   },
   "brand": {
-    "name": "CLIMALOX",
-    "nameFull": "CLIMALOX Design",
+    "name": "EVERLOXX",
+    "nameFull": "EVERLOXX Design",
     "tagline": "Dein Zuhause. Dein Style.",
     "taglineSub": "Wandfarben, die nicht nur wunderschön aussehen – sondern dein Zuhause spürbar gemütlicher machen."
   },
   "icons": {
-    "color": "#D4896F",
+    "color": "#efd2a7",
     "strokeWidth": 2,
     "size": 16
   },

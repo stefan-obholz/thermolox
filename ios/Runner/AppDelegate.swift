@@ -11,7 +11,7 @@ import UIKit
 
     let registrar = self.registrar(forPlugin: "ARWallPaintView")!
     let factory = ARWallPaintViewFactory(messenger: registrar.messenger())
-    registrar.register(factory, withId: "thermolox/ar_wall_paint")
+    registrar.register(factory, withId: "everloxx/ar_wall_paint")
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

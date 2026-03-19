@@ -17,7 +17,7 @@ import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/color_utils.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/before_after_slider.dart';
 import '../widgets/color_palette_sheet.dart';
@@ -59,7 +59,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   }
 
   Future<void> _renameProject(BuildContext context, Project project) async {
-    final newName = await ThermoloxOverlay.promptText(
+    final newName = await EverloxxOverlay.promptText(
       context: context,
       title: 'Projekt umbenennen',
       hintText: 'Neuer Name',
@@ -70,7 +70,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
       try {
         await context.read<ProjectsModel>().renameProject(project.id, newName);
       } catch (_) {
-        ThermoloxOverlay.showSnack(
+        EverloxxOverlay.showSnack(
           context,
           'Bitte anmelden, um Projekte zu speichern.',
         );
@@ -79,7 +79,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   }
 
   Future<void> _addUpload(BuildContext context, Project project) async {
-    final picked = await pickThermoloxAttachment(context);
+    final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
     try {
       await context.read<ProjectsModel>().addItem(
@@ -89,7 +89,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             path: picked.path,
           );
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Uploads zu speichern.',
       );
@@ -188,7 +188,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             Brightness.dark
         ? Colors.white
         : Colors.black;
-    await ThermoloxOverlay.showAppDialog(
+    await EverloxxOverlay.showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
@@ -241,7 +241,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             hex: selectedHex,
           );
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Farben zu speichern.',
       );
@@ -262,7 +262,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             type: 'note',
           );
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu speichern.',
       );
@@ -279,7 +279,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     try {
       await context.read<ProjectsModel>().renameItem(note.id, trimmed);
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu speichern.',
       );
@@ -293,7 +293,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     try {
       await context.read<ProjectsModel>().deleteItem(note.id);
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu löschen.',
       );
@@ -302,7 +302,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     return Consumer<ProjectsModel>(
       builder: (context, model, _) {
         final project = _find(context);
@@ -354,7 +354,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             .toList()
             .reversed
             .toList();
-        return ThermoloxScaffold(
+        return EverloxxScaffold(
           appBar: AppBar(
             title: Text(
               (project.title != null && project.title!.trim().isNotEmpty)
@@ -526,7 +526,7 @@ class _ProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     return ClipRRect(
       borderRadius: BorderRadius.circular(tokens.radiusMd),
       child: AspectRatio(
@@ -559,7 +559,7 @@ class _ProjectImageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final localPath = item?.path;
     final localExists =
         localPath != null && (fileExistsCache[localPath] ?? false);
@@ -670,7 +670,7 @@ class _ProjectColorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final color = item == null
         ? null
         : colorFromHex(item?.url ?? item?.name ?? '');
@@ -915,7 +915,7 @@ class _ProjectNotesCardState extends State<_ProjectNotesCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     return Container(
       padding: EdgeInsets.all(tokens.gapMd),
       decoration: BoxDecoration(
@@ -1254,7 +1254,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
 
   Future<void> _startRender({bool isRetry = false}) async {
     if (!context.read<ConsentService>().aiAllowed) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte Einwilligung für KI-Funktionen aktivieren '
         '(Einstellungen > Rechtliches > Datenschutz).',
@@ -1283,7 +1283,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
         final imageItem = widget.imageItem;
         final colorItem = widget.colorItem;
         if (imageItem == null || imageItem.type != 'image') {
-          ThermoloxOverlay.showSnack(
+          EverloxxOverlay.showSnack(
             context,
             'Bitte zuerst ein Foto hinzufügen.',
             isError: true,
@@ -1292,7 +1292,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
         }
         final colorHex = colorItem?.url ?? colorItem?.name;
         if (colorHex == null || colorHex.trim().isEmpty) {
-          ThermoloxOverlay.showSnack(
+          EverloxxOverlay.showSnack(
             context,
             'Bitte zuerst eine Farbe auswählen.',
             isError: true,
@@ -1371,7 +1371,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
           );
 
       _resetPending();
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Render gespeichert.',
       );
@@ -1383,7 +1383,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   }
 
   void _showRetrySnack() {
-    ThermoloxOverlay.showSnack(
+    EverloxxOverlay.showSnack(
       context,
       'Fehler beim Starten. Bitte erneut versuchen.',
       isError: true,
@@ -1399,7 +1399,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
       await widget.onOpenProPaywall!();
       return;
     }
-    ThermoloxOverlay.showSnack(
+    EverloxxOverlay.showSnack(
       context,
       'Pro Lifetime ist noch nicht verfügbar.',
     );
@@ -1410,14 +1410,14 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
       await widget.onOpenCreditsPaywall!();
       return;
     }
-    ThermoloxOverlay.showSnack(
+    EverloxxOverlay.showSnack(
       context,
       'Nachkauf ist noch nicht verfügbar.',
     );
   }
 
   Future<void> _showProPaywall() async {
-    final shouldOpen = await ThermoloxOverlay.showAppDialog<bool>(
+    final shouldOpen = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
@@ -1455,7 +1455,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   }
 
   Future<void> _showCreditsPaywall() async {
-    final shouldOpen = await ThermoloxOverlay.showAppDialog<bool>(
+    final shouldOpen = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
@@ -1483,7 +1483,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final planController = context.watch<PlanController>();
     final hasPro = planController.isPro;
     final credits = planController.virtualRoomCredits;
@@ -1629,7 +1629,7 @@ class _ActionPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final hasLabel = label != null && label!.trim().isNotEmpty;
     final padding = hasLabel
         ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)

@@ -10,7 +10,7 @@ import '../models/plan_models.dart';
 import '../pages/auth_page.dart';
 import '../theme/app_theme.dart';
 import '../widgets/plan_card_view.dart';
-import 'thermolox_overlay.dart';
+import 'everloxx_overlay.dart';
 
 Future<String?> showPlanModal({
   required BuildContext context,
@@ -28,7 +28,7 @@ Future<String?> showPlanModal({
   final controller = PageController(initialPage: initialIndex);
 
   var currentIndex = initialIndex;
-  return ThermoloxOverlay.showGlassDialog<String>(
+  return EverloxxOverlay.showGlassDialog<String>(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'tarife',
@@ -36,7 +36,7 @@ Future<String?> showPlanModal({
     builder: (dialogContext) {
       return StatefulBuilder(
         builder: (context, setState) {
-          final tokens = dialogContext.thermoloxTokens;
+          final tokens = dialogContext.everloxxTokens;
           final media = MediaQuery.of(dialogContext);
           final screenHeight = media.size.height;
           final screenWidth = media.size.width;

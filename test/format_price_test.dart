@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thermolox/utils/format_price.dart';
+import 'package:everloxx/utils/format_price.dart';
 
 void main() {
   group('formatPrice', () {

@@ -12,7 +12,7 @@ let turnstileReady = false;
 let turnstileToken = null;
 
 function getTurnstileSiteKey() {
-  return (window.__THERMOLOX_CONFIG && window.__THERMOLOX_CONFIG.turnstileSiteKey) || "";
+  return (window.__EVERLOXX_CONFIG && window.__EVERLOXX_CONFIG.turnstileSiteKey) || "";
 }
 
 function initTurnstile() {
@@ -324,7 +324,7 @@ async function sendMessage() {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    console.error("[THERMOLOX] Chat error:", res.status, errText);
+    console.error("[EVERLOXX] Chat error:", res.status, errText);
     appendBubble("assistant", "Es ist ein Fehler aufgetreten. Bitte versuche es erneut.");
     return;
   }
@@ -396,7 +396,7 @@ async function sendMessage() {
 }
 
 /* ===== Auto-Greeting ===== */
-const GREETING_TEXT = `Hallo 👋, ich bin THERMOLOX, Dein persönlicher Farb- und Produktberater.
+const GREETING_TEXT = `Hallo 👋, ich bin EVERLOXX, Dein persönlicher Farb- und Produktberater.
 Ich helfe Dir, die perfekte Wand- und Deckenfarbe zu finden und Dein Projekt sinnvoll zu planen.
 Was möchtest Du als Nächstes tun? 🎨
 

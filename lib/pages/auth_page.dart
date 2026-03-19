@@ -16,7 +16,7 @@ class AuthPage extends StatelessWidget {
         ? SettingsAuthMode.signup
         : SettingsAuthMode.login;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       safeArea: true,
       appBar: AppBar(
         centerTitle: true,

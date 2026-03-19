@@ -1,20 +1,20 @@
 {% comment %}
-  CLIMALOX: Always-visible search bar in header (no modal)
+  EVERLOXX: Always-visible search bar in header (no modal)
   Accepts:
   - input_id: {String} Id for the search input element (required)
 {% endcomment %}
 
-<div class="climalox-header-search">
+<div class="everloxx-header-search">
   {%- if settings.predictive_search_enabled -%}
     <predictive-search data-loading-text="{{ 'accessibility.loading' | t }}">
   {%- endif -%}
-  <form action="{{ routes.search_url }}" method="get" role="search" class="climalox-search-form">
-    <div class="climalox-search-field">
-      <span class="climalox-search-icon">
+  <form action="{{ routes.search_url }}" method="get" role="search" class="everloxx-search-form">
+    <div class="everloxx-search-field">
+      <span class="everloxx-search-icon">
         {{- 'icon-search.svg' | inline_asset_content -}}
       </span>
       <input
-        class="climalox-search-input"
+        class="everloxx-search-input"
         id="{{ input_id }}"
         type="search"
         name="q"

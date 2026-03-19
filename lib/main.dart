@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
-import 'shell/thermolox_shell.dart';
+import 'shell/everloxx_shell.dart';
 import 'controllers/plan_controller.dart';
 import 'models/cart_model.dart';
 import 'models/projects_model.dart';
@@ -37,14 +37,14 @@ Future<void> main() async {
     }
   } on SupabaseConfigException catch (e) {
     runApp(
-      _ThermoloxErrorApp(
+      _EverloxxErrorApp(
         message: e.message,
       ),
     );
     return;
   } catch (e) {
     runApp(
-      _ThermoloxErrorApp(
+      _EverloxxErrorApp(
         message: 'Supabase initialization failed: $e',
       ),
     );
@@ -71,13 +71,13 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(create: (_) => ProjectsModel()),
       ],
-      child: const ThermoloxApp(),
+      child: const EverloxxApp(),
     ),
   );
 }
 
-class ThermoloxApp extends StatelessWidget {
-  const ThermoloxApp({super.key});
+class EverloxxApp extends StatelessWidget {
+  const EverloxxApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +98,7 @@ class ThermoloxApp extends StatelessWidget {
                     : const _OnboardingGate();
 
         return MaterialApp(
-          title: 'CLIMALOX',
+          title: 'EVERLOXX',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.theme,
           home: home,
@@ -108,10 +108,10 @@ class ThermoloxApp extends StatelessWidget {
   }
 }
 
-class _ThermoloxErrorApp extends StatelessWidget {
+class _EverloxxErrorApp extends StatelessWidget {
   final String message;
 
-  const _ThermoloxErrorApp({required this.message});
+  const _EverloxxErrorApp({required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -162,7 +162,7 @@ class _OnboardingGateState extends State<_OnboardingGate> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const _GateLoadingPage();
-    if (_completed) return const ThermoloxShell();
+    if (_completed) return const EverloxxShell();
     return OnboardingPage(
       onComplete: () => setState(() => _completed = true),
     );

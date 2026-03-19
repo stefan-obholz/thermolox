@@ -1,0 +1,26 @@
+/* ── EVERLOXX Icon System ──
+   Lucide Icons (MIT) – consistent stroke-based SVGs
+   Color: #505050 (Akzent 2 from design tokens)
+*/
+
+.everloxx-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.15em;
+  margin-right: 0.25em;
+  flex-shrink: 0;
+}
+
+.everloxx-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+h2 .everloxx-icon,
+h3 .everloxx-icon {
+  width: 1.3em;
+  height: 1.3em;
+}

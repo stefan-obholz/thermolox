@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../services/legal_gate_service.dart';
 import '../theme/app_theme.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 class LegalGatePage extends StatefulWidget {
   const LegalGatePage({super.key});
@@ -18,7 +18,7 @@ class _LegalGatePageState extends State<LegalGatePage> {
   bool _busy = false;
 
   Future<void> _showLegalText(String title, String body) async {
-    await ThermoloxOverlay.showAppDialog<void>(
+    await EverloxxOverlay.showAppDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
@@ -46,9 +46,9 @@ class _LegalGatePageState extends State<LegalGatePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       safeArea: true,
       body: ListView(
         padding: EdgeInsets.fromLTRB(
@@ -59,11 +59,11 @@ class _LegalGatePageState extends State<LegalGatePage> {
         ),
         children: [
           Center(
-            child: Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            child: Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
           ),
           SizedBox(height: tokens.gapMd),
           Text(
-            'Willkommen bei CLIMALOX',
+            'Willkommen bei EVERLOXX',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),

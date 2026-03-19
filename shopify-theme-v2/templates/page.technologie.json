@@ -14,8 +14,8 @@
         "heading_size": "h1",
         "image_before": "shopify://shop_images/Vorher_Nachher_Ohne.png",
         "image_after": "shopify://shop_images/Vorher_Nachher_Mit.png",
-        "label_before": "Ohne CLIMALOX",
-        "label_after": "Mit CLIMALOX Design",
+        "label_before": "Ohne EVERLOXX",
+        "label_after": "Mit EVERLOXX",
         "color_scheme": "scheme-1",
         "padding_top": 36,
         "padding_bottom": 36
@@ -27,14 +27,14 @@
         "heading_block": {
           "type": "heading",
           "settings": {
-            "heading": "<strong>Warum CLIMALOX Design anders ist</strong>",
+            "heading": "<strong>Warum EVERLOXX anders ist</strong>",
             "heading_size": "h1"
           }
         },
         "text_block": {
           "type": "text",
           "settings": {
-            "text": "<p>Normale Wandfarbe sieht gut aus. CLIMALOX Design sieht gut aus <strong>und</strong> spart Energie. Die patentierten Mikro-Hohlglaskugeln in jeder Dose reflektieren über 50 % der Wärmestrahlung zurück in den Raum – messbar, spürbar, nachhaltig.</p>"
+            "text": "<p>Normale Wandfarbe sieht gut aus. EVERLOXX sieht gut aus <strong>und</strong> spart Energie. Die patentierten Mikro-Hohlglaskugeln in jeder Dose reflektieren über 50 % der Wärmestrahlung zurück in den Raum – messbar, spürbar, nachhaltig.</p>"
           }
         }
       },

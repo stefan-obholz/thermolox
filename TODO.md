@@ -1,4 +1,4 @@
-# THERMOLOX TODO
+# EVERLOXX TODO
 
 ## Release-Checkliste
 - [x] CORS_ALLOW_ORIGINS korrekt gesetzt (Prod-Shop + Domain)

@@ -10,7 +10,7 @@ import '../models/projects_model.dart';
 import '../theme/app_theme.dart';
 import '../utils/color_utils.dart';
 import '../utils/plan_modal.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/cart_icon_button.dart';
 import 'project_detail_page.dart';
@@ -42,13 +42,13 @@ class _ProjectsPageState extends State<ProjectsPage> {
     final planController = context.read<PlanController>();
     if (planController.hasProjectsAccess) return true;
 
-    final wantsUpgrade = await ThermoloxOverlay.showAppDialog<bool>(
+    final wantsUpgrade = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -103,7 +103,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
   Future<void> _createProject(BuildContext context) async {
     final allowed = await _ensureProjectAccess(context);
     if (!allowed) return;
-    final name = await ThermoloxOverlay.promptText(
+    final name = await EverloxxOverlay.promptText(
       context: context,
       title: 'Neues Projekt',
       hintText: 'Projektname',
@@ -113,14 +113,14 @@ class _ProjectsPageState extends State<ProjectsPage> {
 
     final model = context.read<ProjectsModel>();
     if (model.existsName(name)) {
-      ThermoloxOverlay.showSnack(context, 'Projekt existiert bereits.');
+      EverloxxOverlay.showSnack(context, 'Projekt existiert bereits.');
       return;
     }
     try {
       final project = await model.addProject(name);
       await _promptFirstUpload(context, project.id);
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Projekte zu speichern.',
       );
@@ -128,7 +128,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
   }
 
   Future<void> _promptFirstUpload(BuildContext context, String projectId) async {
-    final picked = await pickThermoloxAttachment(context);
+    final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
     try {
       await context.read<ProjectsModel>().addItem(
@@ -138,7 +138,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
             path: picked.path,
           );
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Uploads zu speichern.',
       );
@@ -148,11 +148,11 @@ class _ProjectsPageState extends State<ProjectsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final canAccessProjects =
         context.watch<PlanController>().hasProjectsAccess;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       safeArea: true,
       appBar: AppBar(
         centerTitle: true,
@@ -345,7 +345,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                               onSelected: (value) async {
                                 if (value == 'rename') {
                                   final newName =
-                                      await ThermoloxOverlay.promptText(
+                                      await EverloxxOverlay.promptText(
                                     context: context,
                                     title: 'Projekt umbenennen',
                                     hintText: 'Neuer Name',
@@ -358,7 +358,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                                         .renameProject(p.id, newName);
                                   }
                                 } else if (value == 'delete') {
-                                  final ok = await ThermoloxOverlay.confirm(
+                                  final ok = await EverloxxOverlay.confirm(
                                     context: context,
                                     title: 'Projekt löschen?',
                                     message:

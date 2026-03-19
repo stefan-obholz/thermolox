@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../data/thermolox_palette.dart';
+import '../data/everloxx_palette.dart';
 import '../theme/app_theme.dart';
 import '../utils/color_utils.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 Future<String?> showColorPaletteSheet(
   BuildContext context, {
   String? initialHex,
 }) {
-  return ThermoloxOverlay.showSheet<String>(
+  return EverloxxOverlay.showSheet<String>(
     context: context,
     useSafeArea: true,
     isScrollControlled: true,
@@ -36,7 +36,7 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
     super.initState();
     _controller = TextEditingController(text: widget.initialHex ?? '');
     _nearestHex = widget.initialHex != null
-        ? nearestPaletteHex(widget.initialHex!, thermoloxPalette)
+        ? nearestPaletteHex(widget.initialHex!, everloxxPalette)
         : null;
     _controller.addListener(_updateNearest);
   }
@@ -49,7 +49,7 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
   }
 
   void _updateNearest() {
-    final next = nearestPaletteHex(_controller.text, thermoloxPalette);
+    final next = nearestPaletteHex(_controller.text, everloxxPalette);
     if (next == _nearestHex || !mounted) return;
     setState(() => _nearestHex = next);
   }
@@ -61,7 +61,7 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final media = MediaQuery.of(context);
     final height = media.size.height * 0.7;
 
@@ -122,14 +122,14 @@ class _ColorPaletteSheetState extends State<_ColorPaletteSheet> {
             SizedBox(height: tokens.gapMd),
             Expanded(
               child: GridView.builder(
-                itemCount: thermoloxPalette.length,
+                itemCount: everloxxPalette.length,
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 5,
                   mainAxisSpacing: tokens.gapSm,
                   crossAxisSpacing: tokens.gapSm,
                 ),
                 itemBuilder: (context, index) {
-                  final color = thermoloxPalette[index];
+                  final color = everloxxPalette[index];
                   final hex = hexFromColor(color);
                   final isSelected = hex == _nearestHex;
                   return InkWell(

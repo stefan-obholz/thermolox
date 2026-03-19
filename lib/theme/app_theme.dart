@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/design_token_service.dart';
 
 @immutable
-class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
+class EverloxxTokens extends ThemeExtension<EverloxxTokens> {
   final double radiusXs;
   final double radiusSm;
   final double radiusMd;
@@ -36,7 +36,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   final Duration ringPulseDuration;
   final Duration bubbleIntroDuration;
 
-  const ThermoloxTokens({
+  const EverloxxTokens({
     required this.radiusXs,
     required this.radiusSm,
     required this.radiusMd,
@@ -75,7 +75,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     ],
   );
 
-  static const ThermoloxTokens light = ThermoloxTokens(
+  static const EverloxxTokens light = EverloxxTokens(
     radiusXs: 8,
     radiusSm: 12,
     radiusMd: 14,
@@ -104,7 +104,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   );
 
   @override
-  ThermoloxTokens copyWith({
+  EverloxxTokens copyWith({
     double? radiusXs,
     double? radiusSm,
     double? radiusMd,
@@ -131,7 +131,7 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
     Duration? ringPulseDuration,
     Duration? bubbleIntroDuration,
   }) {
-    return ThermoloxTokens(
+    return EverloxxTokens(
       radiusXs: radiusXs ?? this.radiusXs,
       radiusSm: radiusSm ?? this.radiusSm,
       radiusMd: radiusMd ?? this.radiusMd,
@@ -164,9 +164,9 @@ class ThermoloxTokens extends ThemeExtension<ThermoloxTokens> {
   }
 
   @override
-  ThermoloxTokens lerp(ThemeExtension<ThermoloxTokens>? other, double t) {
-    if (other is! ThermoloxTokens) return this;
-    return ThermoloxTokens(
+  EverloxxTokens lerp(ThemeExtension<EverloxxTokens>? other, double t) {
+    if (other is! EverloxxTokens) return this;
+    return EverloxxTokens(
       radiusXs: lerpDouble(radiusXs, other.radiusXs, t) ?? radiusXs,
       radiusSm: lerpDouble(radiusSm, other.radiusSm, t) ?? radiusSm,
       radiusMd: lerpDouble(radiusMd, other.radiusMd, t) ?? radiusMd,
@@ -353,10 +353,10 @@ class AppTheme {
       fontFamily: fontFamilyBody,
       textTheme: textTheme,
       extensions: const <ThemeExtension<dynamic>>[
-        ThermoloxTokens.light,
+        EverloxxTokens.light,
       ],
 
-      // Buttons (CLIMALOX – Peach pill, dark text)
+      // Buttons (EVERLOXX – Peach pill, dark text)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: accent,
@@ -485,18 +485,18 @@ class AppTheme {
   }
 }
 
-extension ThermoloxThemeX on BuildContext {
-  ThermoloxTokens get thermoloxTokens =>
-      Theme.of(this).extension<ThermoloxTokens>()!;
+extension EverloxxThemeX on BuildContext {
+  EverloxxTokens get everloxxTokens =>
+      Theme.of(this).extension<EverloxxTokens>()!;
 }
 
-class ThermoloxPagePadding extends StatelessWidget {
+class EverloxxPagePadding extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final bool center;
   final double? maxWidth;
 
-  const ThermoloxPagePadding({
+  const EverloxxPagePadding({
     super.key,
     required this.child,
     this.padding,
@@ -506,7 +506,7 @@ class ThermoloxPagePadding extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final resolvedPadding =
         padding ?? EdgeInsets.symmetric(horizontal: tokens.screenPadding);
     final resolvedMaxWidth = maxWidth ?? tokens.contentMaxWidth;
@@ -529,7 +529,7 @@ class ThermoloxPagePadding extends StatelessWidget {
   }
 }
 
-class ThermoloxScaffold extends StatelessWidget {
+class EverloxxScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget body;
   final Widget? bottomNavigationBar;
@@ -544,7 +544,7 @@ class ThermoloxScaffold extends StatelessWidget {
   final bool extendBody;
   final bool extendBodyBehindAppBar;
 
-  const ThermoloxScaffold({
+  const EverloxxScaffold({
     super.key,
     this.appBar,
     required this.body,
@@ -563,7 +563,7 @@ class ThermoloxScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = ThermoloxPagePadding(
+    Widget content = EverloxxPagePadding(
       child: body,
       padding: padding,
       maxWidth: maxWidth,

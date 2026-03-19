@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 class MaskEditorPage extends StatefulWidget {
   final Uint8List imageBytes;
@@ -126,7 +126,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
 
   Future<void> _finish() async {
     if (_image == null || _strokes.isEmpty) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte maskiere mindestens eine Fläche.',
         isError: true,
@@ -136,7 +136,7 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
     final bytes = await _exportMask();
     if (!mounted) return;
     if (bytes == null) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Maske konnte nicht erstellt werden.',
         isError: true,
@@ -175,12 +175,12 @@ class _MaskEditorPageState extends State<MaskEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final theme = Theme.of(context);
     final image = _image;
     final aspect = image == null ? 4 / 3 : image.width / image.height;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       appBar: AppBar(
         title: Text(widget.title),
         actions: [

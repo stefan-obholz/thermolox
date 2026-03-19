@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'consent_service.dart';
-import 'thermolox_api.dart';
+import 'everloxx_api.dart';
 import '../utils/safe_json.dart';
 
 class PhotoMeasurementResult {
@@ -52,7 +52,7 @@ class PhotoMeasurementService {
     };
 
     final res = await http.post(
-      Uri.parse('$kThermoloxApiBase/measure/photos'),
+      Uri.parse('$kEverloxxApiBase/measure/photos'),
       headers: buildWorkerHeaders(contentType: 'application/json'),
       body: jsonEncode(payload),
     );

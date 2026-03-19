@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 class BeforeAfterSlider extends StatefulWidget {
   final Widget before;
@@ -41,7 +41,7 @@ class _BeforeAfterSliderState extends State<BeforeAfterSlider> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final borderRadius =
         widget.borderRadius ?? BorderRadius.circular(tokens.radiusMd);
 
@@ -192,8 +192,8 @@ Future<void> showBeforeAfterDialog({
   required Widget after,
   double? aspectRatio,
 }) async {
-  final tokens = context.thermoloxTokens;
-  await ThermoloxOverlay.showAppDialog(
+  final tokens = context.everloxxTokens;
+  await EverloxxOverlay.showAppDialog(
     context: context,
     barrierDismissible: true,
     builder: (ctx) {

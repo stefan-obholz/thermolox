@@ -2,7 +2,7 @@ import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Renders simple HTML content (h1-h3, p, ul/li, strong, em, a, img)
-/// as native Flutter widgets with CLIMALOX styling.
+/// as native Flutter widgets with EVERLOXX styling.
 /// No external dependencies needed.
 class HtmlContentView extends StatelessWidget {
   final String html;

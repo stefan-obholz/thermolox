@@ -57,7 +57,7 @@ class ProjectExportService {
     pw.MemoryImage? logoImage;
     try {
       final logoData =
-          await rootBundle.load('assets/logos/CLIMALOX_SYSTEMS.png');
+          await rootBundle.load('assets/logos/EVERLOXX_SYSTEMS.png');
       logoImage = pw.MemoryImage(logoData.buffer.asUint8List());
     } catch (_) {}
 
@@ -154,7 +154,7 @@ class ProjectExportService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'Erstellt mit CLIMALOX',
+              'Erstellt mit EVERLOXX',
               style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
             ),
             pw.Text(
@@ -277,11 +277,11 @@ class ProjectExportService {
         .trim()
         .replaceAll(RegExp(r'[^\w\s-]'), '')
         .replaceAll(RegExp(r'\s+'), '_');
-    final file = File('${dir.path}/CLIMALOX_$name.pdf');
+    final file = File('${dir.path}/EVERLOXX_$name.pdf');
     await file.writeAsBytes(bytes);
     await Share.shareXFiles(
       [XFile(file.path)],
-      subject: 'CLIMALOX Projekt: ${(project.title ?? project.name).trim()}',
+      subject: 'EVERLOXX Projekt: ${(project.title ?? project.name).trim()}',
     );
   }
 
@@ -296,7 +296,7 @@ class ProjectExportService {
     );
     await Printing.layoutPdf(
       onLayout: (_) async => bytes,
-      name: 'CLIMALOX_${(project.title ?? project.name).trim()}',
+      name: 'EVERLOXX_${(project.title ?? project.name).trim()}',
     );
   }
 }

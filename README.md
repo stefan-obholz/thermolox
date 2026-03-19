@@ -1,4 +1,4 @@
-# thermolox
+# everloxx
 
 A new Flutter project.
 
@@ -17,7 +17,7 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Supabase Setup
 
-THERMOLOX erwartet die Supabase-Konfiguration über Build-Defines. Die Keys
+EVERLOXX erwartet die Supabase-Konfiguration über Build-Defines. Die Keys
 werden nicht im Repo gespeichert.
 
 Beispiel `supabase.json` (lokal, nicht committen):

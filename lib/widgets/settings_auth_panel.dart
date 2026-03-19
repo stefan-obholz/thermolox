@@ -174,7 +174,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
   Future<bool> _showConsentSheet() async {
     if (!mounted) return false;
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     bool accepted = _acceptLegal;
     final result = await showModalBottomSheet<bool>(
       context: context,
@@ -447,7 +447,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final legalGate = context.watch<LegalGateService>();
     final statusColor =
         _statusIsError ? theme.colorScheme.error : theme.colorScheme.primary;
@@ -465,7 +465,7 @@ class _SettingsAuthPanelState extends State<SettingsAuthPanel> {
       shrinkWrap: widget.shrinkWrap,
       children: [
         Center(
-          child: Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+          child: Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
         ),
         SizedBox(height: tokens.gapMd),
         Card(

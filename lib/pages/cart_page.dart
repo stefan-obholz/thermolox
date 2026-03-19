@@ -57,7 +57,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cart = context.watch<CartModel>(); // ✅ EINMAL holen, überall nutzbar
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     final baseSize = theme.textTheme.bodyLarge?.fontSize ?? 16;
     final totalLabelStyle = theme.textTheme.bodyLarge?.copyWith(
@@ -69,7 +69,7 @@ class _CartPageState extends State<CartPage> {
       fontWeight: FontWeight.w800,
     );
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text(

@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 
 class ARWallPaintService {
   static const MethodChannel _channel =
-      MethodChannel('thermolox/ar_wall_paint');
+      MethodChannel('everloxx/ar_wall_paint');
 
   /// Whether the device supports AR wall painting.
   /// iOS 13.4+ with ARKit, Android with ARCore.

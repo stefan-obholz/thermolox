@@ -18,7 +18,7 @@ class ARWallPaintView: NSObject, FlutterPlatformView, ARSessionDelegate {
     init(frame: CGRect, viewIdentifier viewId: Int64, messenger: FlutterBinaryMessenger) {
         arView = ARView(frame: frame)
         channel = FlutterMethodChannel(
-            name: "thermolox/ar_wall_paint",
+            name: "everloxx/ar_wall_paint",
             binaryMessenger: messenger
         )
         super.init()

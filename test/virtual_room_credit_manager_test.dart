@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thermolox/controllers/virtual_room_credit_manager.dart';
-import 'package:thermolox/models/credit_consume_result.dart';
+import 'package:everloxx/controllers/virtual_room_credit_manager.dart';
+import 'package:everloxx/models/credit_consume_result.dart';
 
 void main() {
   test('credits consume ok clears request id', () async {

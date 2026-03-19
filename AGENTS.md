@@ -1,4 +1,4 @@
-# THERMOLOX - Agent Guide (local)
+# EVERLOXX - Agent Guide (local)
 
 ## Ziel
 Dieses Dokument hilft dem nächsten Agenten, die App-Struktur, den Stil und die
@@ -59,9 +59,9 @@ Niemals Secrets in Code oder Chats schreiben.
 - Worker Deploy: `wrangler deploy` (nutzt Cloudflare Tokens)
 Hinweis: Netzwerkzugriff im Agenten kann eingeschränkt sein -> ggf. Approval.
 
-## Lokale Befehle / thermolox_run
+## Lokale Befehle / everloxx_run
 - Alias liegt in `~/.zshrc` (Zeile 17):
-  `alias thermolox_run="cd ~/Projekte/thermolox && export WORKER_APP_TOKEN=$(grep -m1 '^WORKER_APP_TOKEN=' ./secrets | cut -d= -f2-) && flutter run --dart-define-from-file=supabase.json --dart-define=WORKER_APP_TOKEN=$WORKER_APP_TOKEN"`
+  `alias everloxx_run="cd ~/Projekte/thermolox && export WORKER_APP_TOKEN=$(grep -m1 '^WORKER_APP_TOKEN=' ./secrets | cut -d= -f2-) && flutter run --dart-define-from-file=supabase.json --dart-define=WORKER_APP_TOKEN=$WORKER_APP_TOKEN"`
 - Alias lädt den Token direkt aus `./secrets`.
 - Nach Änderung: `source ~/.zshrc`
 

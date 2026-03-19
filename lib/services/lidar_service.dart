@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class LidarService {
-  static const MethodChannel _channel = MethodChannel('thermolox/lidar');
+  static const MethodChannel _channel = MethodChannel('everloxx/lidar');
 
   static Future<bool> isAvailable() async {
     if (kIsWeb) return false;

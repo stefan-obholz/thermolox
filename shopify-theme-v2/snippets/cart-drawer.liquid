@@ -573,30 +573,30 @@
 -%}
 
 {%- if has_digital_items -%}
-  <div class="climalox-digital-waiver" style="margin-top: 14px;">
+  <div class="everloxx-digital-waiver" style="margin-top: 14px;">
     <label style="display:flex; gap:10px; align-items:flex-start; font-size: 14px; line-height: 1.35;">
       <input
-        id="CLIMALOXDigitalWaiverCheckbox"
+        id="EVERLOXXDigitalWaiverCheckbox"
         type="checkbox"
         {% if waiver_value and waiver_value != blank %}checked{% endif %}
         style="margin-top: 3px;"
       />
       <span>
-        Ich stimme ausdrücklich zu, dass CLIMALOX Design vor Ablauf der Widerrufsfrist mit der Ausführung des digitalen Inhalts beginnt und ich dadurch mein Widerrufsrecht verliere.
+        Ich stimme ausdrücklich zu, dass EVERLOXX vor Ablauf der Widerrufsfrist mit der Ausführung des digitalen Inhalts beginnt und ich dadurch mein Widerrufsrecht verliere.
       </span>
     </label>
 
-    <p id="CLIMALOXDigitalWaiverError" style="display:none; margin:8px 0 0; font-size: 13px;">
+    <p id="EVERLOXXDigitalWaiverError" style="display:none; margin:8px 0 0; font-size: 13px;">
       Bitte bestätige die Zustimmung, um fortzufahren.
     </p>
   </div>
 
   <style>
     /* Express Checkout HARD blocken (PayPal/ShopPay etc.) */
-    .climalox-express-blocked .additional-checkout-buttons {
+    .everloxx-express-blocked .additional-checkout-buttons {
       display: none !important;
     }
-    .climalox-express-hint {
+    .everloxx-express-hint {
       margin-top: 10px;
       font-size: 13px;
       opacity: .85;
@@ -632,15 +632,15 @@
         }
 
         // 2) Express Checkout hart ausblenden
-        drawerRoot.classList.toggle('climalox-express-blocked', !accepted);
+        drawerRoot.classList.toggle('everloxx-express-blocked', !accepted);
 
         // 3) Hint unter Express (optional)
         var express = qs('.additional-checkout-buttons');
-        var hint = qs('#CLIMALOXExpressHint');
+        var hint = qs('#EVERLOXXExpressHint');
         if (!accepted && express && !hint) {
           hint = document.createElement('div');
-          hint.id = 'CLIMALOXExpressHint';
-          hint.className = 'climalox-express-hint';
+          hint.id = 'EVERLOXXExpressHint';
+          hint.className = 'everloxx-express-hint';
           hint.textContent = 'Express Checkout ist erst verfügbar, nachdem du die Zustimmung bestätigt hast.';
           express.parentNode.insertBefore(hint, express);
         }
@@ -648,8 +648,8 @@
       }
 
       function mount() {
-        var checkbox = qs('#CLIMALOXDigitalWaiverCheckbox');
-        var errorEl = qs('#CLIMALOXDigitalWaiverError');
+        var checkbox = qs('#EVERLOXXDigitalWaiverCheckbox');
+        var errorEl = qs('#EVERLOXXDigitalWaiverError');
         if (!checkbox) return;
 
         function setErrorVisible(v){
@@ -689,7 +689,7 @@
       // Drawer wird oft dynamisch gerendert -> MutationObserver, damit es IMMER greift
       var obs = new MutationObserver(function(){
         // wenn Checkbox existiert, mounten (idempotent, da listener mehrfach möglich – deshalb einmal markieren)
-        var cb = drawerRoot.querySelector('#CLIMALOXDigitalWaiverCheckbox');
+        var cb = drawerRoot.querySelector('#EVERLOXXDigitalWaiverCheckbox');
         if (cb && !cb.dataset.tlxMounted) {
           cb.dataset.tlxMounted = '1';
           mount();
@@ -701,7 +701,7 @@
       obs.observe(drawerRoot, { childList:true, subtree:true });
 
       // initial attempt
-      var cb0 = drawerRoot.querySelector('#CLIMALOXDigitalWaiverCheckbox');
+      var cb0 = drawerRoot.querySelector('#EVERLOXXDigitalWaiverCheckbox');
       if (cb0 && !cb0.dataset.tlxMounted) {
         cb0.dataset.tlxMounted = '1';
         mount();

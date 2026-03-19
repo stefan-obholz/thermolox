@@ -14,7 +14,7 @@ class QuickReplyChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final isPreferred = button.preferred;
 
     final background = isPreferred ? theme.colorScheme.primary : Colors.white;
@@ -65,7 +65,7 @@ class ColorSwatchChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final labelColor = theme.colorScheme.onSurface;
 
     return GestureDetector(
@@ -104,7 +104,7 @@ class ColorSwatchChip extends StatelessWidget {
 }
 
 /// =======================
-///  THERMOLOX KREIS-WIDGET (Kamera / Galerie / Datei)
+///  EVERLOXX KREIS-WIDGET (Kamera / Galerie / Datei)
 /// =======================
 
 class AttachmentActionCircle extends StatefulWidget {
@@ -131,7 +131,7 @@ class AttachmentActionCircleState extends State<AttachmentActionCircle>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
     _rotationCtrl = AnimationController(
       vsync: this,
       duration: tokens.ringRotationDuration,
@@ -155,7 +155,7 @@ class AttachmentActionCircleState extends State<AttachmentActionCircle>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -253,7 +253,7 @@ class AttachmentIconButtonState extends State<AttachmentIconButton>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
 
     _rotationCtrl = AnimationController(
       vsync: this,
@@ -278,7 +278,7 @@ class AttachmentIconButtonState extends State<AttachmentIconButton>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return ScaleTransition(
       scale: Tween<double>(
@@ -375,7 +375,7 @@ class ChatBubbleAnimatedState extends State<ChatBubbleAnimated>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
     _controller = AnimationController(
       vsync: this,
       duration: tokens.bubbleIntroDuration,

@@ -14,12 +14,12 @@ import '../services/local_data_service.dart';
 import '../services/profile_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/plan_modal.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/plan_card_view.dart';
 import '../widgets/settings_auth_panel.dart';
-import '../widgets/thermolox_secondary_tabs.dart';
-import '../widgets/thermolox_segmented_tabs.dart';
+import '../widgets/everloxx_secondary_tabs.dart';
+import '../widgets/everloxx_segmented_tabs.dart';
 import '../chat/chat_bot.dart';
 import 'auth_page.dart';
 
@@ -38,7 +38,7 @@ class SettingsPage extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       initialIndex: initialTabIndex.clamp(0, 2).toInt(),
-      child: ThermoloxScaffold(
+      child: EverloxxScaffold(
         safeArea: true,
         appBar: AppBar(
           centerTitle: true,
@@ -53,7 +53,7 @@ class SettingsPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            const ThermoloxSegmentedTabs(
+            const EverloxxSegmentedTabs(
               labels: ['Profil', 'Tarif', 'Rechtliches'],
               margin: EdgeInsets.zero,
               fill: true,
@@ -142,10 +142,10 @@ class _ProfileTabState extends State<ProfileTab> {
       };
       await _profileService.upsertProfile(UserProfile.fromMap(data));
       if (!mounted) return;
-      ThermoloxOverlay.showSnack(context, 'Gespeichert');
+      EverloxxOverlay.showSnack(context, 'Gespeichert');
     } catch (e) {
       if (!mounted) return;
-      ThermoloxOverlay.showSnack(context, 'Speichern fehlgeschlagen.',
+      EverloxxOverlay.showSnack(context, 'Speichern fehlgeschlagen.',
           isError: true);
     }
   }
@@ -161,10 +161,10 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Future<void> _pickProfileImage() async {
-    final picked = await pickThermoloxAttachment(context);
+    final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
     if (!picked.isImage) {
-      ThermoloxOverlay.showSnack(context, 'Bitte ein Foto auswählen.');
+      EverloxxOverlay.showSnack(context, 'Bitte ein Foto auswählen.');
       return;
     }
     setState(() {
@@ -179,11 +179,11 @@ class _ProfileTabState extends State<ProfileTab> {
         _profileImagePath = null;
         _uploadingAvatar = false;
       });
-      ThermoloxOverlay.showSnack(context, 'Profilbild gespeichert.');
+      EverloxxOverlay.showSnack(context, 'Profilbild gespeichert.');
     } catch (e) {
       if (!mounted) return;
       setState(() => _uploadingAvatar = false);
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Profilbild konnte nicht hochgeladen werden.',
         isError: true,
@@ -225,13 +225,13 @@ class _ProfileTabState extends State<ProfileTab> {
 
   Future<void> _logout() async {
     try {
-      ThermoloxChatBot.clearCache();
+      EverloxxChatBot.clearCache();
       await AuthService().signOut();
       if (!mounted) return;
       context.read<PlanController>().load(force: true);
     } catch (_) {
       if (!mounted) return;
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Logout fehlgeschlagen.',
         isError: true,
@@ -240,7 +240,7 @@ class _ProfileTabState extends State<ProfileTab> {
   }
 
   Future<void> _confirmLogout() async {
-    final confirm = await ThermoloxOverlay.confirm(
+    final confirm = await EverloxxOverlay.confirm(
       context: context,
       title: 'Logout',
       message: 'Möchtest Du Dich wirklich ausloggen?',
@@ -254,7 +254,7 @@ class _ProfileTabState extends State<ProfileTab> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final isLoggedIn = context.watch<PlanController>().isLoggedIn;
     final user = Supabase.instance.client.auth.currentUser;
 
@@ -488,7 +488,7 @@ class PlanTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final controller = context.watch<PlanController>();
     final plans = controller.planCards;
     final selectedPlanId = controller.activePlan?.plan.slug;
@@ -554,7 +554,7 @@ class LegalTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     const labels = [
       'Impressum',
       'AGB',
@@ -568,7 +568,7 @@ class LegalTab extends StatelessWidget {
           initialTabIndex.clamp(0, labels.length - 1).toInt(),
       child: Column(
         children: [
-          const ThermoloxSecondaryTabs(
+          const EverloxxSecondaryTabs(
             labels: labels,
             padding: EdgeInsets.zero,
           ),
@@ -615,7 +615,7 @@ class _LegalSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -654,7 +654,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final consent = context.watch<ConsentService>();
     final isLoaded = consent.isLoaded;
     final authService = context.read<AuthService>();
@@ -739,7 +739,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
                       ? (value) async {
                           await consent.setAiAllowed(value);
                           if (!value && context.mounted) {
-                            ThermoloxOverlay.showSnack(
+                            EverloxxOverlay.showSnack(
                               context,
                               'Lokales Chat-Gedächtnis wurde gelöscht.',
                             );
@@ -767,7 +767,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
         SizedBox(height: tokens.gapSm),
         OutlinedButton(
           onPressed: () async {
-            final confirm = await ThermoloxOverlay.confirm(
+            final confirm = await EverloxxOverlay.confirm(
               context: context,
               title: 'Lokale Daten löschen',
               message:
@@ -778,7 +778,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
             if (!confirm) return;
             await LocalDataService.clearAll();
             if (!context.mounted) return;
-            ThermoloxOverlay.showSnack(
+            EverloxxOverlay.showSnack(
               context,
               'Lokale Daten gelöscht.',
             );
@@ -800,7 +800,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
               final message = isAnonymous
                   ? 'Löscht deine in der Cloud gespeicherten Daten. Dieser Schritt kann nicht rückgängig gemacht werden.'
                   : 'Möchtest Du Deinen Account endgültig löschen? Dieser Schritt kann nicht rückgängig gemacht werden.';
-              final confirm = await ThermoloxOverlay.confirm(
+              final confirm = await EverloxxOverlay.confirm(
                 context: context,
                 title: title,
                 message: message,
@@ -810,11 +810,11 @@ class _PrivacySectionState extends State<_PrivacySection> {
               if (!confirm) return;
               setState(() => _isDeleting = true);
               try {
-                ThermoloxChatBot.clearCache();
+                EverloxxChatBot.clearCache();
                 await authService.deleteAccount();
                 if (!context.mounted) return;
                 context.read<PlanController>().load(force: true);
-                ThermoloxOverlay.showSnack(
+                EverloxxOverlay.showSnack(
                   context,
                   isAnonymous
                       ? 'Cloud-Daten gelöscht.'
@@ -823,7 +823,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
               } catch (error) {
                 if (!context.mounted) return;
                 debugPrint('Delete account failed: $error');
-                ThermoloxOverlay.showSnack(
+                EverloxxOverlay.showSnack(
                   context,
                   'Daten konnten nicht gelöscht werden.',
                   isError: true,

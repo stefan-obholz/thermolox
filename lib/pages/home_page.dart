@@ -21,16 +21,16 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  final GlobalKey<ThermoloxShowcaseState> _showcaseKey =
-      GlobalKey<ThermoloxShowcaseState>();
-  final GlobalKey<ThermoloxIconStripState> _iconStripKey =
-      GlobalKey<ThermoloxIconStripState>();
+  final GlobalKey<EverloxxShowcaseState> _showcaseKey =
+      GlobalKey<EverloxxShowcaseState>();
+  final GlobalKey<EverloxxIconStripState> _iconStripKey =
+      GlobalKey<EverloxxIconStripState>();
   bool _hasPlayed = false;
 
   /// Sammelpunkt für alle Home-Abschnitte.
   /// Neue Blöcke können einfach angehängt werden.
   List<Widget> _buildSections(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final tightPadding =
         EdgeInsets.symmetric(horizontal: tokens.screenPaddingSm);
     final textPadding =
@@ -39,7 +39,7 @@ class HomePageState extends State<HomePage> {
     return [
       Padding(
         padding: tightPadding,
-        child: ThermoloxShowcase(
+        child: EverloxxShowcase(
           key: _showcaseKey,
           onCompleted: _playIconStrip,
         ),
@@ -47,14 +47,14 @@ class HomePageState extends State<HomePage> {
       const SizedBox(height: 4), // tighter spacing
       Padding(
         padding: textPadding,
-        child: ThermoloxIconStrip(key: _iconStripKey),
+        child: EverloxxIconStrip(key: _iconStripKey),
       ),
       Padding(
         padding: tightPadding,
-        child: const ThermoloxBeforeAfter(),
+        child: const EverloxxBeforeAfter(),
       ),
       const SizedBox(height: 20),
-      const ThermoloxImpactText(),
+      const EverloxxImpactText(),
       const SizedBox(height: 8),
       Padding(
         padding: textPadding,
@@ -87,16 +87,16 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final sections = _buildSections(context);
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       safeArea: true,
       padding: EdgeInsets.zero,
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          'CLIMALOX',
+          'EVERLOXX',
           style: theme.textTheme.headlineMedium?.copyWith(
             fontSize: 34,
             fontWeight: FontWeight.w800,
@@ -121,16 +121,16 @@ class HomePageState extends State<HomePage> {
   }
 }
 
-class ThermoloxShowcase extends StatefulWidget {
+class EverloxxShowcase extends StatefulWidget {
   final VoidCallback? onCompleted;
 
-  const ThermoloxShowcase({super.key, this.onCompleted});
+  const EverloxxShowcase({super.key, this.onCompleted});
 
   @override
-  ThermoloxShowcaseState createState() => ThermoloxShowcaseState();
+  EverloxxShowcaseState createState() => EverloxxShowcaseState();
 }
 
-class ThermoloxShowcaseState extends State<ThermoloxShowcase>
+class EverloxxShowcaseState extends State<EverloxxShowcase>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
@@ -223,14 +223,14 @@ class ThermoloxShowcaseState extends State<ThermoloxShowcase>
   }
 }
 
-class ThermoloxIconStrip extends StatefulWidget {
-  const ThermoloxIconStrip({super.key});
+class EverloxxIconStrip extends StatefulWidget {
+  const EverloxxIconStrip({super.key});
 
   @override
-  ThermoloxIconStripState createState() => ThermoloxIconStripState();
+  EverloxxIconStripState createState() => EverloxxIconStripState();
 }
 
-class ThermoloxIconStripState extends State<ThermoloxIconStrip>
+class EverloxxIconStripState extends State<EverloxxIconStrip>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
@@ -238,7 +238,7 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
   final ValueNotifier<String> _displayText = ValueNotifier<String>('');
   int _typingIndex = 0;
   static const String _fullText =
-      '„Das CLIMALOX-System ist das Balkonkraftwerk für Wände\n- nur effektiver.”';
+      '„Das EVERLOXX-System ist das Balkonkraftwerk für Wände\n- nur effektiver.”';
 
   @override
   void initState() {
@@ -294,7 +294,7 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
                   SizedBox(
                     width: targetWidth,
                     child: Center(
-                      child: Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                      child: Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -326,14 +326,14 @@ class ThermoloxIconStripState extends State<ThermoloxIconStrip>
   }
 }
 
-class ThermoloxBeforeAfter extends StatefulWidget {
-  const ThermoloxBeforeAfter({super.key});
+class EverloxxBeforeAfter extends StatefulWidget {
+  const EverloxxBeforeAfter({super.key});
 
   @override
-  State<ThermoloxBeforeAfter> createState() => _ThermoloxBeforeAfterState();
+  State<EverloxxBeforeAfter> createState() => _EverloxxBeforeAfterState();
 }
 
-class _ThermoloxBeforeAfterState extends State<ThermoloxBeforeAfter> {
+class _EverloxxBeforeAfterState extends State<EverloxxBeforeAfter> {
   double _value = 50.0;
 
   void _onChanged(double newValue) {
@@ -522,13 +522,13 @@ class _ArrowButton extends StatelessWidget {
   }
 }
 
-class ThermoloxImpactText extends StatelessWidget {
-  const ThermoloxImpactText({super.key});
+class EverloxxImpactText extends StatelessWidget {
+  const EverloxxImpactText({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     const bulletSpacing = SizedBox(height: 10);
     const double bodySize = 15;
 
@@ -562,7 +562,7 @@ class ThermoloxImpactText extends StatelessWidget {
         children: [
           Text(
             'Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des '
-            'CLIMALOX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
+            'EVERLOXX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
             'das mit THERMO-COAT gestrichen und mit THERMO-SEAL abgedichtet wurde.',
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.35,
@@ -598,7 +598,7 @@ class ThermoloxImpactText extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Setze auf das CLIMALOX-System – die nachhaltige, '
+            'Setze auf das EVERLOXX-System – die nachhaltige, '
             'rückbaufreie und günstige Alternative zur klassischen Sanierung.',
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.35,

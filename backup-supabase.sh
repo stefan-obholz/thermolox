@@ -1,5 +1,5 @@
 #!/bin/bash
-# CLIMALOX Supabase Backup - Exports all tables as JSON daily
+# EVERLOXX Supabase Backup - Exports all tables as JSON daily
 set -euo pipefail
 
 BACKUP_DIR="/Users/stefanobholz/Projekte/thermolox/backups/supabase"

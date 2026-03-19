@@ -57,9 +57,9 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
-    return ThermoloxScaffold(
+    return EverloxxScaffold(
       // ➜ AppBar MIT globalem Warenkorb (wie Referenz)
       appBar: AppBar(
         centerTitle: true,

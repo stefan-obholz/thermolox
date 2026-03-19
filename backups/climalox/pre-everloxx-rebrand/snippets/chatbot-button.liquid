@@ -1,0 +1,172 @@
+<style>
+/* CLIMALOX Design Chat Button */
+#chat-toggle-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999999 !important;
+  cursor: pointer;
+  width: 84px;
+  height: 84px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform .3s ease, opacity .3s ease;
+  animation: pulseSoft 2.8s ease-in-out infinite;
+}
+
+/* 🌈 Echt fließender Farbverlauf – Start: Blau */
+#chat-toggle-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    270deg,
+    #F9C2AC,
+    #E8A08E,
+    #D4896F,
+    #F9C2AC,
+    #FFD5C2,
+    #F9C2AC,
+    #E8A08E,
+    #D4896F,
+    #F9C2AC
+  );
+  background-size: 2000% 2000%;
+  animation: gradientFlow 18s linear infinite;
+  filter: blur(0.5px);
+}
+
+/* 🌈 Endloser Flow ohne Richtungswechsel */
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* 💫 Sanftes Pulsieren */
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+/* 🛡️ CLIMALOX Logo */
+#chat-toggle-btn::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  background-image: url('https://cdn.shopify.com/s/files/1/0974/3178/1717/files/CLIMALOX_ICON_0bd2f309-88b4-4e09-956e-804bda1cbd73.png?v=1756381141');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.35));
+  z-index: 2;
+}
+
+/* Hover */
+#chat-toggle-btn:hover { transform: scale(1.08); }
+
+/* 📱 Mobile Anpassung */
+@media (max-width: 768px) {
+  #chat-toggle-btn {
+    width: 70px;
+    height: 70px;
+    bottom: 16px;
+    right: 16px;
+  }
+  #chat-toggle-btn::after { inset: 6px; }
+}
+
+/* 🔒 Wenn Chat aktiv → Button ausblenden */
+body.chat-open #chat-toggle-btn {
+  opacity: 0 !important;
+  transform: scale(0.85);
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+/* 🧠 Overlay + Popup */
+#chatbot-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+#chatbot-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+#chatbot-popup {
+  width: 95%;
+  max-width: 800px;
+  height: 95%;
+  max-height: 800px;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  transform: translateY(30px);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+}
+#chatbot-overlay.active #chatbot-popup {
+  transform: translateY(0);
+}
+</style>
+
+<!-- 💬 Chat Button -->
+<button id="chat-toggle-btn" aria-label="Chat öffnen"></button>
+
+<!-- 💭 Overlay + Chatbot -->
+<div id="chatbot-overlay" aria-hidden="true">
+  <div id="chatbot-popup">
+    {% section 'climalox-chatbot' %}
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  const btn=document.getElementById("chat-toggle-btn");
+  const overlay=document.getElementById("chatbot-overlay");
+
+  function loadAndBootCLIMALOX(){
+    if(window.__climaloxBootedOnce||document.getElementById("chat-window")) return;
+    window.__climaloxBootedOnce=true;
+    const s=document.createElement("script");
+    s.src="{{ 'climalox-chatbot.js' | asset_url }}?v="+Date.now();
+    s.async=true;
+    s.onload=()=>{
+      const evt=new Event("DOMContentLoaded",{bubbles:true,cancelable:true});
+      document.dispatchEvent(evt);
+      console.log("[CLIMALOX] Chatbot initialisiert.");
+    };
+    document.body.appendChild(s);
+  }
+
+  function openChat(){
+    overlay.classList.add("active");
+    document.body.classList.add("chat-open");
+    setTimeout(loadAndBootCLIMALOX,300);
+  }
+  function closeChat(){
+    overlay.classList.remove("active");
+    document.body.classList.remove("chat-open");
+  }
+
+  btn.addEventListener("click",()=>overlay.classList.contains("active")?closeChat():openChat());
+  overlay.addEventListener("click",(e)=>{if(e.target===overlay)closeChat();});
+  document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"&&overlay.classList.contains("active")) closeChat();
+  });
+});
+</script>

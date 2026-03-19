@@ -7,11 +7,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="">
-    <meta name="apple-itunes-app" content="app-id=CLIMALOX_APP_ID">
+    <meta name="apple-itunes-app" content="app-id=EVERLOXX_APP_ID">
     <link rel="canonical" href="{{ canonical_url }}">
 
-    <link rel="icon" type="image/png" href="{{ 'CLIMALOX_ICON_32.png' | asset_url }}">
-    <link rel="apple-touch-icon" href="{{ 'CLIMALOX_ICON.png' | asset_url }}">
+    <link rel="icon" type="image/png" href="{{ 'EVERLOXX_ICON_32.png' | asset_url }}">
+    <link rel="apple-touch-icon" href="{{ 'EVERLOXX_ICON.png' | asset_url }}">
 
     {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
       <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
@@ -259,12 +259,12 @@
     {% endstyle %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
-    {{ 'climalox-icons.css' | asset_url | stylesheet_tag }}
-    {{ 'climalox-animations.css' | asset_url | stylesheet_tag }}
-    {{ 'climalox-header.css' | asset_url | stylesheet_tag }}
+    {{ 'everloxx-icons.css' | asset_url | stylesheet_tag }}
+    {{ 'everloxx-animations.css' | asset_url | stylesheet_tag }}
+    {{ 'everloxx-header.css' | asset_url | stylesheet_tag }}
     <link rel="stylesheet" href="https://thermolox-proxy.stefan-obholz.workers.dev/style.css" crossorigin="anonymous">
-    <script src="{{ 'climalox-icons.js' | asset_url }}" defer="defer"></script>
-    <script src="{{ 'climalox-animations.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'everloxx-icons.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'everloxx-animations.js' | asset_url }}" defer="defer"></script>
     <link rel="stylesheet" href="{{ 'component-cart-items.css' | asset_url }}" media="print" onload="this.media='all'">
 
     {%- if settings.cart_type == 'drawer' -%}

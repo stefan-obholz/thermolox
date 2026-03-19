@@ -24,7 +24,7 @@ class PlanCardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final accent = _planAccentColor(theme, data.id);
     final borderColor = isSelected ? accent : accent.withAlpha(120);
     final shadowColor = borderColor.withAlpha(60);

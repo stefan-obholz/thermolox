@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thermolox/models/project_measurement.dart';
-import 'package:thermolox/utils/measurement_calculator.dart';
+import 'package:everloxx/models/project_measurement.dart';
+import 'package:everloxx/utils/measurement_calculator.dart';
 
 ProjectMeasurement _make({
   double? length,

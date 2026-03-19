@@ -89,7 +89,7 @@ class _RoomPhotoMeasurementPageState extends State<RoomPhotoMeasurementPage> {
   }
 
   Future<void> _addPhoto() async {
-    final pick = await pickThermoloxAttachment(
+    final pick = await pickEverloxxAttachment(
       context,
       allowFiles: false,
     );

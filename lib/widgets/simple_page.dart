@@ -13,7 +13,7 @@ class SimplePage extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
-      child: ThermoloxPagePadding(
+      child: EverloxxPagePadding(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

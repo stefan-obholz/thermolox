@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'memory_state.dart';
 import '../services/consent_service.dart';
-import '../services/thermolox_api.dart';
+import '../services/everloxx_api.dart';
 import 'memory_storage.dart';
 
 class MemoryRepository {
@@ -118,7 +118,7 @@ class MemoryManager {
     final uri = Uri.parse('$base/chat');
 
     final systemPrompt = '''
-Du bist der Memory-Summarizer für den CLIMALOX Chat. Halte Tokens klein.
+Du bist der Memory-Summarizer für den EVERLOXX Chat. Halte Tokens klein.
 Gib ausschließlich JSON im Format:
 {"runningSummary":"...","highlights":[{"id":"...","text":"...","tags":["a"],"score":1.0}]}
 Vorgaben:

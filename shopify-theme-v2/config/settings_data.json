@@ -141,8 +141,8 @@
           "color_scheme": "scheme-3"
         }
       },
-      "thermolox-chatbot": {
-        "type": "thermolox-chatbot",
+      "everloxx-chatbot": {
+        "type": "everloxx-chatbot",
         "settings": {}
       }
     },
@@ -153,9 +153,9 @@
           "background": "#ffffff",
           "background_gradient": "",
           "text": "#2D2926",
-          "button": "#F9C2AC",
+          "button": "#efd2a7",
           "button_label": "#2D2926",
-          "secondary_button_label": "#D4896F",
+          "secondary_button_label": "#efd2a7",
           "shadow": "#2D2926"
         }
       },
@@ -164,9 +164,9 @@
           "background": "#FFF8F5",
           "background_gradient": "",
           "text": "#2D2926",
-          "button": "#F9C2AC",
+          "button": "#efd2a7",
           "button_label": "#2D2926",
-          "secondary_button_label": "#D4896F",
+          "secondary_button_label": "#efd2a7",
           "shadow": "#2D2926"
         }
       },
@@ -175,9 +175,9 @@
           "background": "#2D2926",
           "background_gradient": "",
           "text": "#FFF8F5",
-          "button": "#F9C2AC",
+          "button": "#efd2a7",
           "button_label": "#2D2926",
-          "secondary_button_label": "#F9C2AC",
+          "secondary_button_label": "#efd2a7",
           "shadow": "#2D2926"
         }
       },
@@ -186,15 +186,15 @@
           "background": "#1A1614",
           "background_gradient": "",
           "text": "#FFF8F5",
-          "button": "#F9C2AC",
+          "button": "#efd2a7",
           "button_label": "#1A1614",
-          "secondary_button_label": "#F9C2AC",
+          "secondary_button_label": "#efd2a7",
           "shadow": "#1A1614"
         }
       },
       "scheme-5": {
         "settings": {
-          "background": "#F9C2AC",
+          "background": "#efd2a7",
           "background_gradient": "",
           "text": "#2D2926",
           "button": "#2D2926",

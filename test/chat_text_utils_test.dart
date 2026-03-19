@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thermolox/chat/chat_text_utils.dart';
+import 'package:everloxx/chat/chat_text_utils.dart';
 
 void main() {
   group('normalizeHex', () {

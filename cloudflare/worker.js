@@ -101,7 +101,7 @@ function buildPlatformContext(platform) {
   if (platform === 'web') {
     return (
       'PLATFORM: web\n' +
-      'Du läufst auf der CLIMALOX Design Website. Verfügbare Features:\n' +
+      'Du läufst auf der EVERLOXX Design Website. Verfügbare Features:\n' +
       '- Farbberatung und Empfehlungen (immer mit HEX-Codes)\n' +
       '- Produktempfehlungen mit BUTTONS\n' +
       '- Warenkorb-Aktionen via BUTTONS (der Client verarbeitet add_to_cart Buttons)\n' +
@@ -112,7 +112,7 @@ function buildPlatformContext(platform) {
   }
   return (
     'PLATFORM: app\n' +
-    'Du läufst in der CLIMALOX Design App. Alle Features verfügbar:\n' +
+    'Du läufst in der EVERLOXX Design App. Alle Features verfügbar:\n' +
     'Voice, Skills, Rendering, Projekte, Farb-Scan, Warenkorb.'
   );
 }
@@ -244,38 +244,38 @@ function tokensToCss(t) {
   const ca = t.cards || {};
 
   return `:root {
-  /* ── CLIMALOX Design Tokens (auto-generated from Supabase) ── */
-  --climalox-primary: ${c.primary || '#efbba5'};
-  --climalox-primary-rgb: ${hexToRgb(c.primary || '#efbba5')};
-  --climalox-primary-hover: ${c.primaryHover || '#d4896f'};
-  --climalox-bg: ${c.background || '#ffffff'};
-  --climalox-bg-warm: ${c.backgroundWarm || '#ffffff'};
-  --climalox-fg: ${c.foreground || '#404040'};
-  --climalox-fg-rgb: ${hexToRgb(c.foreground || '#404040')};
-  --climalox-fg-light: ${c.foregroundLight || '#ffffff'};
-  --climalox-dark: ${c.dark || '#000000'};
-  --climalox-accent: ${c.accent || '#efbba5'};
-  --climalox-accent2: ${c.accent2 || '#505050'};
-  --climalox-border: ${c.border || '#e0e0e0'};
-  --climalox-shadow: ${c.shadow || '#404040'};
-  --climalox-footer: ${c.footer || '#000000'};
-  --climalox-header: ${c.header || '#505050'};
-  --climalox-icon-color: ${(t.icons || {}).color || '#505050'};
-  --climalox-font-heading: '${f.heading || 'Times New Roman'}', ${f.headingFallback || 'Georgia, serif'};
-  --climalox-font-body: '${f.body || 'Lato'}', ${f.bodyFallback || 'sans-serif'};
-  --climalox-font-heading-weight: ${f.headingWeight || 700};
-  --climalox-font-body-weight: ${f.bodyWeight || 400};
-  --climalox-font-body-size: 17px;
-  --climalox-btn-radius: ${b.radius || 40}px;
-  --climalox-card-radius: ${ca.radius || 12}px;
-  --climalox-page-width: ${s.page || 1400}px;
+  /* ── EVERLOXX Design Tokens (auto-generated from Supabase) ── */
+  --everloxx-primary: ${c.primary || '#efd2a7'};
+  --everloxx-primary-rgb: ${hexToRgb(c.primary || '#efd2a7')};
+  --everloxx-primary-hover: ${c.primaryHover || '#d4896f'};
+  --everloxx-bg: ${c.background || '#ffffff'};
+  --everloxx-bg-warm: ${c.backgroundWarm || '#ffffff'};
+  --everloxx-fg: ${c.foreground || '#404040'};
+  --everloxx-fg-rgb: ${hexToRgb(c.foreground || '#404040')};
+  --everloxx-fg-light: ${c.foregroundLight || '#ffffff'};
+  --everloxx-dark: ${c.dark || '#000000'};
+  --everloxx-accent: ${c.accent || '#efd2a7'};
+  --everloxx-accent2: ${c.accent2 || '#505050'};
+  --everloxx-border: ${c.border || '#e0e0e0'};
+  --everloxx-shadow: ${c.shadow || '#404040'};
+  --everloxx-footer: ${c.footer || '#000000'};
+  --everloxx-header: ${c.header || '#505050'};
+  --everloxx-icon-color: ${(t.icons || {}).color || '#505050'};
+  --everloxx-font-heading: '${f.heading || 'Times New Roman'}', ${f.headingFallback || 'Georgia, serif'};
+  --everloxx-font-body: '${f.body || 'Lato'}', ${f.bodyFallback || 'sans-serif'};
+  --everloxx-font-heading-weight: ${f.headingWeight || 700};
+  --everloxx-font-body-weight: ${f.bodyWeight || 400};
+  --everloxx-font-body-size: 17px;
+  --everloxx-btn-radius: ${b.radius || 40}px;
+  --everloxx-card-radius: ${ca.radius || 12}px;
+  --everloxx-page-width: ${s.page || 1400}px;
 }
 
 /* ── Override Shopify theme variables ── */
 :root, .color-scheme-1 {
   --color-background: ${hexToRgb(c.background || '#ffffff')};
   --color-foreground: ${hexToRgb(c.foreground || '#404040')};
-  --color-button: ${hexToRgb(c.primary || '#efbba5')};
+  --color-button: ${hexToRgb(c.primary || '#efd2a7')};
   --color-button-text: ${hexToRgb(c.foreground || '#404040')};
   --color-secondary-button-text: ${hexToRgb(c.accent2 || '#505050')};
   --color-link: ${hexToRgb(c.accent2 || '#505050')};
@@ -287,7 +287,7 @@ function tokensToCss(t) {
 .color-scheme-2 {
   --color-background: ${hexToRgb(c.background || '#ffffff')};
   --color-foreground: ${hexToRgb(c.foreground || '#404040')};
-  --color-button: ${hexToRgb(c.primary || '#efbba5')};
+  --color-button: ${hexToRgb(c.primary || '#efd2a7')};
   --color-button-text: ${hexToRgb(c.foreground || '#404040')};
   --color-secondary-button-text: ${hexToRgb(c.accent2 || '#505050')};
   --color-link: ${hexToRgb(c.accent2 || '#505050')};
@@ -296,10 +296,10 @@ function tokensToCss(t) {
   --color-background: ${hexToRgb(c.accent2 || '#505050')};
   --gradient-background: ${c.accent2 || '#505050'};
   --color-foreground: 255,255,255;
-  --color-button: ${hexToRgb(c.primary || '#efbba5')};
+  --color-button: ${hexToRgb(c.primary || '#efd2a7')};
   --color-button-text: ${hexToRgb(c.foreground || '#404040')};
-  --color-secondary-button-text: ${hexToRgb(c.primary || '#efbba5')};
-  --color-link: ${hexToRgb(c.primary || '#efbba5')};
+  --color-secondary-button-text: ${hexToRgb(c.primary || '#efd2a7')};
+  --color-link: ${hexToRgb(c.primary || '#efd2a7')};
   --color-badge-foreground: 255,255,255;
   --color-badge-border: 255,255,255;
 }
@@ -307,14 +307,14 @@ function tokensToCss(t) {
   --color-background: ${hexToRgb(c.dark || '#000000')};
   --gradient-background: ${c.dark || '#000000'};
   --color-foreground: 255,255,255;
-  --color-button: ${hexToRgb(c.primary || '#efbba5')};
+  --color-button: ${hexToRgb(c.primary || '#efd2a7')};
   --color-button-text: ${hexToRgb(c.dark || '#000000')};
-  --color-secondary-button-text: ${hexToRgb(c.primary || '#efbba5')};
-  --color-link: ${hexToRgb(c.primary || '#efbba5')};
+  --color-secondary-button-text: ${hexToRgb(c.primary || '#efd2a7')};
+  --color-link: ${hexToRgb(c.primary || '#efd2a7')};
 }
 .color-scheme-5 {
-  --color-background: ${hexToRgb(c.primary || '#efbba5')};
-  --gradient-background: ${c.primary || '#efbba5'};
+  --color-background: ${hexToRgb(c.primary || '#efd2a7')};
+  --gradient-background: ${c.primary || '#efd2a7'};
   --color-foreground: ${hexToRgb(c.foreground || '#404040')};
   --color-button: ${hexToRgb(c.foreground || '#404040')};
   --color-button-text: 255,255,255;
@@ -350,7 +350,7 @@ h4, .h4 { font-size: 1.5rem !important; }
   h3, .h3 { font-size: 1.6rem !important; }
 }
 
-/* ═══════ CLIMALOX COMPONENT CLASSES ═══════
+/* ═══════ EVERLOXX COMPONENT CLASSES ═══════
    ALL font sizes & spacing in one place. Edit here to change site-wide.
    PREMIUM SPACING: generous whitespace between all sections.
 */
@@ -375,15 +375,15 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* Section headings – large, airy */
 .cx-section-heading {
-  font-family: var(--climalox-font-heading) !important;
+  font-family: var(--everloxx-font-heading) !important;
   font-size: clamp(2.4rem, 5vw, 3.6rem) !important;
-  color: var(--climalox-fg) !important;
+  color: var(--everloxx-fg) !important;
   margin: 0 0 20px !important;
   font-weight: 400 !important;
   letter-spacing: -0.02em;
 }
 .cx-section-sub {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.25rem !important;
   color: #909090 !important;
   max-width: 560px;
@@ -393,11 +393,11 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* Tags / labels */
 .cx-tag {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 0.82rem !important;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: var(--climalox-primary) !important;
+  color: var(--everloxx-primary) !important;
   margin-bottom: 10px;
   font-weight: 600;
 }
@@ -412,14 +412,14 @@ h4, .h4 { font-size: 1.5rem !important; }
   box-shadow: 0 16px 40px rgba(0,0,0,0.1) !important;
 }
 .cx-card-title {
-  font-family: var(--climalox-font-heading) !important;
+  font-family: var(--everloxx-font-heading) !important;
   font-size: 1.5rem !important;
-  color: var(--climalox-fg) !important;
+  color: var(--everloxx-fg) !important;
   margin-bottom: 8px;
   letter-spacing: -0.01em;
 }
 .cx-card-sub {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.05rem !important;
   color: #909090 !important;
   line-height: 1.55;
@@ -428,7 +428,7 @@ h4, .h4 { font-size: 1.5rem !important; }
 /* Steps */
 .cx-step-circle {
   width: 72px; height: 72px; border-radius: 50%;
-  background: var(--climalox-primary);
+  background: var(--everloxx-primary);
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 12px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -438,14 +438,14 @@ h4, .h4 { font-size: 1.5rem !important; }
   box-shadow: 0 8px 24px rgba(239,187,165,0.4);
 }
 .cx-step-title {
-  font-family: var(--climalox-font-heading) !important;
+  font-family: var(--everloxx-font-heading) !important;
   font-size: 1.5rem !important;
-  color: var(--climalox-fg) !important;
+  color: var(--everloxx-fg) !important;
   margin: 0 0 10px !important;
   letter-spacing: -0.01em;
 }
 .cx-step-text {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.1rem !important;
   color: #909090 !important;
   line-height: 1.6;
@@ -453,14 +453,14 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* Stats – large with subtle animation */
 .cx-stat {
-  font-family: var(--climalox-font-heading) !important;
+  font-family: var(--everloxx-font-heading) !important;
   font-size: 4rem !important;
-  color: var(--climalox-primary) !important;
+  color: var(--everloxx-primary) !important;
   font-weight: 400 !important;
   letter-spacing: -0.03em;
 }
 .cx-stat-label {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.05rem !important;
   color: rgba(255,255,255,0.6) !important;
   margin-top: 8px;
@@ -469,14 +469,14 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* USP strip */
 .cx-usp-title {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.1rem !important;
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 6px;
 }
 .cx-usp-sub {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 0.92rem !important;
   color: rgba(255,255,255,0.55);
   line-height: 1.45;
@@ -484,7 +484,7 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* CTA */
 .cx-cta-heading {
-  font-family: var(--climalox-font-heading) !important;
+  font-family: var(--everloxx-font-heading) !important;
   font-size: clamp(2.6rem, 5vw, 4rem) !important;
   color: #fff !important;
   font-weight: 400 !important;
@@ -493,7 +493,7 @@ h4, .h4 { font-size: 1.5rem !important; }
   letter-spacing: -0.02em;
 }
 .cx-cta-sub {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.2rem !important;
   color: rgba(255,255,255,0.55) !important;
   margin: 0 0 44px !important;
@@ -502,11 +502,11 @@ h4, .h4 { font-size: 1.5rem !important; }
 .cx-cta-btn {
   display: inline-block;
   padding: 20px 64px;
-  background: var(--climalox-primary);
-  color: var(--climalox-fg);
+  background: var(--everloxx-primary);
+  color: var(--everloxx-fg);
   text-decoration: none;
-  border-radius: var(--climalox-btn-radius);
-  font-family: var(--climalox-font-body) !important;
+  border-radius: var(--everloxx-btn-radius);
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.15rem !important;
   font-weight: 600;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -519,7 +519,7 @@ h4, .h4 { font-size: 1.5rem !important; }
 
 /* Buttons */
 .cx-btn {
-  font-family: var(--climalox-font-body) !important;
+  font-family: var(--everloxx-font-body) !important;
   font-size: 1.1rem !important;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }

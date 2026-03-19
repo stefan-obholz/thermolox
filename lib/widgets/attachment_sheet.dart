@@ -2,7 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 
 class AttachmentPick {
   final String path;
@@ -16,11 +16,11 @@ class AttachmentPick {
   });
 }
 
-Future<AttachmentPick?> pickThermoloxAttachment(
+Future<AttachmentPick?> pickEverloxxAttachment(
   BuildContext context, {
   bool allowFiles = true,
 }) async {
-  final result = await ThermoloxOverlay.showSheet<String>(
+  final result = await EverloxxOverlay.showSheet<String>(
     context: context,
     useSafeArea: true,
     builder: (dialogCtx) {

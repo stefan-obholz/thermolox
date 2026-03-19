@@ -13,9 +13,9 @@
         "q1": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Was ist das THERMOLOX-System?",
+            "heading": "Was ist das EVERLOXX-System?",
             "icon": "question_mark",
-            "row_content": "<p>Das THERMOLOX-System besteht aus zwei Komponenten: <strong>THERMO-COAT</strong> (eine Hightech-Innenwandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und <strong>THERMO-SEAL</strong> (ein transparentes Dichtband für Fenster- und Türspalten). Zusammen reduzieren sie den Wärmeverlust durch Wände und Zugluft um bis zu 42 % – ohne Umbau, ohne Handwerker.</p>"
+            "row_content": "<p>Das EVERLOXX-System besteht aus zwei Komponenten: <strong>THERMO-COAT</strong> (eine Hightech-Innenwandfarbe mit wärmereflektierenden Mikro-Hohlglaskugeln) und <strong>THERMO-SEAL</strong> (ein transparentes Dichtband für Fenster- und Türspalten). Zusammen reduzieren sie den Wärmeverlust durch Wände und Zugluft um bis zu 42 % – ohne Umbau, ohne Handwerker.</p>"
           }
         },
         "q2": {
@@ -29,7 +29,7 @@
         "q3": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Für welche Gebäude eignet sich THERMOLOX?",
+            "heading": "Für welche Gebäude eignet sich EVERLOXX?",
             "icon": "question_mark",
             "row_content": "<p>Das System ist besonders effektiv bei <strong>Altbauten und unsanierten Gebäuden</strong>, wo die größten Wärmeverluste auftreten. Aber auch in Neubauten bringt es spürbare Verbesserungen. Ideal für Mietwohnungen, da vollständig rückbaufrei – beim Auszug einfach überstreichen.</p>"
           }
@@ -127,7 +127,7 @@
           "settings": {
             "heading": "Wie bestelle ich?",
             "icon": "truck",
-            "row_content": "<p>Du kannst direkt hier im Shop bestellen oder unsere <strong>THERMOLOX App</strong> nutzen. In der App kannst du zusätzlich deinen Raum vermessen, den Verbrauch berechnen und die passende Farbmenge automatisch in den Warenkorb legen. Die Lieferung erfolgt innerhalb von 3-5 Werktagen.</p>"
+            "row_content": "<p>Du kannst direkt hier im Shop bestellen oder unsere <strong>EVERLOXX App</strong> nutzen. In der App kannst du zusätzlich deinen Raum vermessen, den Verbrauch berechnen und die passende Farbmenge automatisch in den Warenkorb legen. Die Lieferung erfolgt innerhalb von 3-5 Werktagen.</p>"
           }
         },
         "b2": {
@@ -135,15 +135,15 @@
           "settings": {
             "heading": "Gibt es eine Geld-zurück-Garantie?",
             "icon": "return",
-            "row_content": "<p>Ja! Wenn du mit der Wirkung nicht zufrieden bist, kannst du das unverbrauchte Produkt innerhalb von <strong>30 Tagen</strong> zurückgeben. Wir erstatten den vollen Kaufpreis. Denn wir sind überzeugt: Wer THERMOLOX ausprobiert, bleibt dabei.</p>"
+            "row_content": "<p>Ja! Wenn du mit der Wirkung nicht zufrieden bist, kannst du das unverbrauchte Produkt innerhalb von <strong>30 Tagen</strong> zurückgeben. Wir erstatten den vollen Kaufpreis. Denn wir sind überzeugt: Wer EVERLOXX ausprobiert, bleibt dabei.</p>"
           }
         },
         "b3": {
           "type": "collapsible_row",
           "settings": {
-            "heading": "Was ist im THERMOLOX Pro-Abo enthalten?",
+            "heading": "Was ist im EVERLOXX Pro-Abo enthalten?",
             "icon": "star",
-            "row_content": "<p>Mit <strong>THERMOLOX Pro</strong> erhältst du Zugang zu allen Premium-Funktionen der App: unbegrenzte Raumvermessungen, KI-gestützte Farbberatung, automatische Verbrauchsberechnung und Projektmanagement für mehrere Räume. Ideal für größere Renovierungsprojekte oder professionelle Anwender.</p>"
+            "row_content": "<p>Mit <strong>EVERLOXX Pro</strong> erhältst du Zugang zu allen Premium-Funktionen der App: unbegrenzte Raumvermessungen, KI-gestützte Farbberatung, automatische Verbrauchsberechnung und Projektmanagement für mehrere Räume. Ideal für größere Renovierungsprojekte oder professionelle Anwender.</p>"
           }
         }
       },

@@ -6,19 +6,19 @@
   margin: 0 0 3rem;
 }
 
-/* ── CLIMALOX: hide product-name overlay on image ── */
+/* ── EVERLOXX: hide product-name overlay on image ── */
 .related-products .card__inner .card__content {
   display: none !important;
 }
 
-/* ── CLIMALOX: larger product name below image ── */
+/* ── EVERLOXX: larger product name below image ── */
 .related-products .card > .card__content .card__heading {
   font-size: calc(var(--font-heading-scale) * 1.4rem);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
-/* ── CLIMALOX: align names + prices across cards ── */
+/* ── EVERLOXX: align names + prices across cards ── */
 .related-products .grid__item {
   display: flex;
 }

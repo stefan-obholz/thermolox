@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:thermolox/utils/safe_json.dart';
+import 'package:everloxx/utils/safe_json.dart';
 
 void main() {
   group('SafeJson.decodeMap', () {

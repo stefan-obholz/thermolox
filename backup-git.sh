@@ -1,5 +1,5 @@
 #!/bin/bash
-# CLIMALOX Git Backup - Commits all changes and pushes to GitHub daily
+# EVERLOXX Git Backup - Commits all changes and pushes to GitHub daily
 set -euo pipefail
 
 cd /Users/stefanobholz/Projekte/thermolox

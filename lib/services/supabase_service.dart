@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseService {
   static const redirectUrl = String.fromEnvironment(
     'SUPABASE_REDIRECT_URL',
-    defaultValue: 'climalox://auth/callback',
+    defaultValue: 'everloxx://auth/callback',
   );
 
   static SupabaseClient get client => Supabase.instance.client;

@@ -28,9 +28,9 @@ import '../services/shopify_service.dart';
 import '../services/consent_service.dart';
 import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
-import '../services/thermolox_api.dart';
+import '../services/everloxx_api.dart';
 import '../utils/plan_modal.dart';
-import '../utils/thermolox_overlay.dart';
+import '../utils/everloxx_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/mask_editor_page.dart';
 import '../widgets/image_preview_page.dart';
@@ -87,25 +87,25 @@ class _SentUpload {
 ///  CHATBOT WIDGET
 /// =======================
 
-class ThermoloxChatBot extends StatefulWidget {
-  const ThermoloxChatBot({super.key});
+class EverloxxChatBot extends StatefulWidget {
+  const EverloxxChatBot({super.key});
 
   static void clearCache() {
-    _ThermoloxChatBotState._cachedMessages = [];
-    _ThermoloxChatBotState._cachedUploads = [];
-    _ThermoloxChatBotState._cachedFallbacks = {};
-    _ThermoloxChatBotState._cachedCurrentProjectId = null;
-    _ThermoloxChatBotState._cachedGreetingRequested = false;
-    _ThermoloxChatBotState._cachedProjectPromptShown = false;
-    _ThermoloxChatBotState._cachedUploadPromptShown = false;
-    _ThermoloxChatBotState._cachedVoiceModeActive = false;
+    _EverloxxChatBotState._cachedMessages = [];
+    _EverloxxChatBotState._cachedUploads = [];
+    _EverloxxChatBotState._cachedFallbacks = {};
+    _EverloxxChatBotState._cachedCurrentProjectId = null;
+    _EverloxxChatBotState._cachedGreetingRequested = false;
+    _EverloxxChatBotState._cachedProjectPromptShown = false;
+    _EverloxxChatBotState._cachedUploadPromptShown = false;
+    _EverloxxChatBotState._cachedVoiceModeActive = false;
   }
 
   @override
-  State<ThermoloxChatBot> createState() => _ThermoloxChatBotState();
+  State<EverloxxChatBot> createState() => _EverloxxChatBotState();
 }
 
-class _ThermoloxChatBotState extends State<ThermoloxChatBot>
+class _EverloxxChatBotState extends State<EverloxxChatBot>
     with TickerProviderStateMixin {
   static List<ChatMessage> _cachedMessages = [];
   static List<_SentUpload> _cachedUploads = [];
@@ -349,7 +349,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     }
     _voiceConsentPromptShown = true;
 
-    final approved = await ThermoloxOverlay.showAppDialog<bool>(
+    final approved = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Spracherkennung'),
@@ -380,7 +380,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   @override
   void initState() {
     super.initState();
-    _memoryManager = MemoryManager.withApiBase(apiBase: kThermoloxApiBase);
+    _memoryManager = MemoryManager.withApiBase(apiBase: kEverloxxApiBase);
     _consentService = context.read<ConsentService>();
     _lastAiAllowed = _consentService.aiAllowed;
     _consentService.addListener(_handleConsentChange);
@@ -399,7 +399,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
       _stopSpeaking();
     });
 
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
     _voiceRingCtrl = AnimationController(
       vsync: this,
       duration: tokens.ringRotationDuration,
@@ -525,13 +525,13 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     final planController = context.read<PlanController>();
     if (planController.isPro) return true;
 
-    final wantsUpgrade = await ThermoloxOverlay.showAppDialog<bool>(
+    final wantsUpgrade = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('CLIMALOX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -594,7 +594,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     final hasPermission = await _audioRecorder.hasPermission();
     if (!hasPermission) {
       _showSnack(
-        'Bitte in iOS Einstellungen > CLIMALOX Mikrofon erlauben.',
+        'Bitte in iOS Einstellungen > EVERLOXX Mikrofon erlauben.',
       );
       return false;
     }
@@ -603,7 +603,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
 
   Future<String?> _transcribeRecording(String path) async {
     try {
-      final uri = Uri.parse('$kThermoloxApiBase/stt');
+      final uri = Uri.parse('$kEverloxxApiBase/stt');
       final request = http.MultipartRequest('POST', uri);
       request.headers.addAll(buildWorkerHeaders());
       request.fields['model'] = 'gpt-4o-mini-transcribe';
@@ -781,7 +781,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   }
 
   Future<void> _showRenderCreditsPaywall() async {
-    final shouldOpen = await ThermoloxOverlay.showAppDialog<bool>(
+    final shouldOpen = await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
@@ -805,7 +805,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     );
 
     if (shouldOpen == true) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Nachkauf ist noch nicht verfügbar.',
       );
@@ -1203,7 +1203,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
     await _stopTtsPlayback();
     final tempDir = await getTemporaryDirectory();
     final path =
-        '${tempDir.path}/thermolox_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        '${tempDir.path}/everloxx_voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     _recordingPath = path;
     _lastInputLevel = 0.0;
     _isStartingRecording = true;
@@ -1412,7 +1412,7 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
 
     try {
       final response = await http.post(
-        Uri.parse('$kThermoloxApiBase/tts'),
+        Uri.parse('$kEverloxxApiBase/tts'),
         headers: buildWorkerHeaders(
           contentType: 'application/json',
           accept: 'audio/mpeg',
@@ -1659,16 +1659,16 @@ class _ThermoloxChatBotState extends State<ThermoloxChatBot>
   ) {
     final contextJson = jsonEncode(_skillContextSnapshot(cart, projectsModel));
     final instructions = '''
-=== CLIMALOX DESIGN – SYSTEM-PROMPT ===
+=== EVERLOXX DESIGN – SYSTEM-PROMPT ===
 
-Du bist CLIMALOX, der digitale Farb- und Projektberater von CLIMALOX.
+Du bist EVERLOXX, der digitale Farb- und Projektberater von EVERLOXX.
 Du begleitest Nutzer ruhig, strukturiert und kompetent durch ihr Wandfarben-Projekt – von der Farbwahl bis zum Kauf.
 Du bist Planungshelfer, kein Verkäufer. Produkte sind das Ergebnis guter Planung.
-Alles außerhalb von Farbgestaltung, Projektplanung, Visualisierung und CLIMALOX-Produkten ist irrelevant.
+Alles außerhalb von Farbgestaltung, Projektplanung, Visualisierung und EVERLOXX-Produkten ist irrelevant.
 
 === BEGRÜSSUNG (nur bei neuer Sitzung) ===
 
-Hallo 👋, ich bin CLIMALOX, Dein persönlicher Farb- und Projektberater.
+Hallo 👋, ich bin EVERLOXX, Dein persönlicher Farb- und Projektberater.
 Ich helfe Dir, die perfekte Wandfarbe zu finden, Deinen Bedarf zu berechnen und Dein Projekt zu planen.
 Was möchtest Du als Nächstes tun? 🎨
 
@@ -1734,7 +1734,7 @@ CTA Render: BUTTONS: {"buttons":[{"label":"Wände einfärben","value":"Bitte fä
 Trigger: "Farbe erkennen", "scannen", "welche Farbe ist das"
 1. Foto anfordern oder vorhandenes verwenden
 2. Dominante Farben extrahieren mit HEX
-3. Passende CLIMALOX-Farben zuordnen
+3. Passende EVERLOXX-Farben zuordnen
 4. Optionen anbieten → EXIT RAMP oder Weiterleitung zu Flow 1/2/3
 
 CTA: BUTTONS: {"buttons":[{"label":"Farbe scannen","value":"Ich möchte eine Farbe aus einem Foto erkennen","variant":"preferred","action":"scan_color"}]}
@@ -1773,7 +1773,7 @@ Nutzer können jederzeit den Flow wechseln. Bestätige kurz, merke dir den Stand
 
 === PRODUKT-SYSTEM ===
 
-CLIMALOX funktioniert ausschließlich als System:
+EVERLOXX funktioniert ausschließlich als System:
 - THERMO-COAT (Wandfarbe) + THERMO-SEAL (Abdichtung)
 - Immer zusammen empfehlen, nie isoliert
 - Erkläre kurz, warum das System zusammengehört
@@ -1996,7 +1996,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           _inputController.text.trim().isNotEmpty ||
           _pendingAttachments.isNotEmpty;
       if (hasDraft) {
-        ThermoloxOverlay.showSnack(
+        EverloxxOverlay.showSnack(
           context,
           'Alles klar. Du kannst jetzt senden.',
         );
@@ -2350,7 +2350,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     final selectionMessage =
         'Ich habe die Farbe $hex ausgewählt. Bitte nutze diese Farbe für mein Projekt.';
     if (projectId == null) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte zuerst ein Projekt anlegen.',
         isError: true,
@@ -2363,12 +2363,12 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             projectId: projectId,
             hex: hex,
           );
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Farbe im Projekt gespeichert.',
       );
     } catch (_) {
-      ThermoloxOverlay.showSnack(
+      EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Farben zu speichern.',
         isError: true,
@@ -2388,7 +2388,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
       barrierLabel: 'farbe',
       barrierColor: Colors.transparent,
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
-        final tokens = dialogContext.thermoloxTokens;
+        final tokens = dialogContext.everloxxTokens;
         return Material(
           color: color,
           child: SafeArea(
@@ -2833,7 +2833,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     };
 
     try {
-      final uri = Uri.parse('$kThermoloxApiBase/chat');
+      final uri = Uri.parse('$kEverloxxApiBase/chat');
 
       final req = http.Request('POST', uri)
         ..headers.addAll(
@@ -3397,11 +3397,11 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   }
 
   /// =======================
-  ///  ANHANG-MENÜ (THERMOLOX STYLE)
+  ///  ANHANG-MENÜ (EVERLOXX STYLE)
   /// =======================
 
   Future<void> _openAttachmentMenu() async {
-    final picked = await pickThermoloxAttachment(context);
+    final picked = await pickEverloxxAttachment(context);
     if (picked != null && mounted) {
       setState(() {
         _pendingAttachments.add(
@@ -3527,7 +3527,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           final dataUrl = 'data:$mime;base64,$rawBase64';
 
           final uploadRes = await http.post(
-            Uri.parse('$kThermoloxApiBase/upload'),
+            Uri.parse('$kEverloxxApiBase/upload'),
             headers: buildWorkerHeaders(contentType: 'application/json'),
             body: jsonEncode({'base64': dataUrl}),
           );
@@ -3658,7 +3658,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     };
 
     try {
-      final uri = Uri.parse('$kThermoloxApiBase/chat');
+      final uri = Uri.parse('$kEverloxxApiBase/chat');
 
       final req = http.Request('POST', uri)
         ..headers.addAll(
@@ -3771,7 +3771,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
   Widget _buildBubble(ChatMessage msg, int messageIndex) {
     final isUser = msg.role == 'user';
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final bubbleMaxWidth = MediaQuery.of(context).size.width * 0.8;
 
     final buttons = msg.buttons ?? const <QuickReplyButton>[];
@@ -3978,7 +3978,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Widget _buildAttachmentPreview() {
     if (_pendingAttachments.isEmpty) return const SizedBox.shrink();
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return Container(
       height: 90,
@@ -4057,7 +4057,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Widget _buildTextInputBar() {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final hasPendingAttachments = _pendingAttachments.isNotEmpty;
     final showMic = !_hasInputText && !hasPendingAttachments;
     final canVoice = !_isSending && !_isTranscribing;
@@ -4084,7 +4084,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
               minLines: 1,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Nachricht an CLIMALOX …',
+                hintText: 'Nachricht an EVERLOXX …',
                 filled: true,
                 fillColor: const Color(0xFFFFFFFF),
                 hintStyle: TextStyle(
@@ -4167,7 +4167,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   Widget _buildVoiceActionButton() {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final isDisabled = _isTranscribing || _isTtsLoading;
     final ringGlow = theme.colorScheme.primary.withValues(
       alpha: _isSpeaking ? 0.85 : 0.65,
@@ -4307,7 +4307,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final double voicePadding = _voiceModeActive
         ? (_voiceBarHeight > 0 ? _voiceBarHeight + 12.0 : 190.0)
         : tokens.screenPadding.toDouble();
@@ -4324,7 +4324,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
           Padding(
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Text(
-              'CLIMALOX',
+              'EVERLOXX',
               style: const TextStyle(fontFamily: 'Times New Roman', 
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -4399,7 +4399,7 @@ class _QuickReplyChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final isPreferred = button.preferred;
 
     final background = isPreferred ? theme.colorScheme.primary : Colors.white;
@@ -4450,7 +4450,7 @@ class _ColorSwatchChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
     final labelColor = theme.colorScheme.onSurface;
 
     return GestureDetector(
@@ -4489,7 +4489,7 @@ class _ColorSwatchChip extends StatelessWidget {
 }
 
 /// =======================
-///  THERMOLOX KREIS-WIDGET (Kamera / Galerie / Datei)
+///  EVERLOXX KREIS-WIDGET (Kamera / Galerie / Datei)
 /// =======================
 
 class _AttachmentActionCircle extends StatefulWidget {
@@ -4516,7 +4516,7 @@ class _AttachmentActionCircleState extends State<_AttachmentActionCircle>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
     _rotationCtrl = AnimationController(
       vsync: this,
       duration: tokens.ringRotationDuration,
@@ -4540,7 +4540,7 @@ class _AttachmentActionCircleState extends State<_AttachmentActionCircle>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -4638,7 +4638,7 @@ class _AttachmentIconButtonState extends State<_AttachmentIconButton>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
 
     _rotationCtrl = AnimationController(
       vsync: this,
@@ -4663,7 +4663,7 @@ class _AttachmentIconButtonState extends State<_AttachmentIconButton>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = context.thermoloxTokens;
+    final tokens = context.everloxxTokens;
 
     return ScaleTransition(
       scale: Tween<double>(
@@ -4760,7 +4760,7 @@ class _ChatBubbleAnimatedState extends State<ChatBubbleAnimated>
   @override
   void initState() {
     super.initState();
-    final tokens = ThermoloxTokens.light;
+    final tokens = EverloxxTokens.light;
     _controller = AnimationController(
       vsync: this,
       duration: tokens.bubbleIntroDuration,

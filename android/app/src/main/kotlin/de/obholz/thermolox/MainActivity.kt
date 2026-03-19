@@ -10,11 +10,11 @@ class MainActivity : FlutterActivity() {
 
         val channel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "thermolox/ar_wall_paint"
+            "everloxx/ar_wall_paint"
         )
 
         flutterEngine.platformViewsController.registry.registerViewFactory(
-            "thermolox/ar_wall_paint",
+            "everloxx/ar_wall_paint",
             ARWallPaintViewFactory(channel)
         )
     }

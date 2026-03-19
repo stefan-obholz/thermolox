@@ -20,7 +20,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       icon: Icons.chat_bubble_outline,
       title: 'Dein persönlicher Berater',
       body:
-          'CLIMALOX begleitet dich Schritt für Schritt durch dein Projekt — '
+          'EVERLOXX begleitet dich Schritt für Schritt durch dein Projekt — '
           'von der Farbauswahl bis zur Bestellung.',
     ),
     _Slide(

@@ -1,0 +1,141 @@
+/* ── EVERLOXX Header ── */
+
+.section-header,
+.header-wrapper {
+  background-color: #ffffff !important;
+  border-bottom: none !important;
+}
+
+.header {
+  display: grid !important;
+  grid-template-columns: 180px 1fr 100px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 6px 0;
+  padding: 14px 3rem !important;
+}
+
+/* Logo */
+.header__heading { grid-column: 1; grid-row: 1; }
+.header__heading-link { color: #404040 !important; }
+.header__heading-logo-wrapper { max-width: 160px; }
+
+/* Search – MUSS die gesamte Mittelspalte füllen */
+.everloxx-header-search {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  display: block !important;
+  padding: 0 30px !important;
+  box-sizing: border-box !important;
+}
+.everloxx-search-form { width: 100% !important; position: relative; }
+.everloxx-search-field { position: relative; width: 100% !important; }
+.everloxx-search-icon {
+  position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: #808080;
+}
+.everloxx-search-icon svg { width: 18px; height: 18px; }
+.everloxx-search-input {
+  display: block !important;
+  width: 100% !important;
+  height: 44px;
+  padding: 0 20px 0 48px;
+  border: 1.5px solid #505050;
+  border-radius: 40px;
+  background: #fff;
+  color: #404040;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.everloxx-search-input::placeholder { color: #aaa; }
+.everloxx-search-input:focus {
+  border-color: #efd2a7;
+  box-shadow: 0 0 0 3px rgba(239,187,165,0.2);
+}
+
+/* Old search: hide completely */
+.header__search, details-modal.header__search { display: none !important; }
+
+/* Predictive search */
+.everloxx-header-search .predictive-search {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Icons */
+.header__icons { grid-column: 3; grid-row: 1; justify-self: end; }
+.header__icon { color: #404040 !important; }
+.header__icon svg, .header__icon .icon { color: #404040 !important; }
+.cart-count-bubble { background-color: #efd2a7 !important; color: #404040 !important; }
+.desktop-localization-wrapper { display: none !important; }
+
+/* Nav */
+header-drawer { display: none !important; }
+.header--has-menu .header-menu-container,
+.header nav, .header .list-menu--inline {
+  grid-column: 1 / -1; grid-row: 2; justify-self: center;
+}
+.list-menu__item--link {
+  color: #505050 !important; font-size: 13px !important;
+  letter-spacing: 1px !important; text-transform: uppercase !important;
+  padding: 8px 18px !important; transition: color 0.2s !important;
+}
+.list-menu__item--link:hover { color: #efd2a7 !important; }
+
+/* Home icon: replace "Home" text with Lucide house SVG */
+/* Matches first nav item OR any link to / or /en */
+.list-menu--inline > .list-menu__item:first-child > .list-menu__item--link {
+  font-size: 0 !important;
+  color: transparent !important;
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  padding: 8px 18px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23505050' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
+}
+.list-menu--inline > .list-menu__item:first-child > .list-menu__item--link:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23efbba5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E");
+}
+
+/* ── Mobile ── */
+@media screen and (max-width: 989px) {
+  .header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 12px 1.5rem !important;
+    gap: 8px 0;
+    position: relative;
+  }
+  .header__heading {
+    grid-column: 1; grid-row: 1; justify-self: center;
+  }
+  .header__heading-logo-wrapper { max-width: 120px; }
+  .everloxx-header-search {
+    grid-column: 1 !important; grid-row: 2 !important;
+    padding: 0 !important;
+  }
+  .header__icons {
+    position: absolute; right: 1.5rem; top: 12px;
+  }
+  .header nav, .header .list-menu--inline {
+    grid-column: 1; grid-row: 3;
+  }
+  header-drawer { display: block !important; }
+}
+
+@media screen and (max-width: 749px) {
+  .header { padding: 10px 1rem !important; }
+  .header__heading-logo-wrapper { max-width: 100px; }
+  .header__icons { right: 1rem; top: 10px; }
+  .everloxx-search-input { height: 40px; font-size: 14px; }
+}
