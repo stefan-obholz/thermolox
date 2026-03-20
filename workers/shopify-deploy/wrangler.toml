@@ -1,0 +1,18 @@
+name = "shopify-deploy"
+main = "src/index.js"
+compatibility_date = "2024-10-01"
+
+# KV namespace for backups
+[[kv_namespaces]]
+binding = "BACKUPS"
+id = "cb757685dc2440d8a04a6cc7c26f481a"
+
+# Environment variables (secrets should be set via `wrangler secret put`)
+# Run: wrangler secret put SHOPIFY_API_TOKEN
+# Run: wrangler secret put ALLOWED_ORIGIN (optional, defaults to *)
+
+[vars]
+SHOPIFY_STORE = "thermolox.myshopify.com"
+SHOPIFY_API_VERSION = "2024-10"
+LIVE_THEME_ID = "185262768469"
+SHOPIFY_API_TOKEN = "REDACTED_USE_WRANGLER_SECRET"
