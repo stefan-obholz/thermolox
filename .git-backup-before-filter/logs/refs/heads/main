@@ -1,0 +1,5 @@
+dc1d7199a7bdc63813e5aef0766174beb082dfa5 335a8c8b13011be154bb24d635b5e991b05a584c Stefan Obholz <stefan.obholz@obholz-solutions.de> 1773789781 +0100	commit: Backup 2026-03-18 00:23:01
+335a8c8b13011be154bb24d635b5e991b05a584c 215a718117dcd5a3b84ffe16fbdda0bbb0e8f2d5 Stefan Obholz <stefan.obholz@obholz-solutions.de> 1773876186 +0100	commit: Backup 2026-03-19 00:23:06
+215a718117dcd5a3b84ffe16fbdda0bbb0e8f2d5 a9c06f50890f0f08458d352229cec95b33532641 Stefan Obholz <stefan.obholz@obholz-solutions.de> 1773962585 +0100	commit: Backup 2026-03-20 00:23:05
+a9c06f50890f0f08458d352229cec95b33532641 c6ceb7632e81b0a658bdd4bc4688b789eaefd899 Stefan Obholz <stefan.obholz@obholz-solutions.de> 1774048989 +0100	commit: Backup 2026-03-21 00:23:09
+c6ceb7632e81b0a658bdd4bc4688b789eaefd899 072ffbc706642cfde1e06e241aab1579048a5514 Stefan Obholz <stefan.obholz@obholz-solutions.de> 1774088649 +0100	commit: Remove Shopify API token from wrangler.toml — use secrets instead

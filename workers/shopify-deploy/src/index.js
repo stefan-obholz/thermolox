@@ -14,10 +14,50 @@ function shopifyBase(env) {
   return `https://${env.SHOPIFY_STORE}/admin/api/${env.SHOPIFY_API_VERSION}`;
 }
 
-/** Standard headers for Shopify API requests. */
-function shopifyHeaders(env) {
+// In-memory token cache (per isolate)
+let _cachedToken = null;
+let _tokenExpiresAt = 0;
+
+/**
+ * Get a valid Shopify access token via OAuth Client Credentials Grant.
+ * Tokens are cached in memory and refreshed when expired.
+ */
+async function getAccessToken(env) {
+  const now = Date.now();
+
+  // Return cached token if still valid (with 5min buffer)
+  if (_cachedToken && _tokenExpiresAt > now + 300_000) {
+    return _cachedToken;
+  }
+
+  // Exchange client credentials for access token
+  const res = await fetch(`https://${env.SHOPIFY_STORE}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: env.SHOPIFY_CLIENT_ID,
+      client_secret: env.SHOPIFY_CLIENT_SECRET,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OAuth token exchange failed (${res.status}): ${text}`);
+  }
+
+  const data = await res.json();
+  _cachedToken = data.access_token;
+  _tokenExpiresAt = now + (data.expires_in || 86399) * 1000;
+
+  return _cachedToken;
+}
+
+/** Standard headers for Shopify API requests (with auto-refreshing token). */
+async function shopifyHeaders(env) {
+  const token = await getAccessToken(env);
   return {
-    'X-Shopify-Access-Token': env.SHOPIFY_API_TOKEN,
+    'X-Shopify-Access-Token': token,
     'Content-Type': 'application/json',
   };
 }
@@ -51,7 +91,7 @@ function sleep(ms) {
  */
 async function fetchAllAssets(env, themeId) {
   const url = `${shopifyBase(env)}/themes/${themeId}/assets.json`;
-  const res = await fetch(url, { headers: shopifyHeaders(env) });
+  const res = await fetch(url, { headers: await shopifyHeaders(env) });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to list assets (${res.status}): ${text}`);
@@ -66,7 +106,7 @@ async function fetchAllAssets(env, themeId) {
  */
 async function fetchAssetContent(env, themeId, key) {
   const url = `${shopifyBase(env)}/themes/${themeId}/assets.json?asset[key]=${encodeURIComponent(key)}`;
-  const res = await fetch(url, { headers: shopifyHeaders(env) });
+  const res = await fetch(url, { headers: await shopifyHeaders(env) });
   if (!res.ok) {
     // Some assets (e.g. binaries served via CDN) may 404 on direct fetch.
     return null;
@@ -197,7 +237,7 @@ async function handlePush(request, env) {
   const themeName = name || `Deploy Preview ${new Date().toISOString().slice(0, 16)}`;
   const createRes = await fetch(`${shopifyBase(env)}/themes.json`, {
     method: 'POST',
-    headers: shopifyHeaders(env),
+    headers: await shopifyHeaders(env),
     body: JSON.stringify({ theme: { name: themeName, role: 'unpublished' } }),
   });
 
@@ -219,7 +259,7 @@ async function handlePush(request, env) {
   for (const [key, value] of Object.entries(files)) {
     const putRes = await fetch(`${shopifyBase(env)}/themes/${newThemeId}/assets.json`, {
       method: 'PUT',
-      headers: shopifyHeaders(env),
+      headers: await shopifyHeaders(env),
       body: JSON.stringify({ asset: { key, value } }),
     });
     results.push({ key, status: putRes.status, ok: putRes.ok });
@@ -277,7 +317,7 @@ async function handlePublish(request, env) {
   // Publish by setting role to "main"
   const res = await fetch(`${shopifyBase(env)}/themes/${theme_id}.json`, {
     method: 'PUT',
-    headers: shopifyHeaders(env),
+    headers: await shopifyHeaders(env),
     body: JSON.stringify({ theme: { id: theme_id, role: 'main' } }),
   });
 
@@ -364,7 +404,7 @@ async function handleSettings(request, env) {
   // 4. PUT the modified version back
   const putRes = await fetch(`${shopifyBase(env)}/themes/${themeId}/assets.json`, {
     method: 'PUT',
-    headers: shopifyHeaders(env),
+    headers: await shopifyHeaders(env),
     body: JSON.stringify({ asset: { key: assetKey, value: modified } }),
   });
 
@@ -396,7 +436,7 @@ async function handleSettings(request, env) {
 async function handleStatus(env) {
   // 1. Fetch all themes
   const res = await fetch(`${shopifyBase(env)}/themes.json`, {
-    headers: shopifyHeaders(env),
+    headers: await shopifyHeaders(env),
   });
 
   if (!res.ok) {
