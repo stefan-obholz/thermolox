@@ -52,3 +52,4 @@ secrets
 android/key.properties
 *.jks
 *.keystore
+node_modules/
