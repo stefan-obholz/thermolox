@@ -12,10 +12,15 @@ import '../models/user_entitlements.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../services/plan_service.dart';
+import '../services/shopify_auth_service.dart';
 
 class PlanController extends ChangeNotifier {
   PlanController(this._planService, this._authService) {
     _authSub = _authService.currentUserStream.listen((_) {
+      load(force: true);
+    });
+    _shopifyAuthSub =
+        ShopifyAuthService.instance.onAuthStateChanged.listen((_) {
       load(force: true);
     });
     load();
@@ -24,6 +29,7 @@ class PlanController extends ChangeNotifier {
   final PlanService _planService;
   final AuthService _authService;
   StreamSubscription? _authSub;
+  StreamSubscription? _shopifyAuthSub;
 
   bool _isLoading = false;
   int _loadGeneration = 0;
@@ -45,7 +51,8 @@ class PlanController extends ChangeNotifier {
   }
 
   bool get isLoggedIn =>
-      _authService.currentUser != null && !_authService.isAnonymous;
+      ShopifyAuthService.instance.isLoggedIn ||
+      (_authService.currentUser != null && !_authService.isAnonymous);
   bool get isEmailVerified => _authService.isEmailVerified;
   String? get currentUserEmail => _authService.currentUser?.email;
   String? get currentUserId => _authService.currentUser?.id;
@@ -178,6 +185,7 @@ class PlanController extends ChangeNotifier {
   @override
   void dispose() {
     _authSub?.cancel();
+    _shopifyAuthSub?.cancel();
     super.dispose();
   }
 

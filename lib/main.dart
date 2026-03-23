@@ -18,6 +18,7 @@ import 'pages/legal_gate_page.dart';
 import 'pages/email_verification_page.dart';
 import 'pages/onboarding_page.dart';
 import 'services/onboarding_service.dart';
+import 'services/shopify_auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +26,11 @@ Future<void> main() async {
     await SupabaseService.initialize();
     await DesignTokenService.load();
     await DeepLinkService.initialize();
+    try {
+      await ShopifyAuthService.instance.initialize();
+    } catch (_) {
+      // If Shopify auth init fails, continue without blocking app start.
+    }
     try {
       await ConsentService.instance.load();
     } catch (_) {
@@ -87,8 +93,11 @@ class EverloxxApp extends StatelessWidget {
         final authService = context.read<AuthService>();
         final legalGate = context.watch<LegalGateService>();
         final user = snapshot.data;
-        final needsVerification =
-            user != null && !authService.isUserVerified(user);
+        // Skip email verification when logged in via Shopify
+        final isShopifyLoggedIn = ShopifyAuthService.instance.isLoggedIn;
+        final needsVerification = !isShopifyLoggedIn &&
+            user != null &&
+            !authService.isUserVerified(user);
         final home = !legalGate.isLoaded
             ? const _GateLoadingPage()
             : !legalGate.isAccepted

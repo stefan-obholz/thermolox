@@ -139,6 +139,361 @@ async function markThemePushed(env, themeId, name) {
 }
 
 // ---------------------------------------------------------------------------
+// PKCE + Auth Helpers
+// ---------------------------------------------------------------------------
+
+/** Generate a random string of the given byte length, hex-encoded. */
+function randomString(bytes = 32) {
+  const buf = new Uint8Array(bytes);
+  crypto.getRandomValues(buf);
+  return Array.from(buf)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Generate a PKCE code verifier (43-128 chars, URL-safe). */
+function generateCodeVerifier() {
+  const buf = new Uint8Array(32);
+  crypto.getRandomValues(buf);
+  return base64UrlEncode(buf);
+}
+
+/** SHA-256 hash, then base64url-encode for code_challenge. */
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return base64UrlEncode(new Uint8Array(digest));
+}
+
+/** Base64url encode (no padding). */
+function base64UrlEncode(bytes) {
+  let str = '';
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Build Shopify Customer Account authorization URL. */
+function shopifyAuthUrl(env) {
+  return `https://shopify.com/authentication/${env.SHOPIFY_SHOP_ID}/oauth/authorize`;
+}
+
+/** Build Shopify Customer Account token endpoint URL. */
+function shopifyTokenUrl(env) {
+  return `https://shopify.com/authentication/${env.SHOPIFY_SHOP_ID}/oauth/token`;
+}
+
+/** Build Shopify Customer Account logout URL. */
+function shopifyLogoutUrl(env) {
+  return `https://shopify.com/authentication/${env.SHOPIFY_SHOP_ID}/oauth/logout`;
+}
+
+/** Worker base URL for redirects. */
+function workerBaseUrl() {
+  return 'https://shopify-deploy.stefan-obholz.workers.dev';
+}
+
+// ---------------------------------------------------------------------------
+// Auth Route Handlers
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /auth/login
+ *
+ * Starts Shopify Customer Account OAuth flow with PKCE.
+ * Generates code_verifier, stores in KV, redirects to Shopify.
+ */
+async function handleAuthLogin(request, env) {
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const state = randomString(16);
+  const nonce = randomString(16);
+
+  // Store code_verifier in KV with 10 min TTL
+  await env.BACKUPS.put(`pkce_${state}`, codeVerifier, {
+    expirationTtl: 600,
+  });
+
+  const params = new URLSearchParams({
+    client_id: env.SHOPIFY_CUSTOMER_CLIENT_ID,
+    scope: 'openid email customer-account-api:full',
+    redirect_uri: `${workerBaseUrl()}/auth/callback`,
+    response_type: 'code',
+    state,
+    nonce,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+  });
+
+  const redirectUrl = `${shopifyAuthUrl(env)}?${params.toString()}`;
+  return Response.redirect(redirectUrl, 302);
+}
+
+/**
+ * GET /auth/callback
+ *
+ * Receives authorization code from Shopify, exchanges for tokens,
+ * then redirects to the Flutter app via deep link.
+ */
+async function handleAuthCallback(request, env) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const error = url.searchParams.get('error');
+
+  if (error) {
+    return Response.redirect(
+      `everloxx://auth/callback?error=${encodeURIComponent(error)}`,
+      302
+    );
+  }
+
+  if (!code || !state) {
+    return jsonResponse({ ok: false, error: 'Missing code or state parameter.' }, 400, env);
+  }
+
+  // Retrieve PKCE verifier from KV
+  const codeVerifier = await env.BACKUPS.get(`pkce_${state}`);
+  if (!codeVerifier) {
+    return jsonResponse(
+      { ok: false, error: 'Invalid or expired state. PKCE verifier not found.' },
+      400,
+      env
+    );
+  }
+
+  // Clean up the PKCE verifier
+  await env.BACKUPS.delete(`pkce_${state}`);
+
+  // Exchange authorization code for tokens
+  const basicAuth = btoa(
+    `${env.SHOPIFY_CUSTOMER_CLIENT_ID}:${env.SHOPIFY_CUSTOMER_CLIENT_SECRET}`
+  );
+
+  const tokenRes = await fetch(shopifyTokenUrl(env), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${basicAuth}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: `${workerBaseUrl()}/auth/callback`,
+      code_verifier: codeVerifier,
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    const text = await tokenRes.text();
+    return jsonResponse(
+      { ok: false, error: `Token exchange failed (${tokenRes.status}): ${text}` },
+      502,
+      env
+    );
+  }
+
+  const tokenData = await tokenRes.json();
+  const { access_token, refresh_token, expires_in, id_token } = tokenData;
+
+  if (!access_token) {
+    return jsonResponse(
+      { ok: false, error: 'No access_token in token response.' },
+      502,
+      env
+    );
+  }
+
+  // Redirect to Flutter app with tokens
+  const callbackParams = new URLSearchParams({
+    access_token,
+    refresh_token: refresh_token || '',
+    expires_in: String(expires_in || 3600),
+  });
+  if (id_token) {
+    callbackParams.set('id_token', id_token);
+  }
+
+  return Response.redirect(`everloxx://auth/callback?${callbackParams.toString()}`, 302);
+}
+
+/**
+ * GET /auth/logout
+ *
+ * Redirects to Shopify logout, then back to the app.
+ */
+async function handleAuthLogout(request, env) {
+  const params = new URLSearchParams({
+    id_token_hint: new URL(request.url).searchParams.get('id_token') || '',
+    post_logout_redirect_uri: 'everloxx://auth/logout',
+  });
+
+  return Response.redirect(`${shopifyLogoutUrl(env)}?${params.toString()}`, 302);
+}
+
+/**
+ * POST /auth/refresh
+ *
+ * Exchanges a refresh token for a new access token.
+ * Body: { refresh_token: "..." }
+ */
+async function handleAuthRefresh(request, env) {
+  const body = await request.json();
+  const { refresh_token } = body;
+
+  if (!refresh_token) {
+    return jsonResponse({ ok: false, error: 'Missing refresh_token.' }, 400, env);
+  }
+
+  const basicAuth = btoa(
+    `${env.SHOPIFY_CUSTOMER_CLIENT_ID}:${env.SHOPIFY_CUSTOMER_CLIENT_SECRET}`
+  );
+
+  const tokenRes = await fetch(shopifyTokenUrl(env), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${basicAuth}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token,
+    }),
+  });
+
+  if (!tokenRes.ok) {
+    const text = await tokenRes.text();
+    return jsonResponse(
+      { ok: false, error: `Token refresh failed (${tokenRes.status}): ${text}` },
+      502,
+      env
+    );
+  }
+
+  const tokenData = await tokenRes.json();
+  return jsonResponse(
+    {
+      ok: true,
+      access_token: tokenData.access_token,
+      refresh_token: tokenData.refresh_token || refresh_token,
+      expires_in: tokenData.expires_in || 3600,
+    },
+    200,
+    env
+  );
+}
+
+/**
+ * POST /auth/customer
+ *
+ * Queries the Shopify Customer Account API for profile + recent orders.
+ * Requires Authorization header with Shopify customer access token.
+ */
+async function handleAuthCustomer(request, env) {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return jsonResponse({ ok: false, error: 'Missing or invalid Authorization header.' }, 401, env);
+  }
+
+  const customerToken = authHeader.replace('Bearer ', '');
+
+  const query = `
+    query {
+      customer {
+        id
+        firstName
+        lastName
+        emailAddress {
+          emailAddress
+        }
+        phoneNumber {
+          phoneNumber
+        }
+        orders(first: 10, sortKey: PROCESSED_AT, reverse: true) {
+          edges {
+            node {
+              id
+              name
+              totalPrice {
+                amount
+                currencyCode
+              }
+              processedAt
+              fulfillments(first: 1) {
+                status
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const apiUrl = `https://shopify.com/${env.SHOPIFY_SHOP_ID}/account/customer/api/2024-10/graphql`;
+
+  const gqlRes = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${customerToken}`,
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!gqlRes.ok) {
+    const text = await gqlRes.text();
+    return jsonResponse(
+      { ok: false, error: `Customer API request failed (${gqlRes.status}): ${text}` },
+      gqlRes.status === 401 ? 401 : 502,
+      env
+    );
+  }
+
+  const gqlData = await gqlRes.json();
+
+  if (gqlData.errors && gqlData.errors.length > 0) {
+    return jsonResponse(
+      { ok: false, error: 'GraphQL errors', details: gqlData.errors },
+      400,
+      env
+    );
+  }
+
+  const customer = gqlData.data?.customer;
+  if (!customer) {
+    return jsonResponse({ ok: false, error: 'No customer data returned.' }, 404, env);
+  }
+
+  // Flatten the response for easier consumption
+  const orders = (customer.orders?.edges || []).map((edge) => {
+    const node = edge.node;
+    return {
+      id: node.id,
+      name: node.name,
+      totalPrice: node.totalPrice,
+      createdAt: node.processedAt,
+      fulfillmentStatus: node.fulfillments?.[0]?.status || null,
+    };
+  });
+
+  return jsonResponse(
+    {
+      ok: true,
+      customer: {
+        id: customer.id,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.emailAddress?.emailAddress || null,
+        phone: customer.phoneNumber?.phoneNumber || null,
+        orders,
+      },
+    },
+    200,
+    env
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Route handlers
 // ---------------------------------------------------------------------------
 
@@ -539,6 +894,23 @@ export default {
         return await handleStatus(env);
       }
 
+      // Auth routes
+      if (method === 'GET' && pathname === '/auth/login') {
+        return await handleAuthLogin(request, env);
+      }
+      if (method === 'GET' && pathname === '/auth/callback') {
+        return await handleAuthCallback(request, env);
+      }
+      if (method === 'GET' && pathname === '/auth/logout') {
+        return await handleAuthLogout(request, env);
+      }
+      if (method === 'POST' && pathname === '/auth/refresh') {
+        return await handleAuthRefresh(request, env);
+      }
+      if (method === 'POST' && pathname === '/auth/customer') {
+        return await handleAuthCustomer(request, env);
+      }
+
       // Fallback
       return jsonResponse(
         {
@@ -550,6 +922,11 @@ export default {
             'POST /publish': 'Publish a previously pushed test theme',
             'POST /settings': 'Apply replacements to settings_data.json',
             'GET /status': 'Current theme status and last backup info',
+            'GET /auth/login': 'Start Shopify Customer Account OAuth flow',
+            'GET /auth/callback': 'OAuth callback (handles token exchange)',
+            'GET /auth/logout': 'Logout from Shopify Customer Account',
+            'POST /auth/refresh': 'Refresh access token',
+            'POST /auth/customer': 'Get customer profile and orders',
           },
         },
         404,

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/cart_model.dart';
+import '../services/shopify_auth_service.dart';
 import '../services/shopify_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/format_price.dart';
@@ -35,7 +36,14 @@ class _CartPageState extends State<CartPage> {
 
     setState(() => _checkoutLoading = true);
     try {
-      final url = await ShopifyService.createCheckoutUrl(lineItems);
+      // Pass Shopify customer access token if logged in
+      final shopifyToken = ShopifyAuthService.instance.isLoggedIn
+          ? ShopifyAuthService.instance.accessToken
+          : null;
+      final url = await ShopifyService.createCheckoutUrl(
+        lineItems,
+        customerAccessToken: shopifyToken,
+      );
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -51,8 +51,11 @@ class ShopifyService {
   }
 
   /// Creates a Shopify Storefront checkout and returns the web URL.
+  /// If [customerAccessToken] is provided, associates the checkout with
+  /// the logged-in Shopify customer account.
   static Future<String> createCheckoutUrl(
-      List<Map<String, dynamic>> lineItems) async {
+      List<Map<String, dynamic>> lineItems,
+      {String? customerAccessToken}) async {
     final mutation = '''
 mutation {
   checkoutCreate(input: {
@@ -97,6 +100,17 @@ mutation {
         data['data']?['checkoutCreate']?['checkout']?['webUrl'] as String?;
     if (webUrl == null) {
       throw Exception('Keine Checkout-URL erhalten.');
+    }
+
+    // If a Shopify customer access token is available, append it so the
+    // checkout page can pre-fill customer details.
+    if (customerAccessToken != null && customerAccessToken.isNotEmpty) {
+      final uri = Uri.parse(webUrl);
+      final updatedUri = uri.replace(queryParameters: {
+        ...uri.queryParameters,
+        'logged_in_customer_id': customerAccessToken,
+      });
+      return updatedUri.toString();
     }
 
     return webUrl;

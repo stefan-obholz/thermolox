@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +13,7 @@ import '../services/auth_service.dart';
 import '../services/consent_service.dart';
 import '../services/local_data_service.dart';
 import '../services/profile_service.dart';
+import '../services/shopify_auth_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/plan_modal.dart';
 import '../utils/everloxx_overlay.dart';
@@ -90,6 +92,7 @@ class _ProfileTabState extends State<ProfileTab> {
   bool _uploadingAvatar = false;
   String? _lastUserId;
   Timer? _saveTimer;
+  StreamSubscription<bool>? _shopifyAuthSub;
   final _profileService = ProfileService();
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
@@ -97,6 +100,11 @@ class _ProfileTabState extends State<ProfileTab> {
   final _houseNumberCtrl = TextEditingController();
   final _zipCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
+
+  // Shopify customer profile data
+  String? _shopifyDisplayName;
+  String? _shopifyEmail;
+  List<Map<String, dynamic>> _shopifyOrders = [];
 
   @override
   void initState() {
@@ -107,11 +115,28 @@ class _ProfileTabState extends State<ProfileTab> {
     _houseNumberCtrl.addListener(_onFieldChanged);
     _zipCtrl.addListener(_onFieldChanged);
     _cityCtrl.addListener(_onFieldChanged);
+    _shopifyAuthSub =
+        ShopifyAuthService.instance.onAuthStateChanged.listen((loggedIn) {
+      if (!mounted) return;
+      if (loggedIn) {
+        _loadShopifyProfile();
+      } else {
+        setState(() {
+          _shopifyDisplayName = null;
+          _shopifyEmail = null;
+          _shopifyOrders = [];
+        });
+      }
+    });
+    if (ShopifyAuthService.instance.isLoggedIn) {
+      _loadShopifyProfile();
+    }
   }
 
   @override
   void dispose() {
     _saveTimer?.cancel();
+    _shopifyAuthSub?.cancel();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _streetCtrl.dispose();
@@ -158,6 +183,28 @@ class _ProfileTabState extends State<ProfileTab> {
     if (userId == null || user == null || userId == _lastUserId) return;
     _lastUserId = userId;
     _loadProfile(user);
+  }
+
+  Future<void> _loadShopifyProfile() async {
+    try {
+      final customer = await ShopifyAuthService.instance.getCustomerProfile();
+      if (!mounted) return;
+      setState(() {
+        _shopifyDisplayName =
+            '${customer['firstName'] ?? ''} ${customer['lastName'] ?? ''}'
+                .trim();
+        _shopifyEmail = customer['emailAddress']?['emailAddress'] as String? ??
+            customer['email'] as String?;
+        final orders = customer['orders']?['edges'] as List<dynamic>?;
+        _shopifyOrders = orders
+                ?.map((e) =>
+                    (e as Map<String, dynamic>)['node'] as Map<String, dynamic>)
+                .toList() ??
+            [];
+      });
+    } catch (e) {
+      if (kDebugMode) debugPrint('ShopifyAuth: profile fetch failed: $e');
+    }
   }
 
   Future<void> _pickProfileImage() async {
@@ -226,6 +273,11 @@ class _ProfileTabState extends State<ProfileTab> {
   Future<void> _logout() async {
     try {
       EverloxxChatBot.clearCache();
+      // Logout from Shopify if logged in
+      if (ShopifyAuthService.instance.isLoggedIn) {
+        await ShopifyAuthService.instance.logout();
+      }
+      // Also sign out from Supabase
       await AuthService().signOut();
       if (!mounted) return;
       context.read<PlanController>().load(force: true);
@@ -257,6 +309,7 @@ class _ProfileTabState extends State<ProfileTab> {
     final tokens = context.everloxxTokens;
     final isLoggedIn = context.watch<PlanController>().isLoggedIn;
     final user = Supabase.instance.client.auth.currentUser;
+    final isShopifyLoggedIn = ShopifyAuthService.instance.isLoggedIn;
 
     if (!isLoggedIn) {
       return SettingsAuthPanel(
@@ -278,6 +331,11 @@ class _ProfileTabState extends State<ProfileTab> {
         : (_profileImageUrl != null && _profileImageUrl!.isNotEmpty)
             ? NetworkImage(_profileImageUrl!)
             : null;
+
+    // Determine display name and email: prefer Shopify profile data
+    final displayName = _shopifyDisplayName ??
+        '${_firstNameCtrl.text} ${_lastNameCtrl.text}'.trim();
+    final displayEmail = _shopifyEmail ?? user?.email ?? '';
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -355,25 +413,75 @@ class _ProfileTabState extends State<ProfileTab> {
             ),
             SizedBox(width: tokens.gapMd),
             Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      onPressed: user != null ? _confirmLogout : null,
-                      style: ElevatedButton.styleFrom(
-                        shape: const StadiumBorder(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (displayName.isNotEmpty)
+                    Text(
+                      displayName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      child: const Text('Logout'),
+                    ),
+                  if (displayEmail.isNotEmpty) ...[
+                    SizedBox(height: tokens.gapXs),
+                    Text(
+                      displayEmail,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.6),
+                      ),
                     ),
                   ],
-                ),
+                  SizedBox(height: tokens.gapSm),
+                  ElevatedButton(
+                    onPressed:
+                        (user != null || isShopifyLoggedIn) ? _confirmLogout : null,
+                    style: ElevatedButton.styleFrom(
+                      shape: const StadiumBorder(),
+                    ),
+                    child: const Text('Logout'),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+        // Shopify order history
+        if (isShopifyLoggedIn && _shopifyOrders.isNotEmpty) ...[
+          SizedBox(height: tokens.gapLg),
+          Text(
+            'Bestellungen',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: tokens.gapSm),
+          ..._shopifyOrders.map((order) {
+            final name = order['name'] as String? ?? '';
+            final processedAt = order['processedAt'] as String? ?? '';
+            final totalPrice = order['totalPrice'] as Map<String, dynamic>?;
+            final amount = totalPrice?['amount'] as String? ?? '';
+            final currency = totalPrice?['currencyCode'] as String? ?? 'EUR';
+            final date = processedAt.length >= 10
+                ? processedAt.substring(0, 10)
+                : processedAt;
+            return Card(
+              margin: EdgeInsets.only(bottom: tokens.gapSm),
+              child: ListTile(
+                title: Text(name),
+                subtitle: Text(date),
+                trailing: Text(
+                  '$amount $currency',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
         SizedBox(height: tokens.gapLg),
         Text(
           'Persönliche Angaben',

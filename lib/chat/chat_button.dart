@@ -127,7 +127,7 @@ class _EverloxxChatButtonState extends State<EverloxxChatButton>
                       ),
                     ),
 
-                    const SizedBox(
+                    SizedBox(
                       width: 60,
                       height: 60,
                       child: Icon(

@@ -53,7 +53,7 @@ class ContentDetailPage extends StatelessWidget {
                       ),
                       child: Text(
                         tag,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           color: AppTheme.peachDark,
                           fontWeight: FontWeight.w600,
@@ -65,7 +65,7 @@ class ContentDetailPage extends StatelessWidget {
               ),
             Text(
               item.title,
-              style: const TextStyle(fontFamily: 'Times New Roman', 
+              style: TextStyle(fontFamily: 'Times New Roman',
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primary,

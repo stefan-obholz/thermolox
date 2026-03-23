@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../controllers/plan_controller.dart';
@@ -48,7 +47,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],

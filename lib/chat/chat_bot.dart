@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../pages/ar_wall_paint_page.dart';
 import '../services/lidar_service.dart';
 import 'package:flutter/rendering.dart';
@@ -531,7 +530,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -4325,7 +4324,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Text(
               'EVERLOXX',
-              style: const TextStyle(fontFamily: 'Times New Roman', 
+              style: TextStyle(fontFamily: 'Times New Roman',
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.primary,

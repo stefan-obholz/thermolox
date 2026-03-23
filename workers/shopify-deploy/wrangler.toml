@@ -15,3 +15,8 @@ SHOPIFY_STORE = "thermolox.myshopify.com"
 SHOPIFY_API_VERSION = "2024-10"
 LIVE_THEME_ID = "185262768469"
 SHOPIFY_CLIENT_ID = "7ccae9ba87df62af941e48603e96b5c2"
+SHOPIFY_CUSTOMER_CLIENT_ID = "781f615f-9909-45e7-bc4a-20e822b1dcb5"
+SHOPIFY_SHOP_ID = "97431781717"
+
+# Secrets (set via `wrangler secret put`):
+#   SHOPIFY_CUSTOMER_CLIENT_SECRET — OAuth client secret for Customer Account API

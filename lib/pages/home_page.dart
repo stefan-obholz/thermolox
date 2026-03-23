@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
 import '../widgets/cart_icon_button.dart';
 import '../theme/app_theme.dart';
 import '../models/content_item.dart';
@@ -294,7 +292,7 @@ class EverloxxIconStripState extends State<EverloxxIconStrip>
                   SizedBox(
                     width: targetWidth,
                     child: Center(
-                      child: Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                      child: Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -665,7 +663,7 @@ class _BlogPreviewSectionState extends State<_BlogPreviewSection> {
               children: [
                 Text(
                   'Blog & Tipps',
-                  style: const TextStyle(fontFamily: 'Times New Roman', 
+                  style: TextStyle(fontFamily: 'Times New Roman',
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.primary,

@@ -144,7 +144,7 @@ class _ArticleCard extends StatelessWidget {
                     ),
                   Text(
                     article.title,
-                    style: const TextStyle(fontFamily: 'Times New Roman', 
+                    style: TextStyle(fontFamily: 'Times New Roman',
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.primary,

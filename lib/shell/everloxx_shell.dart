@@ -1,6 +1,5 @@
 import '../theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../pages/settings_page.dart';
@@ -62,7 +61,7 @@ class _EverloxxShellState extends State<EverloxxShell> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
             const Text('Premium-Feature'),
           ],
@@ -116,7 +115,7 @@ class _EverloxxShellState extends State<EverloxxShell> {
 
   @override
   Widget build(BuildContext context) {
-    const Color footerColor = AppTheme.primary;
+    final Color footerColor = AppTheme.primary;
     const Color iconBaseColor = Colors.white;
     final canAccessProjects =
         context.watch<PlanController>().hasProjectsAccess;
@@ -151,9 +150,9 @@ class _EverloxxShellState extends State<EverloxxShell> {
           // ---------- FOOTER ----------
           Container(
             height: 92,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: footerColor,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(0)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(0)),
             ),
             // nur oben Padding -> vertikal einstellbar
             padding: EdgeInsets.only(top: navTopPadding),

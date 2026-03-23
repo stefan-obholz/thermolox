@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'shopify_auth_service.dart';
+
 class DeepLinkService {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri?>? _subscription;
@@ -53,6 +55,14 @@ class DeepLinkService {
     lastDeepLink = _sanitizeUri(uri);
     lastDeepLinkSource = source;
     lastDeepLinkAt = DateTime.now();
+
+    // Forward Shopify auth deep links to ShopifyAuthService
+    if (ShopifyAuthService.instance.handleUri(uri)) {
+      if (kDebugMode) {
+        debugPrint('DeepLink [$source]: forwarded to ShopifyAuthService');
+      }
+      return;
+    }
 
     if (!_isAuthCallback(uri)) return;
 

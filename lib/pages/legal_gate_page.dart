@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../services/legal_gate_service.dart';
@@ -59,7 +58,7 @@ class _LegalGatePageState extends State<LegalGatePage> {
         ),
         children: [
           Center(
-            child: Text('EVERLOXX', style: const TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
+            child: Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 24, fontWeight: FontWeight.w700, color: AppTheme.primary)),
           ),
           SizedBox(height: tokens.gapMd),
           Text(
