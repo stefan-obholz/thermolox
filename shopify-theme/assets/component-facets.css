@@ -47,7 +47,7 @@
 
 .facet-filters__label {
   display: block;
-  color: rgba(var(--color-foreground), 0.85);
+  color: rgba(var(--color-foreground), 0.95);
   font-size: 1.4rem;
   margin: 0 2rem 0 0;
 }
@@ -179,7 +179,7 @@
 
 .facets__heading {
   display: block;
-  color: rgba(var(--color-foreground), 0.85);
+  color: rgba(var(--color-foreground), 0.95);
   font-size: 1.4rem;
   margin: -1.5rem 2rem 0 0;
 }
@@ -193,7 +193,7 @@
 }
 
 .facets__summary {
-  color: rgba(var(--color-foreground), 0.75);
+  color: rgba(var(--color-foreground), 0.95);
   font-size: 1.4rem;
   padding: 0 1.75rem 0 0;
   margin-bottom: 1.5rem;
@@ -820,7 +820,7 @@ a.active-facets__button.focused .active-facets__button-inner {
 }
 
 .mobile-facets__count {
-  color: rgba(var(--color-foreground), 0.7);
+  color: rgba(var(--color-foreground), 0.9);
   font-size: 1.3rem;
   margin: 0;
   flex-grow: 1;

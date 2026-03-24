@@ -210,6 +210,7 @@ class _ProfileTabState extends State<ProfileTab> {
   Future<void> _pickProfileImage() async {
     final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
+    if (!mounted) return;
     if (!picked.isImage) {
       EverloxxOverlay.showSnack(context, 'Bitte ein Foto auswählen.');
       return;
@@ -300,6 +301,7 @@ class _ProfileTabState extends State<ProfileTab> {
       cancelLabel: 'Abbrechen',
     );
     if (!confirm) return;
+    if (!mounted) return;
     await _logout();
   }
 
@@ -576,6 +578,7 @@ class PlanTab extends StatelessWidget {
       allowDowngrade: planController.canDowngrade,
     );
     if (selected == null) return;
+    if (!context.mounted) return;
 
     if (!planController.isLoggedIn && selected == 'pro') {
       final navigator = Navigator.of(context, rootNavigator: true);

@@ -67,9 +67,11 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
       confirmLabel: 'Speichern',
     );
     if (newName != null) {
+      if (!context.mounted) return;
       try {
         await context.read<ProjectsModel>().renameProject(project.id, newName);
       } catch (_) {
+        if (!context.mounted) return;
         EverloxxOverlay.showSnack(
           context,
           'Bitte anmelden, um Projekte zu speichern.',
@@ -81,6 +83,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   Future<void> _addUpload(BuildContext context, Project project) async {
     final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
+    if (!context.mounted) return;
     try {
       await context.read<ProjectsModel>().addItem(
             projectId: project.id,
@@ -89,6 +92,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             path: picked.path,
           );
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Uploads zu speichern.',
@@ -170,7 +174,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     double? aspectRatio;
     aspectRatio = await _loadItemAspectRatio(beforeItem);
     aspectRatio ??= await _loadItemAspectRatio(afterItem);
-    if (!mounted) return;
+    if (!context.mounted) return;
     await showBeforeAfterDialog(
       context: context,
       before: before,
@@ -235,12 +239,14 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
       initialHex: initialHex,
     );
     if (selectedHex == null) return;
+    if (!context.mounted) return;
     try {
       await context.read<ProjectsModel>().addColorSwatch(
             projectId: project.id,
             hex: selectedHex,
           );
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Farben zu speichern.',
@@ -262,6 +268,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             type: 'note',
           );
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu speichern.',
@@ -279,6 +286,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     try {
       await context.read<ProjectsModel>().renameItem(note.id, trimmed);
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu speichern.',
@@ -293,6 +301,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     try {
       await context.read<ProjectsModel>().deleteItem(note.id);
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Notizen zu löschen.',
@@ -1306,6 +1315,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
         } catch (_) {
           _pendingImageSize = null;
         }
+        if (!mounted) return;
         final maskBytes = await MaskEditorPage.open(
           context: context,
           imageBytes: imageBytes,
@@ -1364,6 +1374,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
         outputBytes = await _resizeToMatch(editedBytes, _pendingImageSize!);
       }
       final path = await _writeTempFile(outputBytes);
+      if (!mounted) return;
       await context.read<ProjectsModel>().addRender(
             projectId: widget.project.id,
             name: 'Render',
@@ -1371,6 +1382,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
           );
 
       _resetPending();
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Render gespeichert.',
@@ -1439,6 +1451,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
     );
 
     if (shouldOpen != true) return;
+    if (!mounted) return;
 
     final planController = context.read<PlanController>();
     if (!planController.isLoggedIn) {
@@ -1476,6 +1489,7 @@ class _VirtualRoomSectionState extends State<_VirtualRoomSection> {
     );
 
     if (shouldOpen == true) {
+      if (!mounted) return;
       await openCreditsPaywall();
     }
   }

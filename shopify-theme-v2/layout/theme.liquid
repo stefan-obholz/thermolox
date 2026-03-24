@@ -7,11 +7,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="">
-    <meta name="apple-itunes-app" content="app-id=EVERLOXX_APP_ID">
+    <meta name="apple-itunes-app" content="app-id=THERMOLOX_APP_ID">
     <link rel="canonical" href="{{ canonical_url }}">
 
-    <link rel="icon" type="image/png" href="{{ 'EVERLOXX_ICON_32.png' | asset_url }}">
-    <link rel="apple-touch-icon" href="{{ 'EVERLOXX_ICON.png' | asset_url }}">
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {%- endif -%}
 
     {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
       <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
@@ -82,23 +83,23 @@
           endif
         %}
 
-        --color-foreground: {{ scheme.settings.foreground.red }},{{ scheme.settings.foreground.green }},{{ scheme.settings.foreground.blue }};
+        --color-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
         --color-background-contrast: {{ background_color_contrast.red }},{{ background_color_contrast.green }},{{ background_color_contrast.blue }};
         --color-shadow: {{ scheme.settings.shadow.red }},{{ scheme.settings.shadow.green }},{{ scheme.settings.shadow.blue }};
-        --color-button: {{ scheme.settings.primary_button_background.red }},{{ scheme.settings.primary_button_background.green }},{{ scheme.settings.primary_button_background.blue }};
-        --color-button-text: {{ scheme.settings.primary_button_text.red }},{{ scheme.settings.primary_button_text.green }},{{ scheme.settings.primary_button_text.blue }};
+        --color-button: {{ scheme.settings.button.red }},{{ scheme.settings.button.green }},{{ scheme.settings.button.blue }};
+        --color-button-text: {{ scheme.settings.button_label.red }},{{ scheme.settings.button_label.green }},{{ scheme.settings.button_label.blue }};
         --color-secondary-button: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
-        --color-secondary-button-text: {{ scheme.settings.secondary_button_text.red }},{{ scheme.settings.secondary_button_text.green }},{{ scheme.settings.secondary_button_text.blue }};
-        --color-link: {{ scheme.settings.secondary_button_text.red }},{{ scheme.settings.secondary_button_text.green }},{{ scheme.settings.secondary_button_text.blue }};
-        --color-badge-foreground: {{ scheme.settings.foreground.red }},{{ scheme.settings.foreground.green }},{{ scheme.settings.foreground.blue }};
+        --color-secondary-button-text: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
+        --color-link: {{ scheme.settings.secondary_button_label.red }},{{ scheme.settings.secondary_button_label.green }},{{ scheme.settings.secondary_button_label.blue }};
+        --color-badge-foreground: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
         --color-badge-background: {{ scheme.settings.background.red }},{{ scheme.settings.background.green }},{{ scheme.settings.background.blue }};
-        --color-badge-border: {{ scheme.settings.foreground.red }},{{ scheme.settings.foreground.green }},{{ scheme.settings.foreground.blue }};
+        --color-badge-border: {{ scheme.settings.text.red }},{{ scheme.settings.text.green }},{{ scheme.settings.text.blue }};
         --payment-terms-background-color: rgb({{ scheme.settings.background.rgb }});
       }
       {% endfor %}
 
       {{ scheme_classes | prepend: 'body' }} {
-        color: rgba(var(--color-foreground), 0.75);
+        color: rgba(var(--color-foreground), 0.95);
         background-color: rgb(var(--color-background));
       }
 
@@ -244,8 +245,8 @@
         min-height: 100%;
         margin: 0;
         font-size: 1.5rem;
-        letter-spacing: 0.06rem;
-        line-height: calc(1 + 0.8 / var(--font-body-scale));
+        letter-spacing: 0.01em;
+        line-height: 1.7;
         font-family: var(--font-body-family);
         font-style: var(--font-body-style);
         font-weight: var(--font-body-weight);
@@ -259,12 +260,6 @@
     {% endstyle %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
-    {{ 'everloxx-icons.css' | asset_url | stylesheet_tag }}
-    {{ 'everloxx-animations.css' | asset_url | stylesheet_tag }}
-    {{ 'everloxx-header.css' | asset_url | stylesheet_tag }}
-    <link rel="stylesheet" href="https://thermolox-proxy.stefan-obholz.workers.dev/style.css" crossorigin="anonymous">
-    <script src="{{ 'everloxx-icons.js' | asset_url }}" defer="defer"></script>
-    <script src="{{ 'everloxx-animations.js' | asset_url }}" defer="defer"></script>
     <link rel="stylesheet" href="{{ 'component-cart-items.css' | asset_url }}" media="print" onload="this.media='all'">
 
     {%- if settings.cart_type == 'drawer' -%}

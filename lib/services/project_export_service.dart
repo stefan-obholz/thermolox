@@ -279,9 +279,11 @@ class ProjectExportService {
         .replaceAll(RegExp(r'\s+'), '_');
     final file = File('${dir.path}/EVERLOXX_$name.pdf');
     await file.writeAsBytes(bytes);
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: 'EVERLOXX Projekt: ${(project.title ?? project.name).trim()}',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        subject: 'EVERLOXX Projekt: ${(project.title ?? project.name).trim()}',
+      ),
     );
   }
 

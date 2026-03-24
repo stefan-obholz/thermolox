@@ -371,6 +371,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
 
     if (approved == true) {
       await consent.setAiAllowed(true);
+      if (!mounted) return false;
       return true;
     }
     return false;
@@ -515,8 +516,10 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
     if (_isSending || _isTranscribing) return;
     final chatOk = await _ensureChatAccess();
     if (!chatOk) return;
+    if (!mounted) return;
     final consentOk = await _ensureVoiceConsent();
     if (!consentOk) return;
+    if (!mounted) return;
     _enterVoiceMode();
   }
 
@@ -804,6 +807,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
     );
 
     if (shouldOpen == true) {
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Nachkauf ist noch nicht verfügbar.',
@@ -871,6 +875,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
     }
 
     // Ensure project exists
+    if (!mounted) return;
     final projectsModel = context.read<ProjectsModel>();
     var projectId = _currentProjectId ?? _cachedCurrentProjectId;
     if (projectId == null || projectId.isEmpty) {
@@ -1017,6 +1022,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
         _pendingRenderImageSize = null;
       }
       _addAssistantMessage('Markiere bitte jetzt die Wände im Foto.');
+      if (!mounted) return;
       final maskBytes = await MaskEditorPage.open(
         context: context,
         imageBytes: imageBytes,
@@ -1088,6 +1094,7 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
             await _resizeToMatch(editedBytes, _pendingRenderImageSize!);
       }
       final path = await _writeTempFile(outputBytes);
+      if (!mounted) return;
       await context.read<ProjectsModel>().addRender(
             projectId: _currentProjectId!,
             name: 'Render',
@@ -1188,14 +1195,17 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
         await _cancelRecorderSafely();
       }
     } catch (_) {}
+    if (!mounted) return;
     final planController = context.read<PlanController>();
     final hasVoiceAccess = planController.isPro || planController.canDowngrade;
     if (!hasVoiceAccess) {
       final allowed = await _showPremiumGate(featureName: 'Spracheingabe');
       if (!allowed) return;
     }
+    if (!mounted) return;
     final consentOk = await _ensureVoiceConsent();
     if (!consentOk) return;
+    if (!mounted) return;
     final ready = await _ensureRecordingReady();
     if (!ready) return;
 
@@ -2362,11 +2372,13 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
             projectId: projectId,
             hex: hex,
           );
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Farbe im Projekt gespeichert.',
       );
     } catch (_) {
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Farben zu speichern.',
@@ -3423,6 +3435,7 @@ Nutze die Fakten für Konsistenz, erfinde nichts hinzu. Wenn keine Relevanz, ign
     if (!await _ensureChatAccess()) return;
     if (!_ensureAiConsent()) return;
     await _stopTtsPlayback();
+    if (!mounted) return;
 
     // Always dismiss keyboard after sending
     FocusScope.of(context).unfocus();

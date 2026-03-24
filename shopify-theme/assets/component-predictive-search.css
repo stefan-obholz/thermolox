@@ -94,7 +94,7 @@ predictive-search[loading] .predictive-search {
   border-bottom: 0.1rem solid rgba(var(--color-foreground), 0.08);
   margin: 0 2rem;
   padding: 1.5rem 0 0.75rem;
-  color: rgba(var(--color-foreground), 0.7);
+  color: rgba(var(--color-foreground), 0.9);
 }
 
 predictive-search .spinner {
@@ -178,7 +178,7 @@ predictive-search[loading] .predictive-search__results-groups-wrapper ~ .predict
 }
 
 .predictive-search__item-query-result mark {
-  color: rgba(var(--color-foreground), 0.75);
+  color: rgba(var(--color-foreground), 0.95);
 }
 
 .predictive-search__item-query-result mark {
@@ -186,7 +186,7 @@ predictive-search[loading] .predictive-search__results-groups-wrapper ~ .predict
 }
 
 .predictive-search__item .price {
-  color: rgba(var(--color-foreground), 0.7);
+  color: rgba(var(--color-foreground), 0.9);
   font-size: 1.2rem;
 }
 

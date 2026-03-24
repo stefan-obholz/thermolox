@@ -80,11 +80,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     setState(() => _isLoading = true);
     try {
       await auth.resendSignupEmail(email: email);
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'E-Mail wurde erneut versendet.',
       );
     } catch (e) {
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'E-Mail konnte nicht versendet werden.',
@@ -100,11 +102,13 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     setState(() => _isLoading = true);
     try {
       await auth.refreshSession();
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Status aktualisiert.',
       );
     } catch (e) {
+      if (!mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Aktualisierung fehlgeschlagen.',

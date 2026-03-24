@@ -102,6 +102,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
   Future<void> _createProject(BuildContext context) async {
     final allowed = await _ensureProjectAccess(context);
     if (!allowed) return;
+    if (!context.mounted) return;
     final name = await EverloxxOverlay.promptText(
       context: context,
       title: 'Neues Projekt',
@@ -109,6 +110,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
       confirmLabel: 'Anlegen',
     );
     if (name == null) return;
+    if (!context.mounted) return;
 
     final model = context.read<ProjectsModel>();
     if (model.existsName(name)) {
@@ -117,8 +119,10 @@ class _ProjectsPageState extends State<ProjectsPage> {
     }
     try {
       final project = await model.addProject(name);
+      if (!context.mounted) return;
       await _promptFirstUpload(context, project.id);
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Projekte zu speichern.',
@@ -129,6 +133,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
   Future<void> _promptFirstUpload(BuildContext context, String projectId) async {
     final picked = await pickEverloxxAttachment(context);
     if (picked == null) return;
+    if (!context.mounted) return;
     try {
       await context.read<ProjectsModel>().addItem(
             projectId: projectId,
@@ -137,6 +142,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
             path: picked.path,
           );
     } catch (_) {
+      if (!context.mounted) return;
       EverloxxOverlay.showSnack(
         context,
         'Bitte anmelden, um Uploads zu speichern.',
@@ -352,6 +358,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                                     confirmLabel: 'Speichern',
                                   );
                                   if (newName != null) {
+                                    if (!context.mounted) return;
                                     await context
                                         .read<ProjectsModel>()
                                         .renameProject(p.id, newName);
@@ -365,6 +372,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                                     confirmLabel: 'Löschen',
                                   );
                                   if (ok) {
+                                    if (!context.mounted) return;
                                     await context
                                         .read<ProjectsModel>()
                                         .deleteProject(p.id);
