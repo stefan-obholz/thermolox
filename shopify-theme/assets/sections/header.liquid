@@ -74,7 +74,7 @@
 
 {%- style -%}
   .header {
-    padding: 16px 3rem;
+    padding: 8px 3rem 0 3rem;
   }
 
   .section-header {
@@ -84,7 +84,7 @@
 
   @media screen and (min-width: 990px) {
     .header {
-      padding: 16px 5rem;
+      padding: 8px 5rem 0 5rem;
     }
   }
 {%- endstyle -%}
@@ -138,10 +138,11 @@
           <a href="{{ routes.root_url }}" class="header__heading-link link link--text focus-inset">
               <div class="header__heading-logo-wrapper">
                 <img
-                  src="{{ 'EVERLOXX_LOGO_WIDE.png' | asset_url }}"
+                  src="{{ 'EVERLOXX_LOGO.png' | asset_url }}"
                   alt="EVERLOXX"
                   class="header__heading-logo motion-reduce"
-                  style="width: 240px; height: auto;"
+                  width="{{ settings.logo_width }}"
+                  height="auto"
                   loading="eager"
                 >
               </div>

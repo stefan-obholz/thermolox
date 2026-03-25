@@ -2402,17 +2402,29 @@ input[type='checkbox'] {
 
   .header--top-center {
     grid-template-areas:
-      'left-icons heading icons'
+      'heading search icons'
       'navigation navigation navigation';
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 50px auto;
+    column-gap: 2rem;
+    align-items: center;
+    row-gap: 0;
+  }
+
+  .header--top-center .header__heading,
+  .header--top-center h1.header__heading {
+    overflow: visible;
+    z-index: 3;
   }
 
   .header--top-center.drawer-menu {
-    grid-template-areas: 'left-icons heading icons';
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-areas: 'heading search icons';
+    grid-template-columns: auto 1fr auto;
+    column-gap: 2rem;
   }
 
   .header:not(.header--middle-left, .header--middle-center) .header__inline-menu {
-    margin-top: 1.05rem;
+    margin-top: 0;
   }
 }
 
@@ -2592,6 +2604,70 @@ account-icon {
   display: flex;
 }
 
+/* Inline Search Bar */
+.header__search-bar {
+  grid-area: search;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  justify-self: center;
+}
+
+.header__search-bar-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid rgba(var(--color-foreground), 0.2);
+  border-radius: 40px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+  background: rgb(var(--color-background));
+}
+
+.header__search-bar-form:hover,
+.header__search-bar-form:focus-within {
+  border-color: rgba(var(--color-foreground), 0.45);
+}
+
+.header__search-bar-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  padding: 1rem 2rem;
+  font-size: 1.5rem;
+  font-family: var(--font-body-family);
+  color: rgb(var(--color-foreground));
+  height: 4.4rem;
+  -webkit-appearance: none;
+}
+
+.header__search-bar-input::placeholder {
+  color: rgba(var(--color-foreground), 0.45);
+}
+
+.header__search-bar-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.header__search-bar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0 1.4rem;
+  cursor: pointer;
+  color: rgb(var(--color-foreground));
+  height: 4.4rem;
+}
+
+.header__search-bar-btn svg {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
 /* Search */
 menu-drawer + .header__search {
   display: none;
@@ -2607,7 +2683,7 @@ menu-drawer + .header__search {
 }
 
 .header--top-center header-drawer {
-  grid-area: left-icons;
+  grid-area: heading;
 }
 
 .header:not(.header--has-menu) * > .header__search {
@@ -2628,12 +2704,15 @@ menu-drawer + .header__search {
 }
 
 @media screen and (min-width: 990px) {
-  .header:not(.header--top-center) * > .header__search,
-  .header--top-center > .header__search {
+  .header:not(.header--top-center) * > .header__search {
     display: inline-flex;
   }
 
-  .header:not(.header--top-center) > .header__search,
+  .header:not(.header--top-center) > .header__search {
+    display: none;
+  }
+
+  .header--top-center > .header__search,
   .header--top-center * > .header__search {
     display: none;
   }
@@ -2793,13 +2872,17 @@ details[open] > .header__submenu {
 }
 
 .header__menu-item {
-  padding: 1.2rem 1.5rem;
+  padding: 0.6rem 1.5rem;
   text-decoration: none;
   color: rgb(var(--color-foreground));
   font-size: 1.5rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: none;
+}
+
+.header--top-center .header__menu-item {
+  padding: 0.4rem 1.5rem;
 }
 
 .header__menu-item:hover {
@@ -3600,4 +3683,39 @@ details-disclosure > details {
   100% {
     transform: translateX(100%) scaleX(0);
   }
+}
+
+/* ============================================
+   EVERLOXX Header Compact Override
+   ============================================ */
+.header--top-center.header {
+  padding: 16px 3rem !important;
+}
+
+@media screen and (min-width: 990px) {
+  .header--top-center.header {
+    padding: 16px 5rem !important;
+  }
+}
+
+.header--top-center h1,
+.header--top-center .header__heading {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+.header--top-center .header__inline-menu {
+  margin: 0 !important;
+  padding: 6px 0 2px 0 !important;
+}
+
+.header--top-center .header__menu-item {
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+}
+
+.header--top-center .header__search-bar {
+  margin: 0;
+  padding: 0;
 }
