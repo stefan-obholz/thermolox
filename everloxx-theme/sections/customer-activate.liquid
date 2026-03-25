@@ -1,0 +1,37 @@
+<div class="section">
+  <div class="page-width" style="max-width:480px;margin:0 auto;padding:60px 20px;">
+    <h1 style="text-align:center;margin-bottom:8px;">Konto aktivieren</h1>
+    <p style="text-align:center;color:var(--color-text-light);margin-bottom:24px;">Lege ein Passwort fest, um dein Konto zu aktivieren.</p>
+
+    {%- form 'activate_customer_password' -%}
+      {%- if form.errors -%}
+        <div style="background:#fef2f2;border:1px solid #e55;padding:12px 16px;border-radius:8px;margin-bottom:16px;color:#c33;">
+          {{ form.errors | default_errors }}
+        </div>
+      {%- endif -%}
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <label for="ActivatePassword" class="visually-hidden">Passwort</label>
+        <input type="password" id="ActivatePassword" name="customer[password]" autocomplete="new-password" placeholder="Passwort" required
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <label for="ActivatePasswordConfirm" class="visually-hidden">Passwort bestaetigen</label>
+        <input type="password" id="ActivatePasswordConfirm" name="customer[password_confirmation]" autocomplete="new-password" placeholder="Passwort bestaetigen" required
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <button type="submit" class="btn btn--primary" style="width:100%;">Konto aktivieren</button>
+      </div>
+    {%- endform -%}
+
+    <div style="text-align:center;margin-top:16px;">
+      <a href="{{ routes.account_login_url }}" style="color:var(--color-text-light);font-size:0.95rem;">Einladung ablehnen</a>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Konto aktivieren",
+  "settings": []
+}
+{% endschema %}

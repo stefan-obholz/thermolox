@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "everloxx-product",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

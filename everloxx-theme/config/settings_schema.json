@@ -1,0 +1,37 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "EVERLOXX",
+    "theme_version": "1.0.0",
+    "theme_author": "EVERLOXX",
+    "theme_documentation_url": "https://thermolox.de",
+    "theme_support_url": "https://thermolox.de"
+  },
+  {
+    "name": "t:settings_schema.typography.name",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "type_header_font",
+        "default": "playfair_display_n7",
+        "label": "Überschriften"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_body_font",
+        "default": "montserrat_n4",
+        "label": "Fließtext"
+      }
+    ]
+  },
+  {
+    "name": "Favicon",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon"
+      }
+    ]
+  }
+]

@@ -1,0 +1,353 @@
+/* ============================================
+   EVERLOXX Components & Layout
+   ============================================
+   Enthält NUR:
+   - Header-Layout & Suchleiste
+   - cx-* Komponenten (marquee, cards, CTA, slider, stats, tags)
+   - Hero overlay fix
+   - Product card hover
+   - Footer details
+   - Smooth scroll
+
+   Enthält NICHT:
+   - body, h1-h6, p font-size/color (lebt in base.css)
+   - Globale Typography-Overrides
+   ============================================ */
+
+
+/* ═══ HEADER LAYOUT ═══════════════════════════ */
+
+.section-header,
+.header-wrapper {
+  background-color: #ffffff;
+  border-bottom: none;
+}
+
+.header {
+  display: grid !important;
+  grid-template-columns: 180px 1fr 100px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 6px 0;
+  padding: 14px 3rem !important;
+}
+
+.header__heading { grid-column: 1; grid-row: 1; }
+.header__heading-logo-wrapper { max-width: 160px; }
+
+/* Suchleiste */
+.everloxx-header-search {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  padding: 0 30px;
+  box-sizing: border-box;
+}
+.everloxx-search-form { width: 100%; position: relative; }
+.everloxx-search-field { position: relative; width: 100%; }
+.everloxx-search-icon {
+  position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; color: #808080;
+}
+.everloxx-search-icon svg { width: 18px; height: 18px; }
+.everloxx-search-input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 20px 0 48px;
+  border: 1.5px solid #505050;
+  border-radius: 40px;
+  background: #fff;
+  color: #404040;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.everloxx-search-input::placeholder { color: #aaa; }
+.everloxx-search-input:focus {
+  border-color: #efd2a7;
+  box-shadow: 0 0 0 3px rgba(239,187,165,0.2);
+}
+
+/* Old search icon: hide */
+.header__search, details-modal.header__search { display: none !important; }
+
+/* Predictive search dropdown */
+.everloxx-header-search .predictive-search {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100;
+  background: #fff; border: 1px solid #e0e0e0; border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Icons */
+.header__icons { grid-column: 3; grid-row: 1; justify-self: end; }
+.cart-count-bubble { background-color: #efd2a7; color: #404040; }
+.desktop-localization-wrapper { display: none; }
+
+/* Nav */
+header-drawer { display: none; }
+.header--has-menu .header-menu-container,
+.header nav, .header .list-menu--inline {
+  grid-column: 1 / -1; grid-row: 2; justify-self: center;
+}
+.list-menu__item--link {
+  color: #505050; font-size: 13px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 8px 18px; transition: color 0.2s;
+}
+.list-menu__item--link:hover { color: #efd2a7; }
+
+/* Home icon */
+.list-menu--inline > .list-menu__item:first-child > .list-menu__item--link {
+  font-size: 0;
+  color: transparent;
+  overflow: hidden;
+  width: 20px; height: 20px;
+  padding: 8px 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23505050' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
+}
+.list-menu--inline > .list-menu__item:first-child > .list-menu__item--link:hover {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23efbba5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpolyline points='9 22 9 12 15 12 15 22'/%3E%3C/svg%3E");
+}
+
+/* Header spacing */
+.header__inline-menu {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  margin-top: -4px;
+}
+.header {
+  padding-top: 8px !important;
+  padding-bottom: 0 !important;
+}
+.header__heading-link {
+  padding: 4px 0;
+}
+
+
+/* ═══ MOBILE ═════════════════════════════════ */
+
+@media screen and (max-width: 989px) {
+  .header {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 12px 1.5rem !important;
+    gap: 8px 0;
+    position: relative;
+  }
+  .header__heading { grid-column: 1; grid-row: 1; justify-self: center; }
+  .header__heading-logo-wrapper { max-width: 120px; }
+  .everloxx-header-search {
+    grid-column: 1; grid-row: 2;
+    padding: 0;
+  }
+  .header__icons { position: absolute; right: 1.5rem; top: 12px; }
+  .header nav, .header .list-menu--inline { grid-column: 1; grid-row: 3; }
+  header-drawer { display: block; }
+}
+
+@media screen and (max-width: 749px) {
+  .header { padding: 8px 16px !important; }
+  .header__heading-logo-wrapper img { max-height: 40px; }
+  .header__icons { right: 1rem; top: 10px; }
+  .everloxx-search-input { height: 40px; font-size: 14px; }
+}
+
+
+/* ═══ HERO OVERLAY FIX ═══════════════════════ */
+
+.section-hero_banner .color-scheme-1,
+.section-hero_banner .gradient,
+.section-hero_banner > .color-scheme-1.gradient,
+[class*="section-"] > .color-scheme-1.gradient {
+  background: transparent !important;
+}
+
+
+/* ═══ SECTION SPACING ════════════════════════ */
+
+section.section {
+  --section-spacing: clamp(40px, 6vw, 80px);
+}
+.section + .section {
+  margin-top: 0;
+}
+
+
+/* ═══ PRODUCT CARDS ══════════════════════════ */
+
+.card-wrapper {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-wrapper:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+
+
+/* ═══ cx- KOMPONENTEN ════════════════════════ */
+
+.cx-section-heading,
+.ev-proof h2,
+.ev-flow h2 {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+
+.cx-section-sub {
+  color: #555;
+}
+
+.cx-tag, .ev-product-collection {
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #efd2a7;
+  font-weight: 600;
+}
+
+.cx-usp-title, .cx-step-title, .ev-flow-title {
+  font-weight: 600;
+}
+
+.cx-usp-sub, .cx-step-text, .ev-flow-desc {
+  color: #555;
+}
+
+.cx-stat {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-weight: 300;
+  font-size: 2.4rem;
+  color: #2D2926;
+}
+
+
+/* ═══ MARQUEE ════════════════════════════════ */
+
+.cx-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: cx-marquee-scroll 20s linear infinite;
+}
+
+@keyframes cx-marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+
+/* ═══ CTA BANNER ═════════════════════════════ */
+
+.cx-cta-heading {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-weight: 300;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: #fff;
+  margin: 0 0 12px;
+}
+
+.cx-cta-sub {
+  color: rgba(255,255,255,0.7);
+  margin: 0 0 24px;
+}
+
+.cx-cta-btn {
+  display: inline-block;
+  padding: 14px 40px;
+  background: #efd2a7;
+  color: #2D2926;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 40px;
+  transition: all 0.3s;
+}
+.cx-cta-btn:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}
+
+
+/* ═══ CUSTOM CARDS ═══════════════════════════ */
+
+.cx-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cx-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+.cx-card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2D2926;
+}
+.cx-card-sub {
+  color: #888;
+}
+
+
+/* ═══ BEFORE/AFTER SLIDER ════════════════════ */
+
+.cx-ba-slider {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.cx-ba-clip {
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  overflow: hidden;
+}
+.cx-ba-handle {
+  position: absolute;
+  top: 0; left: 50%;
+  width: 4px; height: 100%;
+  background: #fff;
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+
+/* ═══ LINKS ══════════════════════════════════ */
+
+a { color: inherit; }
+
+.title-wrapper-with-link a { color: #efd2a7; }
+.title-wrapper-with-link a:hover { color: #2D2926; }
+
+
+/* ═══ FOOTER ═════════════════════════════════ */
+
+.footer__content-bottom {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 24px;
+  margin-top: 24px;
+}
+.footer .list-payment svg { opacity: 0.7; }
+
+
+/* ═══ DARK SECTIONS ══════════════════════════ */
+
+[class*="scheme-3"], [class*="scheme-4"],
+[class*="scheme-3"] *, [class*="scheme-4"] * {
+  color: #ffffff;
+}
+
+
+/* ═══ SMOOTH SCROLL ══════════════════════════ */
+
+html { scroll-behavior: smooth; }
+* { -webkit-font-smoothing: antialiased; }

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ page_title }}{% unless page_title contains shop.name %} – {{ shop.name }}{% endunless %}</title>
+  {{ content_for_header }}
+  {{ 'everloxx.css' | asset_url | stylesheet_tag }}
+  <style>
+    :root {
+      --color-bg: #ffffff;
+      --color-text: #2D2926;
+      --color-accent: #efd2a7;
+      --color-dark: #1A1614;
+    }
+    .gift-card-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .gift-card-page__logo { max-width: 180px; margin-bottom: 32px; }
+    .gift-card-page__logo img { width: 100%; height: auto; }
+    .gift-card-page__heading { font-size: 1.6rem; font-weight: 300; margin: 0 0 8px; }
+    .gift-card-page__balance { font-size: 2.4rem; font-weight: 700; margin: 16px 0; }
+    .gift-card-page__image { max-width: 400px; width: 100%; border-radius: 16px; margin-bottom: 24px; overflow: hidden; }
+    .gift-card-page__image img { width: 100%; height: auto; display: block; }
+    .gift-card-page__code {
+      font-family: monospace;
+      font-size: 1.3rem;
+      letter-spacing: 0.15em;
+      background: #f5f5f5;
+      padding: 14px 24px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: inline-block;
+      user-select: all;
+    }
+    .gift-card-page__qr { margin-bottom: 24px; }
+    .gift-card-page__qr img { width: 140px; height: 140px; }
+    .gift-card-page__note { color: #888; font-size: 0.9rem; margin-top: 16px; }
+    .gift-card-page__shop-link {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 14px 32px;
+      background: var(--color-dark);
+      color: #fff;
+      border-radius: 40px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .gift-card-page__shop-link:hover { background: var(--color-accent); color: var(--color-dark); }
+  </style>
+</head>
+<body>
+  <div class="gift-card-page">
+    <div class="gift-card-page__logo">
+      <img src="{{ 'EVERLOXX_LOGO_WIDE.png' | asset_url }}" alt="EVERLOXX">
+    </div>
+
+    <h1 class="gift-card-page__heading">Dein EVERLOXX Geschenkgutschein</h1>
+
+    {%- if gift_card.image -%}
+      <div class="gift-card-page__image">
+        <img src="{{ gift_card.image | image_url: width: 800 }}" alt="Geschenkgutschein">
+      </div>
+    {%- endif -%}
+
+    <div class="gift-card-page__balance">{{ gift_card.balance | money }}</div>
+
+    {%- if gift_card.balance != gift_card.initial_value -%}
+      <p style="color:#888;font-size:0.95rem;">Urspruenglicher Wert: {{ gift_card.initial_value | money }}</p>
+    {%- endif -%}
+
+    <div class="gift-card-page__code" id="gc-code">{{ gift_card.code | format_code }}</div>
+
+    {%- if gift_card.pass_url -%}
+      <p><a href="{{ gift_card.pass_url }}" style="color:var(--color-accent);">Zu Apple Wallet hinzufuegen</a></p>
+    {%- endif -%}
+
+    <div class="gift-card-page__qr">
+      <img src="{{ gift_card.qr_code_url }}" alt="QR-Code">
+    </div>
+
+    {%- if gift_card.expired -%}
+      <p style="color:#c33;font-weight:600;">Dieser Gutschein ist abgelaufen.</p>
+    {%- elsif gift_card.enabled == false -%}
+      <p style="color:#c33;font-weight:600;">Dieser Gutschein ist deaktiviert.</p>
+    {%- endif -%}
+
+    <a href="{{ shop.url }}" class="gift-card-page__shop-link">Jetzt einkaufen</a>
+
+    <p class="gift-card-page__note">Gib den Code beim Checkout ein, um den Gutschein einzuloesen.</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "everloxx-404",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

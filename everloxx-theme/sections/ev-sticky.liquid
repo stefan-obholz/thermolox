@@ -1,0 +1,55 @@
+<style>
+.ev-sticky-cta {
+  position: fixed;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  padding: 14px 40px;
+  background: #2D2926;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  white-space: nowrap;
+}
+.ev-sticky-cta.visible {
+  bottom: 28px;
+}
+.ev-sticky-cta:hover {
+  background: #efd2a7;
+  color: #2D2926;
+}
+</style>
+<a href="/collections/wandfarben" class="ev-sticky-cta" id="ev-sticky-cta">Farbtöne entdecken</a>
+<script>
+(function(){
+  var btn = document.getElementById('ev-sticky-cta');
+  var hero = document.querySelector('.ev-hero');
+  var grid = document.querySelector('[class*="product"]');
+  if(!btn || !hero) return;
+  window.addEventListener('scroll', function(){
+    var heroBottom = hero.getBoundingClientRect().bottom;
+    var gridTop = grid ? grid.getBoundingClientRect().top : 99999;
+    if(heroBottom < 0 && gridTop > 200){
+      btn.classList.add('visible');
+    } else {
+      btn.classList.remove('visible');
+    }
+  }, {passive:true});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "EVERLOXX Sticky Bar",
+  "tag": "section",
+  "class": "ev-section",
+  "settings": []
+}
+{% endschema %}

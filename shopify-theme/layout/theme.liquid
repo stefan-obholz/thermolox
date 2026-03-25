@@ -260,6 +260,7 @@
     {% endstyle %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
+    {{ 'everloxx-header.css' | asset_url | stylesheet_tag }}
     <link rel="stylesheet" href="{{ 'component-cart-items.css' | asset_url }}" media="print" onload="this.media='all'">
 
     {%- if settings.cart_type == 'drawer' -%}
@@ -378,6 +379,42 @@
     {%- endif -%}
 
 {% render 'chatbot-button' %}
+
+  <!-- EVERLOXX Scroll Reveal System -->
+  <script>
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('ev-in-view');
+            // Also trigger ev-visible on direct ev-reveal children
+            entry.target.querySelectorAll('.ev-reveal, .ev-reveal-left, .ev-reveal-right, .ev-reveal-scale').forEach(function(el) {
+              el.classList.add('ev-visible');
+            });
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      // Observe all shopify sections
+      document.querySelectorAll('.shopify-section').forEach(function(section) {
+        // Skip header and first visible section
+        if (section.classList.contains('section-header')) return;
+        observer.observe(section);
+      });
+
+      // Also observe individual ev-reveal elements
+      document.querySelectorAll('.ev-reveal, .ev-reveal-left, .ev-reveal-right, .ev-reveal-scale').forEach(function(el) {
+        var obs = new IntersectionObserver(function(entries) {
+          entries.forEach(function(e) {
+            if (e.isIntersecting) {
+              e.target.classList.add('ev-visible');
+            }
+          });
+        }, { threshold: 0.15 });
+        obs.observe(el);
+      });
+    })();
+  </script>
 
   </body>
 </html>

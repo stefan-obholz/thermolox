@@ -1,0 +1,346 @@
+<!-- Verlauf OBEN -->
+<div class="chat-top-fade"></div>
+
+<!-- ❌ Close-Button -->
+<button id="chat-close-btn" aria-label="Chat schließen">✖</button>
+
+<!-- Chatfenster -->
+<div id="chat-window">
+  <!-- Nachrichten erscheinen hier -->
+</div>
+
+<!-- Whisper UI -->
+<div id="recording-indicator" style="display: none; align-items: center; gap: 10px; margin: 0 20px;">
+  <div class="recording-dot"></div>
+  <span style="color: red;">Aufnahme läuft…</span>
+</div>
+<div id="whisper-processing" style="display: none; align-items: center; gap: 10px; margin: 0 20px;">
+  <div class="spinner"></div>
+  <span>Verarbeite Spracheingabe…</span>
+</div>
+
+<!-- Whisper-Leiste -->
+<div id="whisper-bar">
+  <button id="whisper-cancel">✖</button>
+  <div class="waveform" id="whisper-waveform"></div>
+  <div class="duration" id="whisper-duration">0:00</div>
+  <button id="whisper-stop">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </button>
+</div>
+
+<!-- Eingabe + Vorschau -->
+<div id="chat-input-area" style="flex-direction: column; align-items: stretch;">
+
+  <!-- 🔽 Vorschau-Bereich direkt oberhalb des Textfeldes -->
+  <div id="upload-preview" style="
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding: 6px 16px;
+    background: #fafafa;
+    border-radius: 8px;
+    border: 1px solid #eee;">
+    <div style="position: relative; display: inline-block;">
+      <img id="upload-image"
+           src=""
+           style="width: 20px; height: 20px; border-radius: 6px; object-fit: cover;" />
+      <button id="remove-upload"
+        style="
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #fff;
+          border: 1px solid #ddd;
+          border-radius: 50%;
+          width: 26px;
+          height: 26px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: #333;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+          transition: transform 0.15s ease, background 0.2s ease;
+        "
+        onmouseover="this.style.background='#f3f3f3'; this.style.transform='scale(1.1)';"
+        onmouseout="this.style.background='#fff'; this.style.transform='scale(1)';">
+  ✖
+</button>
+    </div>
+  </div>
+
+  <!-- 🧾 Eingabeleiste -->
+  <div style="display: flex; align-items: flex-end; gap: 10px;">
+    <button class="icon-btn" id="upload-btn"><i data-feather="paperclip"></i></button>
+    <textarea id="chat-input" placeholder="Nachricht an EVERLOXX..." rows="1"></textarea>
+    <button class="icon-btn" id="mic-btn"><i data-feather="mic"></i></button>
+    <button id="send-btn"><i data-feather="send"></i></button>
+    <input type="file" id="file-upload" multiple hidden />
+  </div>
+
+</div>
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+
+<!-- Whisper CSS -->
+{{ 'everloxx-whisper-bar.css' | asset_url | stylesheet_tag }}
+
+<!-- STYLES -->
+<style>
+/* ====== Chatfenster ====== */
+#chat-window {
+  background-color: #fff;
+  color: #000;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 30px 20px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  height: calc(100% - var(--input-height, 60px));
+}
+
+/* ====== Close Button oben rechts ====== */
+#chat-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #f2f2f2;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  z-index: 100;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+#chat-close-btn:hover {
+  background: #ddd;
+  transform: scale(1.1);
+}
+
+/* ====== Fade oben ====== */
+.chat-top-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* ====== Chatblasen ====== */
+.chat-bubble {
+  max-width: 80%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  animation: fadeInSlide 0.3s ease;
+  font-size: 16px;
+  position: relative;
+  white-space: pre-wrap;
+}
+.bot-bubble {
+  background-color: #f1f1f1;
+  align-self: flex-start;
+  border-top-left-radius: 0;
+}
+.user-bubble {
+  background-color: #2D2926;
+  color: #FFF8F5;
+  align-self: flex-end;
+  border-top-right-radius: 0;
+}
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ====== Eingabeleiste ====== */
+#chat-input-area {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* 🔹 wichtig: vertikal anordnen (Preview + Input) */
+  align-items: stretch;
+  padding: 10px 16px;
+  gap: 6px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+  box-sizing: border-box;
+}
+
+#chat-input {
+  flex: 1;
+  resize: none;
+  overflow-y: hidden;
+  min-height: 42px;
+  max-height: 200px;
+  line-height: 1.4;
+  padding: 10px 16px;
+  font-size: 16px;
+  border-radius: 20px;
+  border: none;
+  background-color: #f6f6f6;
+  font-family: inherit;
+  outline: none;
+  transition: height 0.15s ease;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #444;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+}
+
+#send-btn {
+  background-color: #2D2926;
+  color: #FFF8F5;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#send-btn:hover {
+  background-color: #1A1614;
+}
+
+#upload-preview img {
+  border-radius: 6px;
+}
+
+/* ====== Typing Indicator ====== */
+.typing-indicator {
+  display: flex;
+  gap: 5px;
+  padding: 14px 18px;
+}
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  background: #bbb;
+  border-radius: 50%;
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ====== EVERLOXX Buttons ====== */
+.everloxx-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 20px 8px 20px;
+  align-self: flex-start;
+}
+.everloxx-btn {
+  background: #FFF8F5;
+  color: #efd2a7;
+  border: 1.5px solid #efd2a7;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.everloxx-btn:hover {
+  background: #efd2a7;
+  color: #2D2926;
+}
+.everloxx-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.everloxx-btn-preferred {
+  background: #2D2926;
+  color: #FFF8F5;
+}
+.everloxx-btn-preferred:hover {
+  background: #1A1614;
+}
+.everloxx-btn-primary {
+  background: #FF6B3D;
+  color: #fff;
+  border-color: #FF6B3D;
+}
+.everloxx-btn-primary:hover {
+  background: #e55a2f;
+}
+
+/* responsive padding */
+@media (min-width: 769px) {
+  #chat-input-area {
+    padding: 8px 16px;
+  }
+}
+</style>
+
+<!-- Cloudflare Turnstile (unsichtbar) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
+<!-- Config -->
+<script>
+  window.__EVERLOXX_CONFIG = {
+    turnstileSiteKey: {{ section.settings.turnstile_site_key | json }}
+  };
+</script>
+
+<!-- Scripts -->
+{{ 'everloxx-chatbot.js' | asset_url | script_tag }}
+{{ 'everloxx-whisper-bar.js' | asset_url | script_tag }}
+
+{% schema %}
+{
+  "name": "EVERLOXX Chatbot",
+  "settings": [
+    {
+      "type": "text",
+      "id": "turnstile_site_key",
+      "label": "Cloudflare Turnstile Site Key",
+      "info": "Der öffentliche Site Key aus dem Cloudflare Turnstile Dashboard"
+    }
+  ]
+}
+{% endschema %}

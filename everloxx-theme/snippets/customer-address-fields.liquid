@@ -1,0 +1,53 @@
+<div style="display:flex;flex-direction:column;gap:12px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label for="Address_FirstName_{{ form.id }}" class="visually-hidden">Vorname</label>
+      <input type="text" id="Address_FirstName_{{ form.id }}" name="address[first_name]" value="{{ form.first_name }}" placeholder="Vorname" autocomplete="given-name"
+        style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+    </div>
+    <div>
+      <label for="Address_LastName_{{ form.id }}" class="visually-hidden">Nachname</label>
+      <input type="text" id="Address_LastName_{{ form.id }}" name="address[last_name]" value="{{ form.last_name }}" placeholder="Nachname" autocomplete="family-name"
+        style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+    </div>
+  </div>
+  <label for="Address_Company_{{ form.id }}" class="visually-hidden">Firma</label>
+  <input type="text" id="Address_Company_{{ form.id }}" name="address[company]" value="{{ form.company }}" placeholder="Firma (optional)" autocomplete="organization"
+    style="padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+  <label for="Address_Address1_{{ form.id }}" class="visually-hidden">Adresse</label>
+  <input type="text" id="Address_Address1_{{ form.id }}" name="address[address1]" value="{{ form.address1 }}" placeholder="Strasse und Hausnummer" autocomplete="address-line1"
+    style="padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+  <label for="Address_Address2_{{ form.id }}" class="visually-hidden">Adresszusatz</label>
+  <input type="text" id="Address_Address2_{{ form.id }}" name="address[address2]" value="{{ form.address2 }}" placeholder="Adresszusatz (optional)" autocomplete="address-line2"
+    style="padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label for="Address_Zip_{{ form.id }}" class="visually-hidden">PLZ</label>
+      <input type="text" id="Address_Zip_{{ form.id }}" name="address[zip]" value="{{ form.zip }}" placeholder="PLZ" autocomplete="postal-code"
+        style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+    </div>
+    <div>
+      <label for="Address_City_{{ form.id }}" class="visually-hidden">Stadt</label>
+      <input type="text" id="Address_City_{{ form.id }}" name="address[city]" value="{{ form.city }}" placeholder="Stadt" autocomplete="address-level2"
+        style="width:100%;padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+    </div>
+  </div>
+
+  <label for="Address_Country_{{ form.id }}" class="visually-hidden">Land</label>
+  <select id="Address_Country_{{ form.id }}" name="address[country]" autocomplete="country-name"
+    style="padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;background:#fff;">
+    {{ all_country_option_tags }}
+  </select>
+
+  <label for="Address_Phone_{{ form.id }}" class="visually-hidden">Telefon</label>
+  <input type="tel" id="Address_Phone_{{ form.id }}" name="address[phone]" value="{{ form.phone }}" placeholder="Telefon (optional)" autocomplete="tel"
+    style="padding:12px 14px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+  <label style="display:flex;align-items:center;gap:8px;font-size:0.95rem;cursor:pointer;">
+    <input type="checkbox" name="address[default]" value="1"{% if form.default %} checked{% endif %}>
+    Als Standardadresse festlegen
+  </label>
+</div>

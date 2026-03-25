@@ -1,0 +1,24 @@
+<style>
+.ev-progress{position:fixed;top:0;left:0;height:3px;background:#efd2a7;z-index:9999;width:0;transition:width 0.1s linear;pointer-events:none;}
+</style>
+<div class="ev-progress" id="ev-progress"></div>
+<script>
+(function(){
+var bar=document.getElementById('ev-progress');
+if(!bar)return;
+window.addEventListener('scroll',function(){
+var h=document.documentElement;
+var pct=(h.scrollTop||document.body.scrollTop)/(h.scrollHeight-h.clientHeight)*100;
+bar.style.width=pct+'%';
+},{passive:true});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "EVERLOXX Progress Bar",
+  "tag": "section",
+  "class": "ev-section",
+  "settings": []
+}
+{% endschema %}

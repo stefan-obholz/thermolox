@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>{{ page_title }}{% unless page_title contains shop.name %} – {{ shop.name }}{% endunless %}</title>
+  {% if page_description %}<meta name="description" content="{{ page_description | escape }}">{% endif %}
+
+  {%- if settings.favicon != blank -%}
+    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+  {%- endif -%}
+
+  {% render 'meta-tags' %}
+
+  {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
+    <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+  {%- endunless -%}
+
+  <style>
+    {{ settings.type_body_font | font_face: font_display: 'swap' }}
+    {{ settings.type_body_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+    {{ settings.type_header_font | font_face: font_display: 'swap' }}
+  </style>
+
+  {{ content_for_header }}
+
+  {{ 'everloxx.css' | asset_url | stylesheet_tag }}
+
+  <style>
+    :root {
+      --font-body: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+      --font-heading: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
+      --font-body-weight: {{ settings.type_body_font.weight }};
+      --font-heading-weight: {{ settings.type_header_font.weight }};
+      --color-bg: #ffffff;
+      --color-text: #2D2926;
+      --color-text-light: #555;
+      --color-accent: #efd2a7;
+      --color-dark: #1A1614;
+      --color-border: rgba(0,0,0,0.08);
+      --page-width: 1400px;
+      --header-height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link visually-hidden" href="#main">Direkt zum Inhalt</a>
+
+  {% section 'header' %}
+
+  <main id="main" role="main">
+    {{ content_for_layout }}
+  </main>
+
+  {% section 'footer' %}
+
+  {% render 'chatbot-button' %}
+
+  <script>
+  /* EVERLOXX Scroll Reveal */
+  document.addEventListener('DOMContentLoaded', function(){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add('revealed');
+          io.unobserve(e.target);
+        }
+      });
+    },{threshold:0.08, rootMargin:'0px 0px -40px 0px'});
+
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+    /* Staggered children */
+    document.querySelectorAll('.reveal-stagger').forEach(function(parent){
+      var children = parent.children;
+      var cio = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(e.isIntersecting){
+            Array.from(children).forEach(function(child, i){
+              setTimeout(function(){ child.classList.add('revealed'); }, i * 120);
+            });
+            cio.unobserve(e.target);
+          }
+        });
+      },{threshold:0.08});
+      cio.observe(parent);
+    });
+
+    /* Counter animation */
+    document.querySelectorAll('[data-count]').forEach(function(el){
+      var cio = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(!e.isIntersecting) return;
+          var target = parseInt(el.dataset.count);
+          var dur = 1800, start = performance.now();
+          requestAnimationFrame(function tick(now){
+            var p = Math.min((now - start) / dur, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            if(p < 1) requestAnimationFrame(tick);
+          });
+          cio.unobserve(el);
+        });
+      },{threshold:0.3});
+      cio.observe(el);
+    });
+  });
+  </script>
+</body>
+</html>

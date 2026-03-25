@@ -1,0 +1,36 @@
+<footer class="footer">
+  <div class="page-width">
+    <div class="footer__grid">
+      <div>
+        <h3>{{ shop.name }}</h3>
+        <p>Premium-Wandfarben mit patentierter Klimatechnologie. Wunderschön, energiesparend, wohngesund.</p>
+      </div>
+      <div>
+        <h3>Shop</h3>
+        {%- for link in linklists.main-menu.links -%}
+          <p><a href="{{ link.url }}">{{ link.title }}</a></p>
+        {%- endfor -%}
+      </div>
+      <div>
+        <h3>Informationen</h3>
+        {%- for link in linklists.footer.links -%}
+          <p><a href="{{ link.url }}">{{ link.title }}</a></p>
+        {%- endfor -%}
+      </div>
+      <div>
+        <h3>Kontakt</h3>
+        <p>{{ shop.email }}</p>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. Alle Rechte vorbehalten.</p>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer",
+  "settings": []
+}
+{% endschema %}

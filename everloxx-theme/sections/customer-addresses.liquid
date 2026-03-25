@@ -1,0 +1,50 @@
+<div class="section">
+  <div class="page-width" style="max-width:640px;margin:0 auto;padding:60px 20px;">
+    <a href="{{ routes.account_url }}" style="color:var(--color-accent);font-size:0.95rem;">&#8592; Zurueck zum Konto</a>
+    <h1 style="margin:16px 0 32px;">Adressen</h1>
+
+    <!-- Neue Adresse -->
+    <details id="ev-new-address" style="margin-bottom:32px;">
+      <summary class="btn btn--outline" style="cursor:pointer;">Neue Adresse hinzufuegen</summary>
+      <div style="margin-top:16px;">
+        {%- form 'customer_address', customer.new_address -%}
+          {% include 'customer-address-fields' %}
+          <button type="submit" class="btn btn--primary" style="margin-top:12px;">Adresse speichern</button>
+        {%- endform -%}
+      </div>
+    </details>
+
+    <!-- Bestehende Adressen -->
+    {%- for address in customer.addresses -%}
+      <div class="card" style="padding:20px;margin-bottom:16px;">
+        <p>{{ address | format_address }}</p>
+        {%- if address == customer.default_address -%}
+          <span class="tag" style="margin-top:8px;display:inline-block;">Standardadresse</span>
+        {%- endif -%}
+        <div style="margin-top:12px;display:flex;gap:12px;">
+          <details>
+            <summary style="cursor:pointer;color:var(--color-accent);font-weight:600;font-size:0.95rem;">Bearbeiten</summary>
+            <div style="margin-top:12px;">
+              {%- form 'customer_address', address -%}
+                {% include 'customer-address-fields' %}
+                <div style="display:flex;gap:12px;margin-top:12px;">
+                  <button type="submit" class="btn btn--primary">Speichern</button>
+                </div>
+              {%- endform -%}
+            </div>
+          </details>
+          {%- unless address == customer.default_address -%}
+            <a href="/account/addresses/{{ address.id }}" data-method="delete" data-confirm="Adresse wirklich loeschen?" style="color:#c33;font-size:0.95rem;">Loeschen</a>
+          {%- endunless -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Kundenadressen",
+  "settings": []
+}
+{% endschema %}

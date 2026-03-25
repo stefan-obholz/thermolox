@@ -1,0 +1,396 @@
+{% comment %} EVERLOXX Collection — v3 {% endcomment %}
+
+<style>
+  /* RESET: Force ALL text in this section to 18px unless explicitly set */
+  .evc *, .evc *::before, .evc *::after {
+    font-size: 18px;
+    line-height: 1.6;
+    box-sizing: border-box;
+  }
+  
+  .evc { --gold: #efd2a7; --dark: #1A1614; --text: #2D2926; --muted: #888; }
+  
+  /* ── HERO: Full-bleed video background with color overlay ── */
+  .evc-hero {
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    margin-left: calc(-50vw + 50%);
+    width: 100vw;
+  }
+  .evc-hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #2D2926 0%, #1A1614 40%, #0a0808 100%);
+  }
+  /* Animated floating color blobs */
+  .evc-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+    animation: evc-float 12s ease-in-out infinite;
+  }
+  .evc-blob-1 { width: 400px; height: 400px; background: #efd2a7; top: -10%; right: -5%; animation-delay: 0s; }
+  .evc-blob-2 { width: 300px; height: 300px; background: #c4a882; bottom: -15%; left: 10%; animation-delay: -4s; }
+  .evc-blob-3 { width: 200px; height: 200px; background: #d4a98a; top: 30%; left: -5%; animation-delay: -8s; }
+  @keyframes evc-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.1); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+  
+  .evc-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 80px 24px;
+  }
+  .evc-hero-label {
+    font-size: 14px !important;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+  .evc-hero-title {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-weight: 300;
+    font-size: 56px !important;
+    color: #fff;
+    margin: 0 0 20px;
+    line-height: 1.05;
+  }
+  .evc-hero-sub {
+    font-size: 20px !important;
+    color: rgba(255,255,255,0.55);
+    max-width: 550px;
+    margin: 0 auto 48px;
+  }
+  .evc-hero-stats {
+    display: flex;
+    gap: 64px;
+    justify-content: center;
+  }
+  .evc-stat-num {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 48px !important;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .evc-stat-label {
+    font-size: 16px !important;
+    color: rgba(255,255,255,0.45);
+    margin-top: 8px;
+  }
+  
+  /* ── FEATURED: First 4 products as large masonry ── */
+  .evc-featured {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px 40px;
+  }
+  .evc-featured-label {
+    font-size: 14px !important;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .evc-featured-title {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-weight: 300;
+    font-size: 40px !important;
+    color: var(--text);
+    text-align: center;
+    margin: 0 0 48px;
+    line-height: 1.1;
+  }
+  .evc-masonry {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 24px;
+  }
+  .evc-masonry-card {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f5f2ef;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+  }
+  .evc-masonry-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  }
+  .evc-masonry-card:first-child {
+    grid-row: span 2;
+  }
+  .evc-masonry-img {
+    flex: 1;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .evc-masonry-card:first-child .evc-masonry-img {
+    min-height: 400px;
+  }
+  .evc-masonry-img img {
+    max-width: 80%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.5s;
+  }
+  .evc-masonry-card:hover .evc-masonry-img img {
+    transform: scale(1.08) rotate(-2deg);
+  }
+  .evc-masonry-info {
+    padding: 24px 28px;
+    background: #fff;
+  }
+  .evc-masonry-name {
+    font-size: 20px !important;
+    font-weight: 500;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+  .evc-masonry-price {
+    font-size: 18px !important;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .evc-masonry-type {
+    font-size: 16px !important;
+    color: var(--gold);
+    margin-top: 4px;
+  }
+  
+  /* ── ALL PRODUCTS: Clean grid ── */
+  .evc-all {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px 80px;
+  }
+  .evc-all-title {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-weight: 300;
+    font-size: 36px !important;
+    color: var(--text);
+    text-align: center;
+    margin: 0 0 40px;
+  }
+  .evc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .evc-card {
+    text-decoration: none;
+    display: block;
+    transition: transform 0.3s;
+  }
+  .evc-card:hover { transform: translateY(-4px); }
+  .evc-card-img {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #faf8f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .evc-card-img img {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+    transition: transform 0.4s;
+  }
+  .evc-card:hover .evc-card-img img { transform: scale(1.06); }
+  .evc-card-name {
+    font-size: 18px !important;
+    font-weight: 500;
+    color: var(--text);
+    margin: 12px 0 2px;
+    padding: 0 4px;
+  }
+  .evc-card-price {
+    font-size: 18px !important;
+    font-weight: 600;
+    color: var(--text);
+    padding: 0 4px;
+  }
+  
+  /* ── AR BANNER ── */
+  .evc-ar {
+    background: var(--dark);
+    padding: 64px 20px;
+    text-align: center;
+    margin-left: calc(-50vw + 50%);
+    width: 100vw;
+  }
+  .evc-ar h3 {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-weight: 300;
+    font-size: 36px !important;
+    color: #fff;
+    margin: 0 0 16px;
+  }
+  .evc-ar p {
+    font-size: 18px !important;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 32px;
+  }
+  .evc-ar a {
+    display: inline-block;
+    padding: 16px 48px;
+    background: var(--gold);
+    color: var(--dark);
+    text-decoration: none;
+    border-radius: 40px;
+    font-size: 18px !important;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  .evc-ar a:hover { background: #fff; }
+  
+  @media (max-width: 749px) {
+    .evc-hero-title { font-size: 36px !important; }
+    .evc-stat-num { font-size: 32px !important; }
+    .evc-hero-stats { gap: 32px; }
+    .evc-masonry { grid-template-columns: 1fr; }
+    .evc-masonry-card:first-child { grid-row: span 1; }
+    .evc-grid { grid-template-columns: repeat(2, 1fr); }
+    .evc-featured-title, .evc-all-title { font-size: 28px !important; }
+  }
+</style>
+
+<div class="evc">
+
+<!-- HERO -->
+<div class="evc-hero">
+  <div class="evc-hero-bg">
+    <div class="evc-blob evc-blob-1"></div>
+    <div class="evc-blob evc-blob-2"></div>
+    <div class="evc-blob evc-blob-3"></div>
+  </div>
+  <div class="evc-hero-content">
+    <div class="evc-hero-label">Premium Wandfarben</div>
+    <h1 class="evc-hero-title">{{ collection.title }}</h1>
+    <p class="evc-hero-sub">{{ collection.description | default: 'Farben, die Räume verwandeln. Jeder Ton erzählt eine Geschichte.' }}</p>
+    <div class="evc-hero-stats">
+      <div>
+        <div class="evc-stat-num evc-counter" data-target="{{ collection.products_count }}">0</div>
+        <div class="evc-stat-label">Farbtöne</div>
+      </div>
+      <div>
+        <div class="evc-stat-num evc-counter" data-target="100" data-suffix="%">0%</div>
+        <div class="evc-stat-label">Lösemittelfrei</div>
+      </div>
+      <div>
+        <div class="evc-stat-num evc-counter" data-target="42" data-suffix="%">0%</div>
+        <div class="evc-stat-label">Weniger Heizkosten</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ALL PRODUCTS -->
+{%- paginate collection.products by 40 -%}
+<div class="evc-all">
+  <div class="evc-all-title">{{ collection.title }}</div>
+  <div class="evc-grid">
+    {%- for product in collection.products -%}
+      <a href="{{ product.url }}" class="evc-card">
+        <div class="evc-card-img">
+          {%- if product.featured_image -%}
+            <img src="{{ product.featured_image | image_url: width: 500 }}" alt="{{ product.featured_image.alt | escape }}" loading="lazy">
+          {%- endif -%}
+        </div>
+        <div class="evc-card-name">{{ product.title }}</div>
+        <div class="evc-card-price">{{ product.price | money }}</div>
+      </a>
+    {%- endfor -%}
+  </div>
+  {%- if paginate.pages > 1 -%}
+    <div style="text-align:center;padding:48px 0 0;">
+      {{ paginate | default_pagination }}
+    </div>
+  {%- endif -%}
+</div>
+{%- endpaginate -%}
+
+<!-- AR -->
+<div class="evc-ar">
+  <h3>Unsicher welcher Farbton?</h3>
+  <p>Teste jeden Farbton live an deiner Wand mit der EVERLOXX App.</p>
+  <a href="#">AR-Vorschau starten</a>
+</div>
+
+</div>
+
+<!-- Animated counters - all stats count up when visible -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var counters = document.querySelectorAll('.evc-counter');
+  if (!counters.length) return;
+  var started = false;
+  
+  function animateCounters() {
+    if (started) return;
+    started = true;
+    counters.forEach(function(el) {
+      var target = parseInt(el.getAttribute('data-target'));
+      var suffix = el.getAttribute('data-suffix') || '';
+      var current = 0;
+      var duration = 2000;
+      var steps = 50;
+      var increment = target / steps;
+      var stepTime = duration / steps;
+      
+      var interval = setInterval(function() {
+        current += increment;
+        if (current >= target) {
+          current = target;
+          clearInterval(interval);
+        }
+        el.textContent = Math.round(current) + suffix;
+      }, stepTime);
+    });
+  }
+  
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        animateCounters();
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  
+  var statsSection = document.querySelector('.evc-hero-stats');
+  if (statsSection) observer.observe(statsSection);
+});
+</script>
+
+{% schema %}
+{
+  "name": "EVERLOXX Kollektion v3",
+  "tag": "section",
+  "class": "section",
+  "settings": []
+}
+{% endschema %}

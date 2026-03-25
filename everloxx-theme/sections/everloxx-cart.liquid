@@ -1,0 +1,82 @@
+<section class="section" data-section-id="{{ section.id }}">
+  <div class="page-width">
+    <h1>{{ 'cart.general.title' | t }}</h1>
+
+    {%- if cart.item_count > 0 -%}
+      <form action="/cart" method="post" novalidate>
+        <table class="cart__table">
+          <thead>
+            <tr>
+              <th scope="col">Produkt</th>
+              <th scope="col">Preis</th>
+              <th scope="col">Menge</th>
+              <th scope="col">Gesamt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for item in cart.items -%}
+              <tr class="cart__item">
+                <td class="cart__item-info">
+                  <a href="{{ item.url }}" class="cart__item-link">
+                    {%- if item.image -%}
+                      <img
+                        src="{{ item.image | image_url: width: 120 }}"
+                        alt="{{ item.image.alt | escape }}"
+                        width="120"
+                        height="{{ 120 | divided_by: item.image.aspect_ratio | round }}"
+                        loading="lazy"
+                        class="cart__item-image"
+                      >
+                    {%- endif -%}
+                    <span class="cart__item-title">{{ item.product.title }}</span>
+                  </a>
+                  {%- if item.variant.title != 'Default Title' -%}
+                    <span class="cart__item-variant">{{ item.variant.title }}</span>
+                  {%- endif -%}
+                </td>
+                <td class="cart__item-price">{{ item.price | money }}</td>
+                <td class="cart__item-quantity">
+                  <input
+                    type="number"
+                    name="updates[]"
+                    value="{{ item.quantity }}"
+                    min="0"
+                    aria-label="Menge für {{ item.product.title }}"
+                  >
+                </td>
+                <td class="cart__item-total">{{ item.line_price | money }}</td>
+              </tr>
+            {%- endfor -%}
+          </tbody>
+        </table>
+
+        <div class="cart__footer">
+          <div class="cart__total">
+            <span class="cart__total-label">Gesamtsumme</span>
+            <span class="cart__total-price">{{ cart.total_price | money }}</span>
+          </div>
+          <p class="cart__tax-note">inkl. MwSt. zzgl. Versandkosten</p>
+
+          <div class="cart__actions">
+            <button type="submit" name="update" class="btn">Warenkorb aktualisieren</button>
+            <button type="submit" name="checkout" class="btn btn--primary">Zur Kasse</button>
+          </div>
+        </div>
+      </form>
+    {%- else -%}
+      <div class="cart__empty">
+        <p>{{ 'cart.general.empty' | t }}</p>
+        <a href="/collections/all" class="btn btn--primary">Weiter einkaufen</a>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "EVERLOXX Warenkorb",
+  "tag": "section",
+  "class": "section-cart",
+  "settings": []
+}
+{% endschema %}

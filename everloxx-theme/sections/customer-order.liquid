@@ -1,0 +1,72 @@
+<div class="section">
+  <div class="page-width" style="max-width:800px;margin:0 auto;padding:60px 20px;">
+    <a href="{{ routes.account_url }}" style="color:var(--color-accent);font-size:0.95rem;">&#8592; Zurueck zum Konto</a>
+    <h1 style="margin:16px 0 8px;">Bestellung {{ order.name }}</h1>
+    <p style="color:var(--color-text-light);margin-bottom:32px;">
+      Bestellt am {{ order.created_at | date: "%d.%m.%Y" }} &middot; {{ order.financial_status_label }}
+      {%- if order.fulfillment_status -%} &middot; {{ order.fulfillment_status_label }}{%- endif -%}
+    </p>
+
+    <table style="width:100%;border-collapse:collapse;margin-bottom:32px;">
+      <thead>
+        <tr style="border-bottom:2px solid var(--color-border);text-align:left;">
+          <th style="padding:12px 8px;">Produkt</th>
+          <th style="padding:12px 8px;">Menge</th>
+          <th style="padding:12px 8px;text-align:right;">Preis</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for line_item in order.line_items -%}
+          <tr style="border-bottom:1px solid var(--color-border);">
+            <td style="padding:12px 8px;">
+              {{ line_item.title }}
+              {%- if line_item.variant.title != 'Default Title' -%}
+                <span style="color:var(--color-text-light);font-size:0.9rem;"> - {{ line_item.variant.title }}</span>
+              {%- endif -%}
+            </td>
+            <td style="padding:12px 8px;">{{ line_item.quantity }}</td>
+            <td style="padding:12px 8px;text-align:right;">{{ line_item.final_line_price | money }}</td>
+          </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+      <!-- Zusammenfassung -->
+      <div>
+        <h2 style="font-size:1.1rem;margin-bottom:12px;">Zusammenfassung</h2>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;">
+          <span>Zwischensumme</span><span>{{ order.subtotal_price | money }}</span>
+        </div>
+        {%- for shipping_method in order.shipping_methods -%}
+          <div style="display:flex;justify-content:space-between;padding:6px 0;">
+            <span>Versand ({{ shipping_method.title }})</span><span>{{ shipping_method.price | money }}</span>
+          </div>
+        {%- endfor -%}
+        {%- if order.tax_price > 0 -%}
+          <div style="display:flex;justify-content:space-between;padding:6px 0;">
+            <span>Steuern</span><span>{{ order.tax_price | money }}</span>
+          </div>
+        {%- endif -%}
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:2px solid var(--color-border);font-weight:600;">
+          <span>Gesamt</span><span>{{ order.total_price | money }}</span>
+        </div>
+      </div>
+
+      <!-- Lieferadresse -->
+      <div>
+        <h2 style="font-size:1.1rem;margin-bottom:12px;">Lieferadresse</h2>
+        {%- if order.shipping_address -%}
+          <p>{{ order.shipping_address | format_address }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Kundenbestellung",
+  "settings": []
+}
+{% endschema %}

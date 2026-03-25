@@ -1,0 +1,49 @@
+<div class="section">
+  <div class="page-width" style="max-width:800px;margin:0 auto;padding:60px 20px;">
+    <h1 style="margin-bottom:8px;">Mein Konto</h1>
+    <p style="color:var(--color-text-light);margin-bottom:32px;">
+      Hallo {{ customer.first_name | default: customer.email }}.
+      <a href="{{ routes.account_logout_url }}" style="color:var(--color-accent);">Abmelden</a>
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+      <!-- Bestellungen -->
+      <div>
+        <h2 style="font-size:1.2rem;margin-bottom:16px;">Bestellungen</h2>
+        {%- if customer.orders.size > 0 -%}
+          {%- for order in customer.orders -%}
+            <div class="card" style="padding:16px;margin-bottom:12px;">
+              <a href="{{ order.customer_url }}" style="font-weight:600;color:var(--color-text);">{{ order.name }}</a>
+              <div style="font-size:0.9rem;color:var(--color-text-light);margin-top:4px;">
+                {{ order.created_at | date: "%d.%m.%Y" }} &middot; {{ order.financial_status_label }} &middot; {{ order.total_price | money }}
+              </div>
+            </div>
+          {%- endfor -%}
+        {%- else -%}
+          <p style="color:var(--color-text-light);">Noch keine Bestellungen.</p>
+        {%- endif -%}
+      </div>
+
+      <!-- Adressen -->
+      <div>
+        <h2 style="font-size:1.2rem;margin-bottom:16px;">Standardadresse</h2>
+        {%- if customer.default_address -%}
+          <div class="card" style="padding:16px;">
+            <p>{{ customer.default_address | format_address }}</p>
+          </div>
+          <a href="{{ routes.account_addresses_url }}" style="display:inline-block;margin-top:12px;color:var(--color-accent);font-weight:600;">Adressen verwalten</a>
+        {%- else -%}
+          <p style="color:var(--color-text-light);">Keine Adresse hinterlegt.</p>
+          <a href="{{ routes.account_addresses_url }}" style="display:inline-block;margin-top:12px;color:var(--color-accent);font-weight:600;">Adresse hinzufuegen</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Kundenkonto",
+  "settings": []
+}
+{% endschema %}

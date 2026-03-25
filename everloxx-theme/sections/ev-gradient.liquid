@@ -1,0 +1,21 @@
+{%- style -%}
+@keyframes ev-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+body {
+  background: linear-gradient(135deg, #ffffff 0%, #FFF8F5 25%, #ffffff 50%, #faf0e6 75%, #ffffff 100%);
+  background-size: 400% 400%;
+  animation: ev-gradient-shift 20s ease infinite;
+}
+{%- endstyle -%}
+
+{% schema %}
+{
+  "name": "EVERLOXX Gradient",
+  "tag": "section",
+  "class": "ev-section",
+  "settings": []
+}
+{% endschema %}

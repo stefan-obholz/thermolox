@@ -1,0 +1,137 @@
+<!-- ═══════ VORHER/NACHHER SLIDER – 6 RÄUME ═══════ -->
+<section style="background:#f9f9f9;padding:100px 20px;" aria-label="Vorher Nachher">
+  <div style="max-width:1000px;margin:0 auto;text-align:center;">
+    <div class="cx-tag">Inspiration</div>
+    <h2 class="cx-section-heading">So verwandelt Farbe deinen Raum</h2>
+    <p class="cx-section-sub" style="margin-bottom:40px;">Bewege den Slider und erlebe den Unterschied</p>
+
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">
+      <button onclick="cxSwitchRoom('living')" id="cx-tab-living" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#404040;color:#fff;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Wohnzimmer</button>
+      <button onclick="cxSwitchRoom('bedroom')" id="cx-tab-bedroom" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Schlafzimmer</button>
+      <button onclick="cxSwitchRoom('kitchen')" id="cx-tab-kitchen" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Küche</button>
+      <button onclick="cxSwitchRoom('hallway')" id="cx-tab-hallway" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Flur</button>
+      <button onclick="cxSwitchRoom('nursery')" id="cx-tab-nursery" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Kinderzimmer</button>
+      <button onclick="cxSwitchRoom('living2')" id="cx-tab-living2" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Salon</button>
+
+    </div>
+
+
+    <div id="cx-slider-living" class="cx-ba-slider" style="display:block;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'everloxx-after.png' | asset_url }}" alt="Wohnzimmer mit EVERLOXX Salmon Peach" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'everloxx-before.png' | asset_url }}" alt="Wohnzimmer vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Salmon Peach</div>
+    </div>
+    <div id="cx-slider-bedroom" class="cx-ba-slider" style="display:none;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'cx-bedroom-after.png' | asset_url }}" alt="Schlafzimmer mit EVERLOXX Dusty Rose" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 46%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'cx-bedroom-before.png' | asset_url }}" alt="Schlafzimmer vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 44%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Dusty Rose</div>
+    </div>
+    <div id="cx-slider-kitchen" class="cx-ba-slider" style="display:none;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'cx-kitchen-after.png' | asset_url }}" alt="Küche mit EVERLOXX Sage Whisper" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'cx-kitchen-before.png' | asset_url }}" alt="Küche vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Sage Whisper</div>
+    </div>
+    <div id="cx-slider-hallway" class="cx-ba-slider" style="display:none;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'cx-hallway-after.png' | asset_url }}" alt="Flur mit EVERLOXX Urban Schiefergrau" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'cx-hallway-before.png' | asset_url }}" alt="Flur vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Urban Schiefergrau</div>
+    </div>
+    <div id="cx-slider-nursery" class="cx-ba-slider" style="display:none;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'cx-nursery-after.png' | asset_url }}" alt="Kinderzimmer mit EVERLOXX Pastel Sun" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'cx-nursery-before.png' | asset_url }}" alt="Kinderzimmer vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Pastel Sun</div>
+    </div>
+    <div id="cx-slider-living2" class="cx-ba-slider" style="display:none;position:relative;width:100%;aspect-ratio:3/2;border-radius:16px;overflow:hidden;cursor:ew-resize;user-select:none;">
+      <img src="{{ 'cx-living2-after.png' | asset_url }}" alt="Salon mit EVERLOXX Luxury Kaschmirbeige" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 45%;" loading="lazy">
+      <div class="cx-ba-clip" style="position:absolute;inset:0;clip-path:inset(0 50% 0 0);">
+        <img src="{{ 'cx-living2-before.png' | asset_url }}" alt="Salon vorher" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 45%;" loading="lazy">
+      </div>
+      <div class="cx-ba-handle" style="position:absolute;top:0;bottom:0;width:3px;background:#fff;left:50%;transform:translateX(-50%);z-index:10;pointer-events:none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 8 4 4-4 4"/><path d="m6 8-4 4 4 4"/><path d="M2 12h20"/></svg>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:16px;left:16px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;z-index:5;">VORHER</div>
+      <div style="position:absolute;bottom:16px;right:16px;background:rgba(239,187,165,0.9);color:#404040;padding:6px 14px;border-radius:20px;font-size:1.1rem;letter-spacing:1px;font-weight:600;z-index:5;">Luxury Kaschmirbeige</div>
+    </div>
+  </div>
+</section>
+
+<script>
+function cxSwitchRoom(id) {
+  document.querySelectorAll('.cx-ba-slider').forEach(function(el) { el.style.display = 'none'; });
+  document.getElementById('cx-slider-' + id).style.display = 'block';
+  document.querySelectorAll('[id^="cx-tab-"]').forEach(function(btn) {
+    btn.style.background = '#fff'; btn.style.color = '#404040';
+  });
+  document.getElementById('cx-tab-' + id).style.background = '#404040';
+  document.getElementById('cx-tab-' + id).style.color = '#fff';
+}
+
+document.querySelectorAll('.cx-ba-slider').forEach(function(container) {
+  var clip = container.querySelector('.cx-ba-clip');
+  var handle = container.querySelector('.cx-ba-handle');
+  var dragging = false;
+  function setPos(x) {
+    var rect = container.getBoundingClientRect();
+    var pct = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+    clip.style.clipPath = 'inset(0 ' + ((1 - pct) * 100) + '% 0 0)';
+    handle.style.left = (pct * 100) + '%';
+  }
+  container.addEventListener('mousedown', function(e) { dragging = true; setPos(e.clientX); e.preventDefault(); });
+  document.addEventListener('mousemove', function(e) { if (dragging) setPos(e.clientX); });
+  document.addEventListener('mouseup', function() { dragging = false; });
+  container.addEventListener('touchstart', function(e) { dragging = true; setPos(e.touches[0].clientX); }, { passive: true });
+  document.addEventListener('touchmove', function(e) { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
+  document.addEventListener('touchend', function() { dragging = false; });
+});
+</script>
+
+{% schema %}
+{
+  "name": "EVERLOXX Slider",
+  "tag": "section",
+  "class": "ev-section",
+  "settings": []
+}
+{% endschema %}

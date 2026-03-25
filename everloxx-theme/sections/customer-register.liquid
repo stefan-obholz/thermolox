@@ -1,0 +1,44 @@
+<div class="section">
+  <div class="page-width" style="max-width:480px;margin:0 auto;padding:60px 20px;">
+    <h1 style="text-align:center;margin-bottom:24px;">Konto erstellen</h1>
+
+    {%- form 'create_customer' -%}
+      {%- if form.errors -%}
+        <div style="background:#fef2f2;border:1px solid #e55;padding:12px 16px;border-radius:8px;margin-bottom:16px;color:#c33;">
+          {{ form.errors | default_errors }}
+        </div>
+      {%- endif -%}
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <label for="RegisterFirstName" class="visually-hidden">Vorname</label>
+        <input type="text" id="RegisterFirstName" name="customer[first_name]" autocomplete="given-name" placeholder="Vorname"
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <label for="RegisterLastName" class="visually-hidden">Nachname</label>
+        <input type="text" id="RegisterLastName" name="customer[last_name]" autocomplete="family-name" placeholder="Nachname"
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <label for="RegisterEmail" class="visually-hidden">E-Mail</label>
+        <input type="email" id="RegisterEmail" name="customer[email]" autocomplete="email" placeholder="E-Mail-Adresse" required
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <label for="RegisterPassword" class="visually-hidden">Passwort</label>
+        <input type="password" id="RegisterPassword" name="customer[password]" autocomplete="new-password" placeholder="Passwort" required
+          style="padding:14px 16px;border:1px solid var(--color-border);border-radius:8px;font-size:1rem;">
+
+        <button type="submit" class="btn btn--primary" style="width:100%;">Konto erstellen</button>
+      </div>
+    {%- endform -%}
+
+    <div style="text-align:center;margin-top:24px;font-size:0.95rem;">
+      Bereits ein Konto? <a href="{{ routes.account_login_url }}" style="color:var(--color-accent);font-weight:600;">Anmelden</a>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Kunden-Registrierung",
+  "settings": []
+}
+{% endschema %}

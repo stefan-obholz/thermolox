@@ -1,0 +1,81 @@
+{
+  "sections": {
+    "ev_gradient": {
+      "type": "ev-gradient",
+      "settings": {}
+    },
+    "ev_urgency": {
+      "type": "ev-urgency",
+      "settings": {}
+    },
+    "hero": {
+      "type": "ev-hero",
+      "settings": {}
+    },
+    "usp_strip": {
+      "type": "ev-usp-strip",
+      "settings": {}
+    },
+    "marquee": {
+      "type": "ev-marquee",
+      "settings": {}
+    },
+    "product_grid": {
+      "type": "ev-product-grid",
+      "settings": {}
+    },
+    "big_type": {
+      "type": "ev-big-type",
+      "settings": {}
+    },
+    "steps_trust": {
+      "type": "ev-steps-trust",
+      "settings": {}
+    },
+    "slider": {
+      "type": "ev-slider",
+      "settings": {}
+    },
+    "blog_teaser": {
+      "type": "ev-blog-teaser",
+      "settings": {}
+    },
+    "app_flow": {
+      "type": "ev-app-flow",
+      "settings": {}
+    },
+    "cta_banner": {
+      "type": "ev-cta-banner",
+      "settings": {}
+    },
+    "app_cta": {
+      "type": "ev-app-cta",
+      "settings": {}
+    },
+    "sticky": {
+      "type": "ev-sticky",
+      "settings": {}
+    },
+    "progress": {
+      "type": "ev-progress",
+      "settings": {}
+    }
+  },
+  "order": [
+    "ev_gradient",
+    "ev_urgency",
+    "hero",
+    "usp_strip",
+    "marquee",
+    "product_grid",
+    "big_type",
+    "steps_trust",
+    "slider",
+    "blog_teaser",
+    "app_flow",
+    "cta_banner",
+    "app_cta",
+    "sticky",
+    "progress"
+  ]
+}
