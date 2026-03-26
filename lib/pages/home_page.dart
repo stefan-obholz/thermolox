@@ -5,626 +5,35 @@ import 'package:video_player/video_player.dart';
 import '../widgets/cart_icon_button.dart';
 import '../theme/app_theme.dart';
 import '../models/content_item.dart';
+import '../models/product.dart';
 import '../services/content_service.dart';
+import '../services/shopify_service.dart';
 import 'blog_page.dart';
 import 'content_detail_page.dart';
 import 'products_page.dart';
+import 'product_detail_page.dart';
+
+// ── Design constants ──
+
+const _dark = Color(0xFF1A1614);
+const _gray = Color(0xFF6B635D);
+const _warmBg = Color(0xFFFAFAF9);
 
 class HomePage extends StatefulWidget {
-  final void Function(int)? onNavigateTab;
-
-  const HomePage({super.key, this.onNavigateTab});
+  const HomePage({super.key});
 
   @override
-  HomePageState createState() => HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class HomePageState extends State<HomePage> {
-  final GlobalKey<EverloxxShowcaseState> _showcaseKey =
-      GlobalKey<EverloxxShowcaseState>();
-  final GlobalKey<EverloxxIconStripState> _iconStripKey =
-      GlobalKey<EverloxxIconStripState>();
-  bool _hasPlayed = false;
-
-  /// Sammelpunkt für alle Home-Abschnitte.
-  /// Neue Blöcke können einfach angehängt werden.
-  List<Widget> _buildSections(BuildContext context) {
-    final tokens = context.everloxxTokens;
-    final tightPadding =
-        EdgeInsets.symmetric(horizontal: tokens.screenPaddingSm);
-    final textPadding =
-        EdgeInsets.symmetric(horizontal: tokens.screenPadding);
-
-    return [
-      const _HeroVideo(),
-      Padding(
-        padding: tightPadding,
-        child: EverloxxShowcase(
-          key: _showcaseKey,
-          onCompleted: _playIconStrip,
-        ),
-      ),
-      const SizedBox(height: 4), // tighter spacing
-      Padding(
-        padding: textPadding,
-        child: EverloxxIconStrip(key: _iconStripKey),
-      ),
-      Padding(
-        padding: tightPadding,
-        child: const EverloxxBeforeAfter(),
-      ),
-      const SizedBox(height: 20),
-      const EverloxxImpactText(),
-      const SizedBox(height: 8),
-      Padding(
-        padding: textPadding,
-        child: _BlogPreviewSection(
-          onViewAll: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const BlogPage()),
-          ),
-        ),
-      ),
-    ];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => playAnimation());
-  }
-
-  void playAnimation() {
-    if (_hasPlayed) return;
-    _hasPlayed = true;
-    _showcaseKey.currentState?.play();
-  }
-
-  void _playIconStrip() {
-    _iconStripKey.currentState?.play();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.everloxxTokens;
-    final sections = _buildSections(context);
-
-    return EverloxxScaffold(
-      safeArea: true,
-      padding: EdgeInsets.zero,
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          'EVERLOXX',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            fontSize: 34,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.0,
-          ),
-        ),
-        actions: const [CartIconButton()],
-      ),
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: ListView.separated(
-        padding: EdgeInsets.fromLTRB(
-          0,
-          tokens.gapMd,
-          0,
-          tokens.gapLg,
-        ),
-        itemCount: sections.length,
-        itemBuilder: (context, index) => sections[index],
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-      ),
-    );
-  }
-}
-
-class EverloxxShowcase extends StatefulWidget {
-  final VoidCallback? onCompleted;
-
-  const EverloxxShowcase({super.key, this.onCompleted});
-
-  @override
-  EverloxxShowcaseState createState() => EverloxxShowcaseState();
-}
-
-class EverloxxShowcaseState extends State<EverloxxShowcase>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  late final Animation<double> _scale;
-  bool _hasCompleted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _fade = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.2, curve: Curves.easeOut),
-    );
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed && !_hasCompleted) {
-        _hasCompleted = true;
-        widget.onCompleted?.call();
-      }
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) => play());
-  }
-
-  void play() {
-    _controller.forward(from: 0);
-    _hasCompleted = false;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    const double imageHeight = 220;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          width: double.infinity,
-          height: imageHeight + 2,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-              child: FadeTransition(
-                opacity: _fade,
-                child: ScaleTransition(
-                  scale: _scale,
-                  child: SizedBox(
-                    height: imageHeight,
-                    child: Image.asset(
-                      'assets/images/EVERLOXX_ICON.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class EverloxxIconStrip extends StatefulWidget {
-  const EverloxxIconStrip({super.key});
-
-  @override
-  EverloxxIconStripState createState() => EverloxxIconStripState();
-}
-
-class EverloxxIconStripState extends State<EverloxxIconStrip>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fade;
-  Timer? _typingTimer;
-  final ValueNotifier<String> _displayText = ValueNotifier<String>('');
-  int _typingIndex = 0;
-  static const String _fullText =
-      '„Das EVERLOXX-System ist das Balkonkraftwerk für Wände\n- nur effektiver.”';
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-  }
-
-  void play() {
-    _controller.forward(from: 0);
-    _startTyping();
-  }
-
-  @override
-  void dispose() {
-    _typingTimer?.cancel();
-    _displayText.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _startTyping() {
-    _typingTimer?.cancel();
-    _displayText.value = '';
-    _typingIndex = 0;
-    const step = Duration(milliseconds: 30);
-    _typingTimer = Timer.periodic(step, (timer) {
-      if (_typingIndex >= _fullText.length) {
-        timer.cancel();
-        return;
-      }
-      _typingIndex++;
-      _displayText.value = _fullText.substring(0, _typingIndex);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double targetWidth = constraints.maxWidth * 0.85;
-        return Center(
-          child: Transform.translate(
-            offset: const Offset(0, -36),
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: targetWidth,
-                    child: Center(
-                      child: Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 32, fontWeight: FontWeight.w700, color: AppTheme.primary)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: targetWidth,
-                    height: 64, // reserve space to avoid layout shift
-                    child: ValueListenableBuilder<String>(
-                      valueListenable: _displayText,
-                      builder: (context, text, _) {
-                        return Text(
-                          text,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w600,
-                                height: 1.35,
-                              ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class EverloxxBeforeAfter extends StatefulWidget {
-  const EverloxxBeforeAfter({super.key});
-
-  @override
-  State<EverloxxBeforeAfter> createState() => _EverloxxBeforeAfterState();
-}
-
-class _EverloxxBeforeAfterState extends State<EverloxxBeforeAfter> {
-  double _value = 50.0;
-
-  void _onChanged(double newValue) {
-    setState(() => _value = newValue);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double width = constraints.maxWidth;
-        final double percent = (_value / 100).clamp(0.0, 1.0);
-        final double handleX = width * percent;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'So sieht echte Energieeinsparung aus',
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.0,
-              ),
-            ),
-            const SizedBox(height: 24),
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: _BeforeAfterSlider(
-                percent: percent,
-                handleX: handleX,
-                onChanged: _onChanged,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _BeforeAfterSlider extends StatelessWidget {
-  final double percent;
-  final double handleX;
-  final ValueChanged<double> onChanged;
-
-  const _BeforeAfterSlider({
-    required this.percent,
-    required this.handleX,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double width = constraints.maxWidth;
-        final double clampedX = handleX.clamp(0, width);
-        const double buttonSize = 40;
-        const double buttonGap = 10;
-
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/HAUS_SCHIEBER_COOL.png',
-                fit: BoxFit.cover,
-              ),
-            ),
-            Positioned.fill(
-              child: ClipPath(
-                clipper: _RightClipper(percent: percent),
-                child: Image.asset(
-                  'assets/images/HAUS_SCHIEBER_HOT.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _CenterLinePainter(x: clampedX, color: Colors.white),
-                ),
-              ),
-            ),
-            Positioned(
-              left: (clampedX - buttonGap - buttonSize).clamp(0.0, width - buttonSize),
-              top: (constraints.maxHeight - buttonSize) / 2,
-              child: _ArrowButton(icon: Icons.chevron_left, size: buttonSize),
-            ),
-            Positioned(
-              left: (clampedX + buttonGap).clamp(0.0, width - buttonSize),
-              top: (constraints.maxHeight - buttonSize) / 2,
-              child: _ArrowButton(icon: Icons.chevron_right, size: buttonSize),
-            ),
-            Positioned.fill(
-              child: SliderTheme(
-                data: SliderTheme.of(context).copyWith(
-                  trackHeight: 0,
-                  activeTrackColor: Colors.transparent,
-                  inactiveTrackColor: Colors.transparent,
-                  thumbColor: Colors.transparent,
-                  overlayColor: Colors.transparent,
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 0),
-                ),
-                child: Slider(
-                  min: 0,
-                  max: 100,
-                  value: percent * 100,
-                  onChanged: onChanged,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _CenterLinePainter extends CustomPainter {
-  final double x;
-  final Color color;
-
-  const _CenterLinePainter({required this.x, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint linePaint = Paint()
-      ..color = color
-      ..strokeWidth = 2;
-    canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _CenterLinePainter oldDelegate) =>
-      oldDelegate.x != x || oldDelegate.color != color;
-}
-
-class _RightClipper extends CustomClipper<Path> {
-  final double percent;
-
-  _RightClipper({required double percent})
-      : percent = percent.clamp(0.0, 1.0);
-
-  @override
-  Path getClip(Size size) {
-    final double w = size.width * percent;
-    return Path()..addRect(Rect.fromLTWH(0, 0, w, size.height));
-  }
-
-  @override
-  bool shouldReclip(covariant _RightClipper oldClipper) =>
-      oldClipper.percent != percent;
-}
-
-class _ArrowButton extends StatelessWidget {
-  final IconData icon;
-  final double size;
-
-  const _ArrowButton({required this.icon, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: AppTheme.accent,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Icon(icon, color: AppTheme.primary),
-    );
-  }
-}
-
-class EverloxxImpactText extends StatelessWidget {
-  const EverloxxImpactText({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.everloxxTokens;
-    const bulletSpacing = SizedBox(height: 10);
-    const double bodySize = 15;
-
-    Widget bullet(String text) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('✅ ', style: TextStyle(fontSize: 18)),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.35,
-                fontSize: bodySize,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        tokens.screenPadding,
-        4,
-        tokens.screenPadding,
-        tokens.gapLg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des '
-            'EVERLOXX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
-            'das mit EVERLOXX gestrichen und abgedichtet wurde.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              height: 1.35,
-              fontSize: bodySize,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            '💡 Weniger Wärmeverlust bedeutet:\n'
-            'Weniger Heizkosten. Mehr Komfort. Besser fürs Klima.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              height: 1.4,
-              fontWeight: FontWeight.w700,
-              fontSize: bodySize,
-            ),
-          ),
-          const SizedBox(height: 18),
-          bullet('Ideal für Altbau & unsanierte Gebäude'),
-          bulletSpacing,
-          bullet('Spart bis zu 42% Heiz- und Kühlkosten'),
-          bulletSpacing,
-          bullet('Sofortige Wirkung nach der Anwendung'),
-          bulletSpacing,
-          bullet('Ohne Handwerker oder Umbau'),
-          const SizedBox(height: 22),
-          Text(
-            'Energie sparen war noch nie so einfach.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-              height: 1.35,
-              fontSize: bodySize,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Setze auf das EVERLOXX-System – die nachhaltige, '
-            'rückbaufreie und günstige Alternative zur klassischen Sanierung.',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              height: 1.35,
-              fontSize: bodySize,
-            ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                final onTab = context.findAncestorStateOfType<HomePageState>()?.widget.onNavigateTab;
-                if (onTab != null) {
-                  onTab(2);
-                } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ProductsPage()),
-                  );
-                }
-              },
-              child: const Text('Jetzt entdecken'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Blog Preview on Home ──
-
-class _BlogPreviewSection extends StatefulWidget {
-  final VoidCallback onViewAll;
-  const _BlogPreviewSection({required this.onViewAll});
-
-  @override
-  State<_BlogPreviewSection> createState() => _BlogPreviewSectionState();
-}
-
-class _BlogPreviewSectionState extends State<_BlogPreviewSection> {
+class _HomePageState extends State<HomePage> {
+  late Future<List<Product>> _productsFuture;
   late Future<List<ContentItem>> _articlesFuture;
 
   @override
   void initState() {
     super.initState();
+    _productsFuture = ShopifyService.fetchProducts();
     _articlesFuture = ContentService.fetchArticles();
   }
 
@@ -632,91 +41,51 @@ class _BlogPreviewSectionState extends State<_BlogPreviewSection> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return FutureBuilder<List<ContentItem>>(
-      future: _articlesFuture,
-      builder: (context, snapshot) {
-        final articles = snapshot.data ?? [];
-        if (articles.isEmpty) return const SizedBox.shrink();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Blog & Tipps',
-                  style: TextStyle(fontFamily: 'Times New Roman',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.primary,
-                  ),
-                ),
-                TextButton(
-                  onPressed: widget.onViewAll,
-                  child: const Text('Alle anzeigen'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...articles.take(2).map((article) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GestureDetector(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ContentDetailPage(item: article),
-                      ),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primary.withValues(alpha: 0.08),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              article.title,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primary,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 14,
-                            color: AppTheme.peachDark,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )),
-          ],
-        );
-      },
+    return Scaffold(
+      backgroundColor: _warmBg,
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          'EVERLOXX',
+          style: TextStyle(
+            fontFamily: AppTheme.fontFamilyHeading,
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            color: theme.textTheme.headlineLarge?.color,
+          ),
+        ),
+        actions: const [CartIconButton()],
+      ),
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const _HeroVideoSection(),
+          const _UspStrip(),
+          _FeaturedColorsSection(productsFuture: _productsFuture),
+          const _StepsSection(),
+          const _TrustStatsBar(),
+          const _AppBannerSection(),
+          _BlogTeaserSection(articlesFuture: _articlesFuture),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 }
 
-/// Hero video matching the website's fullscreen hero
-class _HeroVideo extends StatefulWidget {
-  const _HeroVideo();
+// ─────────────────────────────────────────────────────────────────────────────
+// A. Hero Video
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HeroVideoSection extends StatefulWidget {
+  const _HeroVideoSection();
 
   @override
-  State<_HeroVideo> createState() => _HeroVideoState();
+  State<_HeroVideoSection> createState() => _HeroVideoSectionState();
 }
 
-class _HeroVideoState extends State<_HeroVideo> {
+class _HeroVideoSectionState extends State<_HeroVideoSection> {
   late VideoPlayerController _controller;
   bool _initialized = false;
 
@@ -724,13 +93,16 @@ class _HeroVideoState extends State<_HeroVideo> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.networkUrl(
-      Uri.parse('https://cdn.shopify.com/videos/c/o/v/3eb4687cd1a44a71a997a27eed59dbbb.mp4'),
+      Uri.parse(
+        'https://cdn.shopify.com/videos/c/o/v/31a8ce5b004e491dbd5a3615c5b917c7.mp4',
+      ),
     )..initialize().then((_) {
         if (mounted) {
           setState(() => _initialized = true);
-          _controller.setLooping(true);
-          _controller.setVolume(0);
-          _controller.play();
+          _controller
+            ..setLooping(true)
+            ..setVolume(0)
+            ..play();
         }
       });
   }
@@ -743,8 +115,8 @@ class _HeroVideoState extends State<_HeroVideo> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final heroHeight = screenWidth * 1.2; // tall hero for mobile
+    final screenHeight = MediaQuery.of(context).size.height;
+    final heroHeight = screenHeight * 0.75;
 
     return SizedBox(
       width: double.infinity,
@@ -752,7 +124,7 @@ class _HeroVideoState extends State<_HeroVideo> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Video background
+          // Video / placeholder
           if (_initialized)
             FittedBox(
               fit: BoxFit.cover,
@@ -763,9 +135,9 @@ class _HeroVideoState extends State<_HeroVideo> {
               ),
             )
           else
-            Container(color: const Color(0xFF1A1614)),
+            Container(color: _dark),
 
-          // Top fade (white → transparent)
+          // Top fade: white -> transparent
           Positioned(
             top: 0,
             left: 0,
@@ -776,16 +148,13 @@ class _HeroVideoState extends State<_HeroVideo> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0xCCFFFFFF),
-                    Color(0x00FFFFFF),
-                  ],
+                  colors: [Color(0xCCFFFFFF), Color(0x00FFFFFF)],
                 ),
               ),
             ),
           ),
 
-          // Bottom gradient overlay
+          // Bottom gradient: black 50% -> transparent
           Positioned(
             bottom: 0,
             left: 0,
@@ -797,7 +166,7 @@ class _HeroVideoState extends State<_HeroVideo> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Color(0x99000000),
+                    Color(0x80000000),
                     Color(0x26000000),
                     Color(0x00000000),
                   ],
@@ -806,7 +175,7 @@ class _HeroVideoState extends State<_HeroVideo> {
             ),
           ),
 
-          // Text content
+          // Text overlay
           Positioned(
             bottom: 60,
             left: 24,
@@ -851,15 +220,18 @@ class _HeroVideoState extends State<_HeroVideo> {
                     MaterialPageRoute(builder: (_) => const ProductsPage()),
                   ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.accent,
                       borderRadius: BorderRadius.circular(40),
                     ),
-                    child: Text(
+                    child: const Text(
                       'FARBTÖNE ENTDECKEN',
                       style: TextStyle(
-                        color: const Color(0xFF1A1614),
+                        color: _dark,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                         letterSpacing: 1.2,
@@ -871,6 +243,661 @@ class _HeroVideoState extends State<_HeroVideo> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// B. USP Strip
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _UspStrip extends StatelessWidget {
+  const _UspStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      _UspItem(Icons.palette, '132 Farbtöne', 'Kuratierte Premium-Auswahl'),
+      _UspItem(Icons.home, 'Energiesparend', 'Bis zu 42 % Heizkosten sparen'),
+      _UspItem(Icons.eco, '100% Wohngesund', 'Ohne Lösemittel & Weichmacher'),
+      _UspItem(Icons.shield_outlined, 'Premium-Qualität', 'Beste Deckkraft & Haltbarkeit'),
+      _UspItem(Icons.brush, 'Einfach selbst machen', 'Ohne Handwerker'),
+    ];
+
+    return Container(
+      color: const Color(0xFF505050),
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: items
+              .map(
+                (item) => Container(
+                  width: 160,
+                  margin: const EdgeInsets.only(right: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(item.icon, color: Colors.white, size: 24),
+                      const SizedBox(height: 8),
+                      Text(
+                        item.title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item.subtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _UspItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  const _UspItem(this.icon, this.title, this.subtitle);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// C. Featured Colors (Horizontal Carousel)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FeaturedColorsSection extends StatelessWidget {
+  final Future<List<Product>> productsFuture;
+  const _FeaturedColorsSection({required this.productsFuture});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Beliebte Farbtöne',
+              style: TextStyle(
+                fontFamily: AppTheme.fontFamilyHeading,
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: _dark,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Unsere meistgewählten Premium-Wandfarben',
+              style: TextStyle(fontSize: 14, color: _gray),
+            ),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 240,
+            child: FutureBuilder<List<Product>>(
+              future: productsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final products = snapshot.data ?? [];
+                if (products.isEmpty) {
+                  return const Center(
+                    child: Text('Keine Farbtöne verfügbar.'),
+                  );
+                }
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: products.length > 10 ? 10 : products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return _ProductCard(product: product);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductCard extends StatelessWidget {
+  final Product product;
+  const _ProductCard({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProductDetailPage(product: product),
+        ),
+      ),
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image or color swatch
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: SizedBox(
+                height: 140,
+                width: double.infinity,
+                child: product.imageUrl != null
+                    ? Image.network(
+                        product.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _colorSwatch(),
+                      )
+                    : _colorSwatch(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _dark,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (product.price != null)
+                    Text(
+                      '${product.price!.toStringAsFixed(2)} \u20AC',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.accent,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _colorSwatch() {
+    final hex = product.hex;
+    Color color = const Color(0xFFE0D5C8);
+    if (hex != null && hex.isNotEmpty) {
+      final cleaned = hex.replaceAll('#', '');
+      if (cleaned.length == 6) {
+        color = Color(int.parse('FF$cleaned', radix: 16));
+      }
+    }
+    return Container(color: color);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// D. Steps Section
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StepsSection extends StatelessWidget {
+  const _StepsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 400;
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      child: Column(
+        children: [
+          Text(
+            'So einfach geht\u2019s',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppTheme.fontFamilyHeading,
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: _dark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'In drei Schritten zum Wohlfühl-Zuhause',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: _gray),
+          ),
+          const SizedBox(height: 32),
+          isNarrow
+              ? Column(
+                  children: _buildSteps()
+                      .expand((w) => [w, const SizedBox(height: 24)])
+                      .toList()
+                    ..removeLast(),
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _buildSteps()
+                      .map<Widget>(
+                        (w) => Expanded(child: w),
+                      )
+                      .toList(),
+                ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildSteps() {
+    return const [
+      _StepTile(
+        icon: Icons.palette,
+        number: '1',
+        title: 'Farbton wählen',
+        subtitle: 'Über 132 kuratierte Farbtöne',
+      ),
+      _StepTile(
+        icon: Icons.shopping_cart,
+        number: '2',
+        title: 'Bestellen & Liefern',
+        subtitle: 'Direkt aus der App \u2014 versandkostenfrei ab 99\u20AC',
+      ),
+      _StepTile(
+        icon: Icons.brush,
+        number: '3',
+        title: 'Streichen & Genießen',
+        subtitle: 'Rolle oder Pinsel \u2014 sofort wohnbereit',
+      ),
+    ];
+  }
+}
+
+class _StepTile extends StatelessWidget {
+  final IconData icon;
+  final String number;
+  final String title;
+  final String subtitle;
+
+  const _StepTile({
+    required this.icon,
+    required this.number,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: AppTheme.accent.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 26, color: _dark),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: _dark,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: _gray, height: 1.4),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E. Trust Stats Bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TrustStatsBar extends StatelessWidget {
+  const _TrustStatsBar();
+
+  @override
+  Widget build(BuildContext context) {
+    const stats = [
+      _StatItem('50%', 'Wärmestrahlung\nreflektiert'),
+      _StatItem('42%', 'weniger Heizkosten\nmöglich'),
+      _StatItem('132', 'Premium-\nFarbtöne'),
+      _StatItem('0%', 'Lösemittel'),
+    ];
+
+    return Container(
+      color: AppTheme.accent,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      child: Wrap(
+        alignment: WrapAlignment.spaceEvenly,
+        runSpacing: 20,
+        children: stats
+            .map(
+              (s) => SizedBox(
+                width: 155,
+                child: Column(
+                  children: [
+                    Text(
+                      s.number,
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFamilyHeading,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: _dark,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      s.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: _dark,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _StatItem {
+  final String number;
+  final String label;
+  const _StatItem(this.number, this.label);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F. App Banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AppBannerSection extends StatelessWidget {
+  const _AppBannerSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _dark,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Image.asset(
+              'assets/images/EVERLOXX_ICON.png',
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Farben live an deiner Wand',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: AppTheme.fontFamilyHeading,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Teste jeden Farbton per AR-Vorschau',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Kostenlos \u00B7 132 Farbtöne \u00B7 iOS & Android',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// G. Blog Teaser
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BlogTeaserSection extends StatelessWidget {
+  final Future<List<ContentItem>> articlesFuture;
+  const _BlogTeaserSection({required this.articlesFuture});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ContentItem>>(
+      future: articlesFuture,
+      builder: (context, snapshot) {
+        final articles = snapshot.data ?? [];
+        if (articles.isEmpty && snapshot.connectionState == ConnectionState.done) {
+          // Static placeholder
+          return _staticBlogPlaceholder(context);
+        }
+        if (articles.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(0, 32, 0, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ratgeber & Inspiration',
+                      style: TextStyle(
+                        fontFamily: AppTheme.fontFamilyHeading,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: _dark,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BlogPage()),
+                      ),
+                      child: Text(
+                        'Alle anzeigen',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 170,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: articles.length > 6 ? 6 : articles.length,
+                  itemBuilder: (context, index) {
+                    final article = articles[index];
+                    return _BlogCard(article: article);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _staticBlogPlaceholder(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ratgeber & Inspiration',
+            style: TextStyle(
+              fontFamily: AppTheme.fontFamilyHeading,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: _dark,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Bald verfügbar \u2014 Tipps rund um Wandfarben, Raumgestaltung und Energiesparen.',
+            style: TextStyle(fontSize: 14, color: _gray),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlogCard extends StatelessWidget {
+  final ContentItem article;
+  const _BlogCard({required this.article});
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = article.blogTitle ?? article.tags.firstOrNull;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ContentDetailPage(item: article),
+        ),
+      ),
+      child: Container(
+        width: 220,
+        margin: const EdgeInsets.only(right: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (tag != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.accent.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _dark,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            Expanded(
+              child: Text(
+                article.title,
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _dark,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
