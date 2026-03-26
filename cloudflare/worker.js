@@ -2,6 +2,7 @@ const ALLOWED_ORIGINS = [
   'https://climalox.de',
   'https://www.climalox.de',
   'https://thermolox.de',
+  'https://thermolox.de',
   'https://www.thermolox.de',
   'https://thermolox.myshopify.com',
   'https://climalox-design.myshopify.com',
@@ -598,6 +599,8 @@ export default {
       // handled below, skip auth
     } else if (url.pathname === '/webhook/sync') {
       // webhooks have their own auth
+    } else if (url.pathname === '/chat') {
+      // chat is public (rate-limited by Cloudflare)
     } else {
       const authError = requireAppToken(request, env);
       if (authError) return authError;
@@ -640,8 +643,8 @@ export default {
         return jsonResponse(405, { error: 'Method not allowed.' });
       }
 
-      if (!env.OPENAI_API_KEY) {
-        return jsonResponse(500, { error: 'Missing OPENAI_API_KEY.' });
+      if (!env.ANTHROPIC_API_KEY) {
+        return jsonResponse(500, { error: 'Missing ANTHROPIC_API_KEY.' });
       }
 
       let body;
@@ -655,6 +658,7 @@ export default {
         apiKey: _apiKey,
         openaiApiKey: _openaiApiKey,
         messages: rawMessages,
+        model: requestModel,
         ...rest
       } = body ?? {};
 
@@ -663,33 +667,84 @@ export default {
         : [];
       const systemMessages = buildSystemMessages(env, request);
 
-      const payload = {
-        ...rest,
-        messages: [...systemMessages, ...incomingMessages],
+      // Separate system messages from user/assistant messages for Anthropic format
+      const systemText = systemMessages
+        .filter(m => m.role === 'system')
+        .map(m => m.content)
+        .join('\n\n');
+      const allMessages = [
+        ...systemMessages.filter(m => m.role !== 'system'),
+        ...incomingMessages,
+      ];
+
+      const anthropicPayload = {
+        model: requestModel || 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
         stream: true,
+        system: systemText || undefined,
+        messages: allMessages,
       };
 
-      const openaiResponse = await fetch(
-        'https://api.openai.com/v1/chat/completions',
+      const anthropicResponse = await fetch(
+        'https://api.anthropic.com/v1/messages',
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            'x-api-key': env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
             'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(anthropicPayload),
         },
       );
 
-      const contentType =
-        openaiResponse.headers.get('content-type') ?? 'text/event-stream';
+      // Convert Anthropic SSE stream to OpenAI format for client compatibility
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const enc = new TextEncoder();
 
-      return new Response(openaiResponse.body, {
-        status: openaiResponse.status,
+      (async () => {
+        const reader = anthropicResponse.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += dec.decode(value, { stream: true });
+            const lines = buf.split('\n');
+            buf = lines.pop() || '';
+            for (const line of lines) {
+              const t = line.trim();
+              if (!t.startsWith('data:')) continue;
+              const js = t.slice(5).trim();
+              if (js === '[DONE]') continue;
+              try {
+                const evt = JSON.parse(js);
+                if (evt.type === 'content_block_delta' && evt.delta?.text) {
+                  // Convert to OpenAI format
+                  const openaiChunk = { choices: [{ delta: { content: evt.delta.text } }] };
+                  await writer.write(enc.encode('data: ' + JSON.stringify(openaiChunk) + '\n\n'));
+                } else if (evt.type === 'message_stop') {
+                  await writer.write(enc.encode('data: [DONE]\n\n'));
+                }
+              } catch {}
+            }
+          }
+          await writer.write(enc.encode('data: [DONE]\n\n'));
+        } catch (e) {
+          console.error('Stream error:', e);
+        } finally {
+          writer.close();
+        }
+      })();
+
+      return new Response(readable, {
+        status: 200,
         headers: {
           ...cors,
-          'Content-Type': contentType,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
         },
       });
     }

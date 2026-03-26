@@ -1,9 +1,11 @@
 <style>
 .ev-sticky-cta {
   position: fixed;
-  bottom: -60px;
+  bottom: -80px;
   left: 50%;
   transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
   z-index: 999;
   padding: 14px 40px;
   background: #2D2926;
@@ -15,33 +17,100 @@
   text-transform: uppercase;
   border-radius: 40px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+  transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.3s ease,
+              position 0s,
+              box-shadow 0.3s ease;
   white-space: nowrap;
 }
 .ev-sticky-cta.visible {
   bottom: 28px;
+  opacity: 1;
+  pointer-events: auto;
+}
+.ev-sticky-cta.docked {
+  position: absolute;
+  bottom: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  opacity: 1;
+  pointer-events: auto;
 }
 .ev-sticky-cta:hover {
   background: #efd2a7;
   color: #2D2926;
 }
+@media (max-width: 749px) {
+  .ev-sticky-cta { padding: 12px 28px !important; font-size: 0.9rem !important; }
+  .ev-sticky-cta.visible { bottom: 16px !important; }
+}
 </style>
+
 <a href="/collections/wandfarben" class="ev-sticky-cta" id="ev-sticky-cta">Farbtöne entdecken</a>
+
 <script>
 (function(){
   var btn = document.getElementById('ev-sticky-cta');
-  var hero = document.querySelector('.ev-hero');
-  var grid = document.querySelector('[class*="product"]');
-  if(!btn || !hero) return;
+  if(!btn) return;
+
+  var docked = false;
+
   window.addEventListener('scroll', function(){
-    var heroBottom = hero.getBoundingClientRect().bottom;
-    var gridTop = grid ? grid.getBoundingClientRect().top : 99999;
-    if(heroBottom < 0 && gridTop > 200){
-      btn.classList.add('visible');
+    var dock = document.getElementById('ev-cta-dock-slot');
+    var hero = document.querySelector('section[aria-label]');
+
+    if(!hero) return;
+
+    var scrollY = window.scrollY;
+
+    // Show button after 300px scroll
+    if(scrollY > 300){
+      if(!docked) btn.classList.add('visible');
     } else {
       btn.classList.remove('visible');
+      if(docked) undock();
+      return;
+    }
+
+    // Dock when the dock slot is in view
+    if(dock){
+      var dockRect = dock.getBoundingClientRect();
+      var btnHeight = btn.offsetHeight;
+      var viewH = window.innerHeight;
+
+      // Button is at bottom:28px → it's at viewH - 28 - btnHeight
+      var btnVisualTop = viewH - 28 - btnHeight;
+
+      // If the dock slot center is near the button's position, dock it
+      var dockCenter = dockRect.top + dockRect.height / 2;
+
+      if(dockCenter < btnVisualTop + btnHeight && dockCenter > 0 && !docked){
+        dockBtn(dock);
+      } else if(dockRect.top > viewH && docked){
+        /* Only undock when scrolling UP past the dock (dock goes below viewport) */
+        undock();
+      }
     }
   }, {passive:true});
+
+  function dockBtn(dock){
+    docked = true;
+    dock.style.position = 'relative';
+    btn.classList.remove('visible');
+    btn.classList.add('docked');
+    dock.appendChild(btn);
+  }
+
+  function undock(){
+    docked = false;
+    btn.classList.remove('docked');
+    btn.classList.add('visible');
+    document.body.appendChild(btn);
+  }
+
+  /* Override: only undock when scrolling ABOVE the dock, not below */
 })();
 </script>
 

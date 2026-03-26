@@ -1,12 +1,18 @@
+<style>
+@media (max-width: 749px) {
+  .ev-account-page { padding: 32px 16px !important; max-width: 100% !important; }
+  .ev-account-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+}
+</style>
 <div class="section">
-  <div class="page-width" style="max-width:800px;margin:0 auto;padding:60px 20px;">
+  <div class="page-width ev-account-page" style="max-width:800px;margin:0 auto;padding:60px 20px;">
     <h1 style="margin-bottom:8px;">Mein Konto</h1>
     <p style="color:var(--color-text-light);margin-bottom:32px;">
       Hallo {{ customer.first_name | default: customer.email }}.
       <a href="{{ routes.account_logout_url }}" style="color:var(--color-accent);">Abmelden</a>
     </p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+    <div class="ev-account-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
       <!-- Bestellungen -->
       <div>
         <h2 style="font-size:1.2rem;margin-bottom:16px;">Bestellungen</h2>

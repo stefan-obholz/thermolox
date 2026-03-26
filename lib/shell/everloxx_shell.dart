@@ -8,8 +8,6 @@ import '../pages/products_page.dart';
 import '../pages/home_page.dart';
 import '../chat/chat_button.dart';
 import '../controllers/plan_controller.dart';
-import '../utils/plan_modal.dart';
-import '../utils/everloxx_overlay.dart';
 
 class EverloxxShell extends StatefulWidget {
   final int initialIndex;
@@ -42,75 +40,17 @@ class _EverloxxShellState extends State<EverloxxShell> {
   }
 
   Future<void> _onNavTapped(int index) async {
-    final planController = context.read<PlanController>();
-    final canAccessProjects = planController.hasProjectsAccess;
-    if (index == 1 && !canAccessProjects) {
-      await _showPremiumGate(featureName: 'Projekte');
-      return;
+    // Projekte (index 1) is premium
+    if (index == 1) {
+      final planController = context.read<PlanController>();
+      if (!planController.isPro) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Projekte ist ein Premium-Feature.')),
+        );
+        return;
+      }
     }
     setState(() => _currentIndex = index);
-  }
-
-  Future<bool> _showPremiumGate({required String featureName}) async {
-    final planController = context.read<PlanController>();
-    if (planController.isPro) return true;
-
-    final wantsUpgrade = await EverloxxOverlay.showAppDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
-            const SizedBox(width: 8),
-            const Text('Premium-Feature'),
-          ],
-        ),
-        content: Text(
-          'Um $featureName nutzen zu können, benötigst du einen Pro Account.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Verzichten'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Upgrade'),
-          ),
-        ],
-      ),
-    );
-
-    if (wantsUpgrade != true) return false;
-    if (planController.isLoading) return false;
-    if (planController.planCards.isEmpty) {
-      await planController.load(force: true);
-    }
-    if (!mounted) return false;
-
-    final plans = List.of(planController.planCards)
-      ..sort((a, b) {
-        if (a.id == b.id) return 0;
-        if (a.id == 'pro') return -1;
-        if (b.id == 'pro') return 1;
-        return 0;
-      });
-    if (plans.isEmpty) return false;
-    final selected = planController.activePlan?.plan.slug ?? 'basic';
-    final initialPlanId =
-        plans.any((plan) => plan.id == 'pro') ? 'pro' : selected;
-    final choice = await showPlanModal(
-      context: context,
-      plans: plans,
-      selectedPlanId: selected,
-      initialPlanId: initialPlanId,
-      allowDowngrade: planController.canDowngrade,
-    );
-    if (choice != null && choice != selected) {
-      await planController.selectPlan(choice);
-    }
-    return false;
   }
 
   @override

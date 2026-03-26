@@ -1,5 +1,13 @@
+<style>
+@media (max-width: 749px) {
+  .ev-order-page { padding: 32px 16px !important; max-width: 100% !important; }
+  .ev-order-page table { font-size: 0.9rem; }
+  .ev-order-page th, .ev-order-page td { padding: 8px 4px !important; }
+  .ev-order-summary { grid-template-columns: 1fr !important; gap: 24px !important; }
+}
+</style>
 <div class="section">
-  <div class="page-width" style="max-width:800px;margin:0 auto;padding:60px 20px;">
+  <div class="page-width ev-order-page" style="max-width:800px;margin:0 auto;padding:60px 20px;">
     <a href="{{ routes.account_url }}" style="color:var(--color-accent);font-size:0.95rem;">&#8592; Zurueck zum Konto</a>
     <h1 style="margin:16px 0 8px;">Bestellung {{ order.name }}</h1>
     <p style="color:var(--color-text-light);margin-bottom:32px;">
@@ -31,7 +39,7 @@
       </tbody>
     </table>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+    <div class="ev-order-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
       <!-- Zusammenfassung -->
       <div>
         <h2 style="font-size:1.1rem;margin-bottom:12px;">Zusammenfassung</h2>

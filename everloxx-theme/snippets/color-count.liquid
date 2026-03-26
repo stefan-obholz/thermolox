@@ -1,0 +1,26 @@
+<script>
+(function(){
+  var url = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1/palette_colors?select=id&status=eq.active';
+  var key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';
+
+  fetch(url, {
+    headers: { 'apikey': key, 'Authorization': 'Bearer ' + key, 'Prefer': 'count=exact', 'Range': '0-0' }
+  }).then(function(r){
+    var range = r.headers.get('content-range');
+    if(range){
+      var count = range.split('/')[1];
+      if(count){
+        window.EVERLOXX_COLOR_COUNT = parseInt(count);
+        document.querySelectorAll('[data-ev-count]').forEach(function(el){
+          var template = el.dataset.evCount || '{n}';
+          el.textContent = template.replace('{n}', count);
+        });
+        /* Update dynamic counters */
+        document.querySelectorAll('[data-ev-dynamic-count]').forEach(function(el){
+          el.setAttribute('data-count', count);
+        });
+      }
+    }
+  }).catch(function(){});
+})();
+</script>

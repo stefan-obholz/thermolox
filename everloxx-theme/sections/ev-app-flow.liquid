@@ -96,7 +96,11 @@
   letter-spacing: 0.08em;
 }
 @media (max-width: 749px) {
+  .ev-flow { padding: 48px 16px !important; }
+  .ev-flow-inner { max-width: 100% !important; }
+  .ev-flow-sub { margin-bottom: 32px; }
   .ev-flow-steps { flex-direction: column; gap: 8px; }
+  .ev-flow-step { padding: 20px 12px; }
   .ev-flow-step:not(:last-child)::after { content: '\2193'; right: auto; top: auto; bottom: -16px; left: 50%; transform: translateX(-50%); }
 }
 </style>
@@ -114,7 +118,7 @@
       <div class="ev-flow-step">
         <div class="ev-flow-icon"><svg viewBox="0 0 24 24"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/></svg></div>
         <div class="ev-flow-title">Farbe wählen</div>
-        <div class="ev-flow-desc">132 Premium-Farbtöne durchstöbern</div>
+        <div class="ev-flow-desc"><span data-ev-count="{n} Premium-Farbtöne">132 Premium-Farbtöne</span> durchstöbern</div>
       </div>
       <div class="ev-flow-step">
         <div class="ev-flow-icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>

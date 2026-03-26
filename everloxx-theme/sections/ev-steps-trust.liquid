@@ -1,19 +1,28 @@
 {%- style -%}
 .cx-step-circle{width:72px;height:72px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;background:#efd2a7;border-radius:50%;}
 .cx-step-circle svg{stroke:#2D2926 !important;}
+@media (max-width: 749px) {
+  .ev-steps-section { padding: 40px 16px 0 !important; }
+  .ev-steps-section .cx-section-sub { margin-bottom: 40px !important; }
+  .ev-steps-flex { flex-direction: column !important; gap: 24px !important; align-items: center !important; margin-bottom: 32px !important; }
+  .ev-steps-flex > div { max-width: 100% !important; min-width: unset !important; }
+  .ev-trust-bar { padding: 32px 16px !important; overflow: hidden !important; margin-left: 0 !important; margin-right: 0 !important; width: auto !important; }
+  .ev-trust-bar-inner { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 20px !important; }
+  .ev-trust-bar-inner .cx-stat { font-size: 2rem !important; }
+}
 {%- endstyle -%}
 
-<section style="background:#fff;padding:80px 20px 0;" aria-label="So funktioniert es">
+<section class="ev-steps-section" style="background:#fff;padding:80px 20px 0;" aria-label="So funktioniert es">
   <div style="max-width:1000px;margin:0 auto;text-align:center;">
-    <h2 class="cx-section-heading">So einfach geht's</h2>
+    <h2 class="cx-section-heading reveal">So einfach geht's</h2>
     <p class="cx-section-sub" style="margin-bottom:100px;">In drei Schritten zum Wohlfühl-Zuhause</p>
-    <div style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-bottom:50px;padding-top:20px;">
+    <div class="reveal-stagger ev-steps-flex" style="display:flex;gap:40px;justify-content:center;flex-wrap:wrap;margin-bottom:50px;padding-top:20px;">
 
       <div style="flex:1;min-width:220px;max-width:280px;text-align:center;">
         <div class="cx-step-circle"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2D2926" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="#404040"/><circle cx="17.5" cy="10.5" r=".5" fill="#404040"/><circle cx="6.5" cy="12.5" r=".5" fill="#404040"/><circle cx="8.5" cy="7.5" r=".5" fill="#404040"/></svg></div>
         <div class="cx-tag" style="margin-top:6px;">Schritt 1</div>
         <h3 style="font-family:Times New Roman,Georgia,serif;font-size:1.5rem;color:#404040;margin:4px 0 8px;">Farbton wählen</h3>
-        <p class="cx-step-text">Über 130 kuratierte Farbtöne in 11 Kollektionen – finde deinen perfekten Ton</p>
+        <p class="cx-step-text">Über <span data-ev-count="{n}">132</span> kuratierte Farbtöne in 11 Kollektionen – finde deinen perfekten Ton</p>
       </div>
       <div style="flex:1;min-width:220px;max-width:280px;text-align:center;">
         <div class="cx-step-circle"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2D2926" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></div>
@@ -29,12 +38,12 @@
       </div>
     </div>
   </div>
-  <div style="background:#efd2a7;padding:48px 20px;margin-left:calc(-50vw + 50%);margin-right:calc(-50vw + 50%);width:100vw;">
-    <div style="max-width:1000px;margin:0 auto;display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px;text-align:center;">
-      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;">50%</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Wärmestrahlung reflektiert</div></div>
-      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;">42%</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">weniger Heizkosten möglich</div></div>
-      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;" id="trust-count">132</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Premium-Farbtöne</div></div>
-      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;">0%</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Lösemittel</div></div>
+  <div class="ev-trust-bar" style="background:#efd2a7;padding:48px 20px;margin-left:calc(-50vw + 50%);margin-right:calc(-50vw + 50%);width:100vw;">
+    <div class="ev-trust-bar-inner" style="max-width:1000px;margin:0 auto;display:flex;justify-content:space-around;flex-wrap:wrap;gap:24px;text-align:center;">
+      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;" data-count="50" data-suffix="%">0</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Wärmestrahlung reflektiert</div></div>
+      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;" data-count="42" data-suffix="%">0</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">weniger Heizkosten möglich</div></div>
+      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;" id="trust-count" data-count="132" data-ev-dynamic-count>0</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Premium-Farbtöne</div></div>
+      <div><div class="cx-stat" style="color:#404040 !important;font-size:3rem !important;" data-count-down="100" data-suffix="%">100</div><div style="color:rgba(64,64,64,0.6);margin-top:4px;">Lösemittel</div></div>
     </div>
   </div>
 </section>

@@ -6,20 +6,25 @@
   transform: translateY(-4px);
   box-shadow: 0 12px 32px rgba(0,0,0,0.1);
 }
+@media (max-width: 749px) {
+  .ev-product-grid-section { padding: 40px 16px !important; }
+  .ev-product-grid-wrap { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
+  .ev-product-grid-header { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; margin-bottom: 24px !important; }
+}
 {%- endstyle -%}
 
-<section style="background:#fff;padding:80px 20px;" aria-label="Beliebte Farbtöne">
+<section class="ev-product-grid-section" style="background:#fff;padding:80px 20px;" aria-label="Beliebte Farbtöne">
   <div style="max-width:1200px;margin:0 auto;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
+    <div class="ev-product-grid-header" style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;">
       <div>
-        <h2 class="cx-section-heading" style="margin:0 !important;">Beliebte Farbtöne</h2>
+        <h2 class="cx-section-heading reveal" style="margin:0 !important;">Beliebte Farbtöne</h2>
         <p class="cx-section-sub" style="margin:8px 0 0 0 !important;text-align:left !important;">Unsere meistgewählten Premium-Wandfarben</p>
       </div>
       <a href="/collections/wandfarben" style="color:#efd2a7;text-decoration:none;font-weight:600;white-space:nowrap;">Alle ansehen →</a>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+    <div class="reveal-stagger ev-product-grid-wrap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
 
-      <a href="/products/silk-cremebeige" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/silk-cremebeige" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Silk_Cremebeige_seidenmatt.png?v=1773492863" alt="Silk Cremebeige" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -28,7 +33,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/prestige-architekturgrau" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/prestige-architekturgrau" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Prestige_Architekturgrau_seidenmatt.png?v=1773492960" alt="Prestige Architekturgrau" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -37,7 +42,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/dusty-rose" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/dusty-rose" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Dusty_Rose_seidenmatt.png?v=1773493071" alt="Dusty Rose" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -46,7 +51,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/sage-whisper" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/sage-whisper" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Sage_Whisper_seidenmatt.png?v=1773493193" alt="Sage Whisper" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -55,7 +60,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/onyx-grey" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/onyx-grey" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Onyx_Grey_seidenmatt.png?v=1773493439" alt="Onyx Grey" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -64,7 +69,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/golden-ockerbraun" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/golden-ockerbraun" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Golden_Ockerbraun_seidenmatt.png?v=1773492974" alt="Golden Ockerbraun" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -73,7 +78,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/navy-mood" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/navy-mood" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Navy_Mood_seidenmatt.png?v=1773493287" alt="Navy Mood" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>
@@ -82,7 +87,7 @@
           <div style="color:#909090;">€149</div>
         </div>
       </a>
-      <a href="/products/peach-blossom" class="cx-card" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
+      <a href="/products/peach-blossom" class="cx-card lift zoom-hover" style="text-decoration:none;display:block;border-radius:12px;overflow:hidden;background:#fff;border:1px solid #f0f0f0;">
         <div style="aspect-ratio:1;background:#fafafa;display:flex;align-items:center;justify-content:center;padding:20px;">
           <img src="https://cdn.shopify.com/s/files/1/0974/3178/1717/files/Peach_Blossom_seidenmatt.png?v=1773493035" alt="Peach Blossom" style="max-width:80%;max-height:80%;object-fit:contain;" loading="lazy">
         </div>

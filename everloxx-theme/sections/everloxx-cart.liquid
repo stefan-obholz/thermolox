@@ -1,3 +1,22 @@
+<style>
+@media (max-width: 749px) {
+  .section-cart .page-width { padding: 24px 16px !important; }
+  .cart__table thead { display: none; }
+  .cart__table, .cart__table tbody, .cart__table tr, .cart__table td { display: block; width: 100%; }
+  .cart__item { border: 1px solid var(--gray-200, #E8E6E3); border-radius: 12px; padding: 16px !important; margin-bottom: 12px; display: grid !important; grid-template-columns: 80px 1fr; gap: 12px; }
+  .cart__item-info { grid-column: 1 / -1; }
+  .cart__item-link { display: flex; gap: 12px; align-items: center; }
+  .cart__item-image { width: 80px !important; height: 80px !important; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .cart__item-price::before { content: 'Preis: '; font-weight: 400; color: var(--gray-500, #78716C); }
+  .cart__item-quantity { display: flex; align-items: center; gap: 8px; }
+  .cart__item-quantity::before { content: 'Menge: '; font-weight: 400; color: var(--gray-500, #78716C); }
+  .cart__item-quantity input { width: 60px; padding: 8px; border: 1px solid var(--gray-200, #E8E6E3); border-radius: 8px; text-align: center; }
+  .cart__item-total { font-weight: 600; }
+  .cart__item-total::before { content: 'Gesamt: '; font-weight: 400; color: var(--gray-500, #78716C); }
+  .cart__actions { flex-direction: column; gap: 8px; }
+  .cart__actions .btn { width: 100%; }
+}
+</style>
 <section class="section" data-section-id="{{ section.id }}">
   <div class="page-width">
     <h1>{{ 'cart.general.title' | t }}</h1>

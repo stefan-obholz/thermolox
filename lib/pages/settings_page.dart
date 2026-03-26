@@ -688,18 +688,22 @@ class LegalTab extends StatelessWidget {
               children: [
                 _LegalSection(
                   title: 'Impressum',
-                  body: 'Hier folgt das Impressum.',
+                  body: 'EVERLOXX GmbH\n'
+                      'Geschäftsführer: Stefano Bholz\n\n'
+                      'Kontakt: info@everloxx.com\n'
+                      'Web: https://everloxx.com\n\n'
+                      'Vollständiges Impressum unter:\nhttps://everloxx.com/policies/legal-notice',
                   padding: tokens.gapMd,
                 ),
                 _LegalSection(
                   title: 'AGB',
-                  body: 'Hier folgen die Allgemeinen Geschäftsbedingungen.',
+                  body: 'Die vollständigen Allgemeinen Geschäftsbedingungen findest du unter:\nhttps://everloxx.com/policies/terms-of-service',
                   padding: tokens.gapMd,
                 ),
                 const _PrivacySection(),
                 _LegalSection(
                   title: 'Widerrufsrecht',
-                  body: 'Hier folgt die Widerrufsbelehrung.',
+                  body: 'Die vollständige Widerrufsbelehrung findest du unter:\nhttps://everloxx.com/policies/refund-policy',
                   padding: tokens.gapMd,
                 ),
               ],
@@ -789,7 +793,7 @@ class _PrivacySectionState extends State<_PrivacySection> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Hier folgt die Datenschutzerklärung.',
+          'Die vollständige Datenschutzerklärung findest du unter:\nhttps://everloxx.com/policies/privacy-policy',
           style: theme.textTheme.bodyMedium,
         ),
         SizedBox(height: tokens.gapMd),

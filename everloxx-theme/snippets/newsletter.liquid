@@ -1,0 +1,114 @@
+{%- style -%}
+  .ev-newsletter {
+    background: var(--color-dark);
+    padding: var(--space-10) var(--space-5);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-newsletter::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(239,210,167,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(239,210,167,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .ev-newsletter-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .ev-newsletter h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    color: #fff;
+    margin-bottom: var(--space-3);
+  }
+  .ev-newsletter p {
+    color: rgba(255,255,255,0.6);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-6);
+    line-height: 1.6;
+  }
+  .ev-newsletter-form {
+    display: flex;
+    gap: var(--space-2);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .ev-newsletter-input {
+    flex: 1;
+    padding: var(--space-3) var(--space-4);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: var(--text-base);
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .ev-newsletter-input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+  .ev-newsletter-input:focus {
+    border-color: var(--color-accent);
+  }
+  .ev-newsletter-submit {
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-accent);
+    color: var(--color-dark);
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .ev-newsletter-submit:hover {
+    opacity: 0.85;
+  }
+  .ev-newsletter-success {
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    margin-top: var(--space-3);
+    display: none;
+  }
+  .ev-newsletter-success.is-visible {
+    display: block;
+  }
+  @media (max-width: 549px) {
+    .ev-newsletter { padding: var(--space-8) var(--space-4); }
+    .ev-newsletter-form { flex-direction: column; }
+  }
+{%- endstyle -%}
+
+<div class="ev-newsletter">
+  <div class="ev-newsletter-inner reveal">
+    <h2>Bleib inspiriert</h2>
+    <p>Neue Farbtöne, Design-Tipps und exklusive Angebote — direkt in dein Postfach.</p>
+
+    {%- form 'customer', id: 'ev-newsletter-form' -%}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+      <div class="ev-newsletter-form">
+        <input
+          type="email"
+          name="contact[email]"
+          class="ev-newsletter-input"
+          placeholder="Deine E-Mail-Adresse"
+          required
+          autocomplete="email"
+        >
+        <button type="submit" class="ev-newsletter-submit">Anmelden</button>
+      </div>
+      {%- if form.posted_successfully? -%}
+        <p class="ev-newsletter-success is-visible">Vielen Dank! Du bist jetzt angemeldet.</p>
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+</div>

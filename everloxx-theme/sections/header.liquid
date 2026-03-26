@@ -1,4 +1,58 @@
 <style>
+  /* Predictive Search */
+  .header__search-form { position: relative; }
+  .ev-search-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: var(--radius-sm, 8px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    z-index: 100;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 4px;
+  }
+  .ev-search-dropdown.open { display: block; }
+  .ev-search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: var(--color-text, #2D2926);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .ev-search-result:hover { background: var(--gray-50, #FAFAF9); }
+  .ev-search-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .ev-search-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .ev-search-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .ev-search-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--gray-400, #A8A29E);
+    font-size: 0.9rem;
+  }
+
   .header__mobile-toggle {
     display: none;
     background: none;
@@ -92,18 +146,21 @@
       </a>
 
       <div class="header__search">
-        <form action="{{ routes.search_url }}" method="get" class="header__search-form">
+        <form action="{{ routes.search_url }}" method="get" class="header__search-form" id="ev-search-form">
           <input
             type="search"
             name="q"
             class="header__search-input"
+            id="ev-search-input"
             placeholder="Produkte durchsuchen..."
             value="{{ search.terms | escape }}"
+            autocomplete="off"
           >
           <input type="hidden" name="options[prefix]" value="last">
           <button type="submit" class="header__search-btn" aria-label="Suchen">
             <svg viewBox="0 0 18 19" fill="none"><path fill="currentColor" fill-rule="evenodd" d="M11.03 11.68A5.784 5.784 0 1 1 2.85 3.5a5.784 5.784 0 0 1 8.18 8.18m.26 1.12a6.78 6.78 0 1 1 .72-.7l5.4 5.4a.5.5 0 1 1-.71.7z" clip-rule="evenodd"/></svg>
           </button>
+          <div class="ev-search-dropdown" id="ev-search-dropdown"></div>
         </form>
       </div>
 
@@ -123,7 +180,7 @@
 
       <nav class="header__nav" aria-label="Hauptnavigation">
         {%- for link in linklists.main-menu.links -%}
-          <a href="{{ link.url }}" class="header__nav-link{% if link.active %} active{% endif %}">
+          <a href="{{ link.url }}" class="header__nav-link{% if link.active or link.child_active %} active{% endif %}">
             {{ link.title }}
           </a>
         {%- endfor -%}
@@ -162,6 +219,84 @@
   if(toggle) toggle.addEventListener('click', open);
   if(close) close.addEventListener('click', shut);
   if(overlay) overlay.addEventListener('click', shut);
+})();
+
+/* Active nav link highlight */
+(function(){
+  var path = window.location.pathname;
+  document.querySelectorAll('.header__nav-link').forEach(function(link){
+    var href = link.getAttribute('href');
+    if(!href) return;
+    /* Exact match or path starts with link href (for collections/products) */
+    if(path === href || (href !== '/' && path.startsWith(href))){
+      link.classList.add('active');
+    }
+  });
+})();
+</script>
+
+<script>
+(function(){
+  var input = document.getElementById('ev-search-input');
+  var dropdown = document.getElementById('ev-search-dropdown');
+  if (!input || !dropdown) return;
+
+  var debounceTimer;
+  var supaUrl = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1/';
+  var supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';
+
+  function toHandle(name) {
+    return name.toLowerCase().replace(/[^a-z0-9äöüß]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function doSearch(query) {
+    if (query.length < 2) {
+      dropdown.classList.remove('open');
+      return;
+    }
+    var url = supaUrl + 'palette_colors?name=ilike.*' + encodeURIComponent(query) + '*&select=name,hex,image_url_1&status=eq.active&limit=6';
+    fetch(url, {
+      headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data || !data.length) {
+        dropdown.innerHTML = '<div class="ev-search-empty">Keine Ergebnisse</div>';
+        dropdown.classList.add('open');
+        return;
+      }
+      var html = '';
+      data.forEach(function(p){
+        var handle = toHandle(p.name);
+        html += '<a href="/products/' + handle + '" class="ev-search-result">'
+          + '<span class="ev-search-dot" style="background:' + (p.hex || '#ccc') + ';"></span>'
+          + (p.image_url_1 ? '<img class="ev-search-img" src="' + p.image_url_1 + '" alt="" loading="lazy">' : '')
+          + '<span class="ev-search-name">' + p.name + '</span>'
+          + '</a>';
+      });
+      dropdown.innerHTML = html;
+      dropdown.classList.add('open');
+    })
+    .catch(function(){ dropdown.classList.remove('open'); });
+  }
+
+  input.addEventListener('keyup', function(){
+    clearTimeout(debounceTimer);
+    var q = input.value.trim();
+    debounceTimer = setTimeout(function(){ doSearch(q); }, 300);
+  });
+
+  input.addEventListener('focus', function(){
+    if (input.value.trim().length >= 2 && dropdown.innerHTML) {
+      dropdown.classList.add('open');
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('#ev-search-form')) {
+      dropdown.classList.remove('open');
+    }
+  });
 })();
 </script>
 

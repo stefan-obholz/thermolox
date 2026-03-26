@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../widgets/cart_icon_button.dart';
 import '../theme/app_theme.dart';
 import '../models/content_item.dart';
@@ -35,6 +36,7 @@ class HomePageState extends State<HomePage> {
         EdgeInsets.symmetric(horizontal: tokens.screenPadding);
 
     return [
+      const _HeroVideo(),
       Padding(
         padding: tightPadding,
         child: EverloxxShowcase(
@@ -171,15 +173,13 @@ class EverloxxShowcaseState extends State<EverloxxShowcase>
 
   @override
   Widget build(BuildContext context) {
-    const double rightImageHeight = 220;
-    const double leftImageHeight = rightImageHeight / 1.2; // ~1.2x kleiner
-    const double gap = 32;
+    const double imageHeight = 220;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return SizedBox(
           width: double.infinity,
-          height: rightImageHeight + 2,
+          height: imageHeight + 2,
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: constraints.maxWidth),
@@ -187,28 +187,11 @@ class EverloxxShowcaseState extends State<EverloxxShowcase>
                 opacity: _fade,
                 child: ScaleTransition(
                   scale: _scale,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          height: leftImageHeight,
-                          child: Image.asset(
-                            'assets/images/THERMOSEAL.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        SizedBox(width: gap),
-                        SizedBox(
-                          height: rightImageHeight,
-                          child: Image.asset(
-                            'assets/images/THERMOCOAT.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ],
+                  child: SizedBox(
+                    height: imageHeight,
+                    child: Image.asset(
+                      'assets/images/EVERLOXX_ICON.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -561,7 +544,7 @@ class EverloxxImpactText extends StatelessWidget {
           Text(
             'Unser Wärmebild-Vergleich zeigt eindrucksvoll die Wirkung des '
             'EVERLOXX-Systems: Links ein unbehandeltes Gebäude – rechts ein Haus, '
-            'das mit THERMO-COAT gestrichen und mit THERMO-SEAL abgedichtet wurde.',
+            'das mit EVERLOXX gestrichen und abgedichtet wurde.',
             style: theme.textTheme.bodyLarge?.copyWith(
               height: 1.35,
               fontSize: bodySize,
@@ -721,6 +704,174 @@ class _BlogPreviewSectionState extends State<_BlogPreviewSection> {
           ],
         );
       },
+    );
+  }
+}
+
+/// Hero video matching the website's fullscreen hero
+class _HeroVideo extends StatefulWidget {
+  const _HeroVideo();
+
+  @override
+  State<_HeroVideo> createState() => _HeroVideoState();
+}
+
+class _HeroVideoState extends State<_HeroVideo> {
+  late VideoPlayerController _controller;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(
+      Uri.parse('https://cdn.shopify.com/videos/c/o/v/3eb4687cd1a44a71a997a27eed59dbbb.mp4'),
+    )..initialize().then((_) {
+        if (mounted) {
+          setState(() => _initialized = true);
+          _controller.setLooping(true);
+          _controller.setVolume(0);
+          _controller.play();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final heroHeight = screenWidth * 1.2; // tall hero for mobile
+
+    return SizedBox(
+      width: double.infinity,
+      height: heroHeight,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Video background
+          if (_initialized)
+            FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _controller.value.size.width,
+                height: _controller.value.size.height,
+                child: VideoPlayer(_controller),
+              ),
+            )
+          else
+            Container(color: const Color(0xFF1A1614)),
+
+          // Top fade (white → transparent)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 120,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xCCFFFFFF),
+                    Color(0x00FFFFFF),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Bottom gradient overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: heroHeight * 0.6,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Color(0x99000000),
+                    Color(0x26000000),
+                    Color(0x00000000),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Text content
+          Positioned(
+            bottom: 60,
+            left: 24,
+            right: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Dein',
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamilyHeading,
+                    fontSize: 42,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white,
+                    height: 1.0,
+                  ),
+                ),
+                Text(
+                  'Wohlfühl-Zuhause.',
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamilyHeading,
+                    fontSize: 42,
+                    fontWeight: FontWeight.w300,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Premium-Wandfarben für Räume, die sich so gut\nanfühlen, wie sie aussehen.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.7),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProductsPage()),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accent,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Text(
+                      'FARBTÖNE ENTDECKEN',
+                      style: TextStyle(
+                        color: const Color(0xFF1A1614),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

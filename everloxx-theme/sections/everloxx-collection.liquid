@@ -1,79 +1,309 @@
-<section class="section" data-section-id="{{ section.id }}">
-  <div class="page-width">
-    <header class="collection__header">
-      <h1 class="collection__title">{{ collection.title }}</h1>
-      {%- if collection.description != blank -%}
-        <div class="collection__description">
-          {{ collection.description }}
-        </div>
-      {%- endif -%}
-    </header>
+{%- style -%}
+  .ev-coll-hero {
+    background: var(--color-dark);
+    padding: var(--space-10) var(--space-5) var(--space-8);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-coll-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(239,210,167,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(239,210,167,0.05) 0%, transparent 60%);
+    animation: ev-coll-glow 12s ease-in-out infinite alternate;
+  }
+  @keyframes ev-coll-glow {
+    0% { transform: translateX(-5%); }
+    100% { transform: translateX(5%); }
+  }
+  .ev-coll-hero h1 {
+    color: #fff;
+    position: relative;
+    z-index: 1;
+    margin-bottom: var(--space-3);
+  }
+  .ev-coll-hero p {
+    color: rgba(255,255,255,0.6);
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: var(--text-md);
+  }
+  .ev-coll-count {
+    display: inline-block;
+    background: rgba(239,210,167,0.15);
+    color: var(--color-accent);
+    padding: var(--space-1) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-4);
+    position: relative;
+    z-index: 1;
+  }
+  .ev-coll-filter {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: var(--space-5) var(--space-5) 0;
+    max-width: var(--page-width);
+    margin: 0 auto;
+  }
+  .ev-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-full);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+  .ev-filter-btn:hover { border-color: var(--color-text); }
+  .ev-filter-btn.active {
+    background: var(--color-dark);
+    color: #fff;
+    border-color: var(--color-dark);
+  }
+  .ev-filter-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .ev-filter-dot--gradient {
+    background: conic-gradient(#c44, #c84, #cc4, #4c8, #48c, #84c, #c44);
+  }
+  .ev-coll-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-5) var(--space-8);
+  }
+  .ev-coll-card {
+    background: var(--color-bg);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .ev-coll-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+  }
+  .ev-coll-card-img {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--gray-50);
+  }
+  .ev-coll-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.5s ease;
+  }
+  .ev-coll-card:hover .ev-coll-card-img img { transform: scale(1.04); }
+  .ev-coll-card { position: relative; }
+  .ev-coll-card-qv {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: var(--radius-md);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .ev-coll-card:hover .ev-coll-card-qv { opacity: 1; pointer-events: auto; }
+  .ev-coll-card-qv span {
+    background: #fff;
+    color: var(--color-dark, #1A1614);
+    padding: 8px 20px;
+    border-radius: var(--radius-full, 40px);
+    font-size: var(--text-sm, 0.9rem);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+  }
+  .ev-coll-card-body { padding: var(--space-4); }
+  .ev-coll-card-title { font-weight: 600; margin-bottom: var(--space-1); }
+  .ev-coll-card-price { font-weight: 600; color: var(--color-text); }
+  .ev-pagination {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-6) 0 var(--space-10);
+  }
+  .ev-pagination a, .ev-pagination span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .ev-pagination a {
+    color: var(--color-text);
+    border: 1px solid var(--gray-200);
+  }
+  .ev-pagination a:hover {
+    background: var(--color-dark);
+    color: #fff;
+    border-color: var(--color-dark);
+  }
+  .ev-pagination span.current {
+    background: var(--color-dark);
+    color: #fff;
+    min-width: 40px;
+  }
+  .ev-pagination span.dots {
+    border: none;
+    color: var(--gray-400);
+  }
+  .ev-pagination .ev-page-arrow {
+    width: auto;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+  }
+  @media (max-width: 989px) {
+    .ev-coll-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 549px) {
+    .ev-coll-grid { grid-template-columns: 1fr; }
+    .ev-coll-hero { padding: var(--space-8) var(--space-4) var(--space-6); }
+  }
+{%- endstyle -%}
 
-    {%- paginate collection.products by 12 -%}
-      {%- if collection.products.size > 0 -%}
-        <div class="grid grid--4">
-          {%- for product in collection.products -%}
-            <a href="{{ product.url }}" class="card">
-              <div class="card__image">
-                {%- if product.featured_image -%}
-                  <img
-                    src="{{ product.featured_image | image_url: width: 480 }}"
-                    alt="{{ product.featured_image.alt | escape }}"
-                    width="480"
-                    height="{{ 480 | divided_by: product.featured_image.aspect_ratio | round }}"
-                    loading="lazy"
-                  >
-                {%- else -%}
-                  <div class="card__image-placeholder">Kein Bild</div>
-                {%- endif -%}
-              </div>
-              <div class="card__body">
-                <h2 class="card__title">{{ product.title }}</h2>
-                <p class="card__price">{{ product.price | money }}</p>
-              </div>
-            </a>
-          {%- endfor -%}
-        </div>
+<!-- Hero -->
+<div class="ev-coll-hero">
+  <span class="ev-coll-count reveal">{{ collection.products_count }} Farbtöne</span>
+  <h1 class="reveal">{{ collection.title }}</h1>
+  {%- if collection.description != blank -%}
+    <p class="reveal">{{ collection.description }}</p>
+  {%- else -%}
+    <p class="reveal">Kuratierte Farben mit patentierter Klimatechnologie und seidigem Effekt.</p>
+  {%- endif -%}
+</div>
 
-        {%- if paginate.pages > 1 -%}
-          <nav class="pagination" aria-label="Seitennavigation">
-            <ul class="pagination__list">
-              {%- if paginate.previous -%}
-                <li>
-                  <a href="{{ paginate.previous.url }}" class="pagination__link" aria-label="Vorherige Seite">&laquo; Zurück</a>
-                </li>
-              {%- endif -%}
+<!-- Color Filters -->
+<div class="ev-coll-filter reveal-stagger">
+  <button class="ev-filter-btn active" onclick="evFilterColor('all', this)"><span class="ev-filter-dot ev-filter-dot--gradient"></span> Alle</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('rose', this)"><span class="ev-filter-dot" style="background:#C4A8AD;"></span> Rosé</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('red', this)"><span class="ev-filter-dot" style="background:#A85A3A;"></span> Rot</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('sun', this)"><span class="ev-filter-dot" style="background:#C8A854;"></span> Gelb</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('botanical', this)"><span class="ev-filter-dot" style="background:#7A8A78;"></span> Grün</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('sky', this)"><span class="ev-filter-dot" style="background:#5A7A98;"></span> Blau</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('ocean', this)"><span class="ev-filter-dot" style="background:#1A5A68;"></span> Petrol</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('velvet', this)"><span class="ev-filter-dot" style="background:#5A3060;"></span> Violett</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('natural', this)"><span class="ev-filter-dot" style="background:#EDE4D6;"></span> Beige</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('earth', this)"><span class="ev-filter-dot" style="background:#8B5E3C;"></span> Braun</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('urban', this)"><span class="ev-filter-dot" style="background:#A09890;"></span> Grau</button>
+  <button class="ev-filter-btn" onclick="evFilterColor('black', this)"><span class="ev-filter-dot" style="background:#1C2028;"></span> Schwarz</button>
+</div>
 
-              {%- for part in paginate.parts -%}
-                <li>
-                  {%- if part.is_link -%}
-                    <a href="{{ part.url }}" class="pagination__link">{{ part.title }}</a>
-                  {%- else -%}
-                    <span class="pagination__link pagination__link--current" aria-current="page">{{ part.title }}</span>
-                  {%- endif -%}
-                </li>
-              {%- endfor -%}
+<!-- Products Grid (loaded from Supabase) -->
+<div class="ev-coll-grid" id="ev-coll-grid"></div>
+<div id="ev-coll-loading" style="text-align:center;padding:var(--space-8) 0;color:var(--gray-400);">Farbtöne werden geladen...</div>
 
-              {%- if paginate.next -%}
-                <li>
-                  <a href="{{ paginate.next.url }}" class="pagination__link" aria-label="Nächste Seite">Weiter &raquo;</a>
-                </li>
-              {%- endif -%}
-            </ul>
-          </nav>
-        {%- endif -%}
-      {%- else -%}
-        <p class="collection__empty">Keine Produkte in dieser Kollektion.</p>
-      {%- endif -%}
-    {%- endpaginate -%}
-  </div>
-</section>
+<script>
+(function(){
+  var grid = document.getElementById('ev-coll-grid');
+  var loading = document.getElementById('ev-coll-loading');
+  var allProducts = [];
+  var currentFilter = 'all';
+  var supaUrl = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1/palette_colors';
+  var supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';
+
+  fetch(supaUrl + '?select=name,hex,group_name,image_url_1,price_eur,shopify_product_id&status=eq.active&order=sort_order', {
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    allProducts = data;
+    loading.style.display = 'none';
+    renderProducts('all');
+  })
+  .catch(function(){
+    loading.textContent = 'Fehler beim Laden. Bitte Seite neu laden.';
+  });
+
+  window.evFilterColor = function(color, btn) {
+    document.querySelectorAll('.ev-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentFilter = color;
+    renderProducts(color);
+  };
+
+  function renderProducts(filter) {
+    var filtered = filter === 'all'
+      ? allProducts
+      : allProducts.filter(function(p){ return p.group_name && p.group_name.toLowerCase() === filter; });
+
+    var html = '';
+    filtered.forEach(function(p){
+      var handle = p.name.toLowerCase().replace(/[^a-z0-9äöüß]+/g, '-').replace(/^-|-$/g, '');
+      var img = p.image_url_1 || '';
+      var price = p.price_eur ? '€' + Number(p.price_eur).toFixed(2).replace('.', ',') : '';
+
+      html += '<a href="/products/' + handle + '" class="ev-coll-card" onclick="event.preventDefault(); openQuickView(\'' + handle.replace(/'/g, "\\'") + '\', \'' + p.name.replace(/'/g, "\\'") + '\');">'
+        + '<div class="ev-coll-card-qv"><span>Quick View</span></div>'
+        + '<div class="ev-coll-card-img">'
+        + (img ? '<img src="' + img + '" alt="' + p.name + '" loading="lazy">' : '<div style="width:100%;height:100%;background:' + p.hex + ';"></div>')
+        + '</div>'
+        + '<div class="ev-coll-card-body">'
+        + '<div class="ev-coll-card-title">' + p.name + '</div>'
+        + '<div class="ev-coll-card-price">' + price + '</div>'
+        + '</div></a>';
+    });
+
+    grid.innerHTML = html;
+
+    /* Animate cards in */
+    var cards = grid.querySelectorAll('.ev-coll-card');
+    cards.forEach(function(card, i){
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      setTimeout(function(){
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, Math.min(i * 50, 600));
+    });
+  }
+})();
+</script>
 
 {% schema %}
 {
   "name": "EVERLOXX Kollektion",
   "tag": "section",
-  "class": "section-collection",
   "settings": []
 }
 {% endschema %}

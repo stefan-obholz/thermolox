@@ -1,0 +1,222 @@
+{%- style -%}
+  .ev-search-hero {
+    background: var(--gray-50);
+    padding: var(--space-10) var(--space-5) var(--space-8);
+    text-align: center;
+  }
+  .ev-search-hero h1 {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    color: var(--color-text);
+    margin-bottom: var(--space-3);
+  }
+  .ev-search-hero h1 span {
+    color: var(--color-accent);
+    font-style: italic;
+  }
+  .ev-search-meta {
+    color: var(--color-text-light);
+    font-size: var(--text-sm);
+  }
+  .ev-search-results {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-5) var(--space-10);
+  }
+  .ev-search-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+  }
+  .ev-search-card {
+    background: var(--color-bg);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .ev-search-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+  }
+  .ev-search-card-img {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--gray-50);
+  }
+  .ev-search-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .ev-search-card:hover .ev-search-card-img img {
+    transform: scale(1.04);
+  }
+  .ev-search-card-body {
+    padding: var(--space-4);
+  }
+  .ev-search-card-title {
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+    font-size: var(--text-base);
+    color: var(--color-text);
+  }
+  .ev-search-card-price {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .ev-search-empty {
+    text-align: center;
+    padding: var(--space-10) var(--space-5);
+  }
+  .ev-search-empty-icon {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+    opacity: 0.3;
+  }
+  .ev-search-empty h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    color: var(--color-text);
+    margin-bottom: var(--space-3);
+  }
+  .ev-search-empty p {
+    color: var(--color-text-light);
+    max-width: 480px;
+    margin: 0 auto var(--space-5);
+  }
+  .ev-search-pagination {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-6) 0 var(--space-10);
+  }
+  .ev-search-pagination a,
+  .ev-search-pagination span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .ev-search-pagination a {
+    color: var(--color-text);
+    border: 1px solid var(--gray-200);
+  }
+  .ev-search-pagination a:hover {
+    background: var(--color-dark);
+    color: #fff;
+    border-color: var(--color-dark);
+  }
+  .ev-search-pagination span.current {
+    background: var(--color-dark);
+    color: #fff;
+  }
+  .ev-search-pagination .ev-page-arrow {
+    width: auto;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+  }
+  @media (max-width: 989px) {
+    .ev-search-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 549px) {
+    .ev-search-grid { grid-template-columns: 1fr; }
+    .ev-search-hero { padding: var(--space-8) var(--space-4) var(--space-6); }
+  }
+{%- endstyle -%}
+
+<div class="ev-search-hero">
+  <h1 class="reveal">Suchergebnisse für <span>&bdquo;{{ search.terms }}&ldquo;</span></h1>
+  {%- if search.performed -%}
+    <p class="ev-search-meta">{{ search.results_count }} Ergebnis{{ search.results_count | pluralize: '', 'se' }} gefunden</p>
+  {%- endif -%}
+</div>
+
+<div class="ev-search-results">
+  {%- if search.performed and search.results_count > 0 -%}
+    {%- paginate search.results by 16 -%}
+      <div class="ev-search-grid reveal-stagger">
+        {%- for item in search.results -%}
+          <a href="{{ item.url }}" class="ev-search-card">
+            <div class="ev-search-card-img">
+              {%- if item.featured_image -%}
+                <img
+                  src="{{ item.featured_image | image_url: width: 600 }}"
+                  alt="{{ item.featured_image.alt | escape }}"
+                  loading="lazy"
+                  width="600"
+                  height="600"
+                >
+              {%- else -%}
+                <div style="width:100%;height:100%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;color:var(--gray-400);">
+                  <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 21l-5.2-5.2M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+              {%- endif -%}
+            </div>
+            <div class="ev-search-card-body">
+              <div class="ev-search-card-title">{{ item.title }}</div>
+              {%- if item.price -%}
+                <div class="ev-search-card-price">{{ item.price | money }}</div>
+              {%- endif -%}
+            </div>
+          </a>
+        {%- endfor -%}
+      </div>
+
+      {%- if paginate.pages > 1 -%}
+        <nav class="ev-search-pagination" aria-label="Seitennavigation">
+          {%- if paginate.previous -%}
+            <a href="{{ paginate.previous.url }}" class="ev-page-arrow">&larr; Zurück</a>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {%- else -%}
+              {%- if part.title == paginate.current_page -%}
+                <span class="current">{{ part.title }}</span>
+              {%- else -%}
+                <span class="dots">{{ part.title }}</span>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <a href="{{ paginate.next.url }}" class="ev-page-arrow">Weiter &rarr;</a>
+          {%- endif -%}
+        </nav>
+      {%- endif -%}
+    {%- endpaginate -%}
+
+  {%- elsif search.performed -%}
+    <div class="ev-search-empty reveal">
+      <div class="ev-search-empty-icon">&#128269;</div>
+      <h2>Keine Ergebnisse gefunden</h2>
+      <p>Versuche es mit einem anderen Suchbegriff oder stöbere in unserer Kollektion.</p>
+      <a href="/collections/all" class="btn btn--primary">Alle Farbtöne entdecken</a>
+    </div>
+  {%- else -%}
+    <div class="ev-search-empty reveal">
+      <div class="ev-search-empty-icon">&#128269;</div>
+      <h2>Wonach suchst du?</h2>
+      <p>Gib einen Suchbegriff ein, um unsere Farbtöne, Artikel und Seiten zu durchsuchen.</p>
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "EVERLOXX Suche",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

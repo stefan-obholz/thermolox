@@ -1,9 +1,15 @@
+<style>
+@media (max-width: 749px) {
+  .ev-usp-strip-inner { flex-direction: column !important; gap: 20px 0 !important; padding: 24px 16px !important; }
+  .cx-usp-item { min-width: unset !important; flex: unset !important; width: 48% !important; }
+}
+</style>
 <div style="background:#505050;padding:40px 20px;color:#ffffff;">
-  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:32px 16px;">
+  <div class="reveal-stagger ev-usp-strip-inner" style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:32px 16px;">
 
     <div class="cx-usp-item" style="flex:1;min-width:160px;text-align:center;">
       <div style="margin-bottom:10px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="#ffffff"/><circle cx="17.5" cy="10.5" r=".5" fill="#ffffff"/><circle cx="6.5" cy="12.5" r=".5" fill="#ffffff"/><circle cx="8.5" cy="7.5" r=".5" fill="#ffffff"/></svg></div>
-      <div class="cx-usp-title"><span id="everloxx-color-count">132</span> Farbtöne</div>
+      <div class="cx-usp-title"><span data-ev-count="{n} Farbtöne">132 Farbtöne</span></div>
       <div class="cx-usp-sub">Kuratierte Kollektionen – live aus der Datenbank</div>
     </div>
     <div class="cx-usp-item" style="flex:1;min-width:160px;text-align:center;">

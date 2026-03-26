@@ -1,0 +1,107 @@
+<style>
+  .ev-app-banner {
+    background: linear-gradient(135deg, var(--color-dark) 0%, #2D2926 100%);
+    padding: var(--space-8) var(--space-5);
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-app-banner::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(239,210,167,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .ev-app-banner-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-7);
+    position: relative;
+    z-index: 1;
+  }
+  .ev-app-banner-icon {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+  }
+  .ev-app-banner-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(239,210,167,0.3));
+  }
+  .ev-app-banner-text {
+    flex: 1;
+  }
+  .ev-app-banner-text h3 {
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: var(--font-heading-weight);
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-2);
+  }
+  .ev-app-banner-text h3 em { color: var(--color-accent); font-style: italic; }
+  .ev-app-banner-text p {
+    color: rgba(255,255,255,0.6);
+    margin-bottom: var(--space-4);
+    line-height: 1.5;
+  }
+  .ev-app-banner-badges {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .ev-app-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: rgba(255,255,255,0.5);
+    font-size: var(--text-sm);
+  }
+  .ev-app-badge svg { width: 16px; height: 16px; stroke: var(--color-accent); fill: none; stroke-width: 1.5; }
+  .ev-app-banner-cta {
+    flex-shrink: 0;
+  }
+  .ev-app-banner-cta a {
+    display: inline-block;
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: var(--color-dark);
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .ev-app-banner-cta a:hover {
+    background: #fff;
+    transform: translateY(-2px);
+  }
+  @media (max-width: 749px) {
+    .ev-app-banner-inner { flex-direction: column; text-align: center; }
+    .ev-app-banner-badges { justify-content: center; }
+  }
+</style>
+
+<div class="ev-app-banner">
+  <div class="ev-app-banner-inner">
+    <div class="ev-app-banner-icon">
+      <img src="{{ 'EVERLOXX_ICON.png' | asset_url }}" alt="EVERLOXX App">
+    </div>
+    <div class="ev-app-banner-text">
+      <h3>Farben <em>live</em> an deiner Wand</h3>
+      <p>Teste jeden Farbton per AR-Vorschau direkt in deinem Raum — bevor du bestellst.</p>
+      <div class="ev-app-banner-badges">
+        <span class="ev-app-badge"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg> Kostenlos</span>
+        <span class="ev-app-badge"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg> <span data-ev-count="{n} Farbtöne">132 Farbtöne</span></span>
+        <span class="ev-app-badge"><svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg> iOS & Android</span>
+      </div>
+    </div>
+    <div class="ev-app-banner-cta">
+      <a href="#">App laden</a>
+    </div>
+  </div>
+</div>

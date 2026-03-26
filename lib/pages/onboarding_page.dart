@@ -18,31 +18,31 @@ class _OnboardingPageState extends State<OnboardingPage> {
   static const _slides = [
     _Slide(
       icon: Icons.chat_bubble_outline,
-      title: 'Dein persönlicher Berater',
+      title: 'Dein persönlicher Farbberater',
       body:
-          'EVERLOXX begleitet dich Schritt für Schritt durch dein Projekt — '
-          'von der Farbauswahl bis zur Bestellung.',
+          'EVERLOXX hilft dir, die perfekte Wandfarbe zu finden — '
+          'Schritt für Schritt, von der Auswahl bis zur Bestellung.',
     ),
     _Slide(
       icon: Icons.palette_outlined,
-      title: 'Visualisiere deine Wände',
+      title: 'Sieh deine Farbe live',
       body:
           'Lade ein Foto hoch und sieh sofort, wie deine Wände '
-          'in der neuen Farbe aussehen — per KI-Rendering.',
+          'in der neuen Farbe aussehen — AR-Vorschau direkt an deiner Wand.',
     ),
     _Slide(
       icon: Icons.straighten_outlined,
       title: 'Berechne deinen Bedarf',
       body:
-          'Miss deinen Raum per LiDAR oder Foto und erhalte '
-          'eine exakte Empfehlung für Farbe und Thermo-Seal.',
+          'Wandfläche eingeben, Menge automatisch berechnen — '
+          'passend für unsere 4,5-Liter-Gebinde.',
     ),
     _Slide(
       icon: Icons.shopping_bag_outlined,
       title: 'Alles aus einer Hand',
       body:
-          'Plane, visualisiere und bestelle — alles in einer App. '
-          'Dein Projekt, deine Farbe, dein System.',
+          'Bestellen, streichen, Energie sparen — alles in einer App. '
+          'Dein Projekt, deine Farbe, dein EVERLOXX-System.',
     ),
   ];
 

@@ -290,25 +290,25 @@ class AppTheme {
         letterSpacing: 0.1,
         color: primaryText,
       ),
-      bodyLarge: GoogleFonts.lato(
+      bodyLarge: GoogleFonts.montserrat(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         height: 1.4,
         color: primaryText,
       ),
-      bodyMedium: GoogleFonts.lato(
+      bodyMedium: GoogleFonts.montserrat(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         height: 1.4,
         color: primaryText,
       ),
-      bodySmall: GoogleFonts.lato(
+      bodySmall: GoogleFonts.montserrat(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         height: 1.3,
         color: mutedText,
       ),
-      labelLarge: GoogleFonts.lato(
+      labelLarge: GoogleFonts.montserrat(
         fontSize: 14,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.2,

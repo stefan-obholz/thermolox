@@ -28,7 +28,6 @@ import '../services/consent_service.dart';
 import '../services/credit_service.dart';
 import '../services/image_edit_service.dart';
 import '../services/everloxx_api.dart';
-import '../utils/plan_modal.dart';
 import '../utils/everloxx_overlay.dart';
 import '../widgets/attachment_sheet.dart';
 import '../widgets/mask_editor_page.dart';
@@ -302,10 +301,8 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
   }
 
   Future<bool> _ensureChatAccess() async {
-    final planController = context.read<PlanController>();
-    if (planController.isPro) return true;
-    await _showPremiumGate(featureName: 'Chatbot');
-    return false;
+    // Chat is free for all users
+    return true;
   }
 
   void _showAiConsentPrompt() {
@@ -524,10 +521,14 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
   }
 
   Future<bool> _showPremiumGate({required String featureName}) async {
+    // Only Projekte and Virtuelle Raumgestaltung are premium
+    final premiumFeatures = ['Projekte', 'Virtuelle Raumgestaltung'];
+    if (!premiumFeatures.contains(featureName)) return true;
+
     final planController = context.read<PlanController>();
     if (planController.isPro) return true;
 
-    final wantsUpgrade = await EverloxxOverlay.showAppDialog<bool>(
+    await EverloxxOverlay.showAppDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Row(
@@ -535,53 +536,18 @@ class _EverloxxChatBotState extends State<EverloxxChatBot>
           children: [
             Text('EVERLOXX', style: TextStyle(fontFamily: 'Times New Roman', fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary)),
             const SizedBox(width: 8),
-            const Text('Premium-Feature'),
+            const Text('Premium'),
           ],
         ),
-        content: Text(
-          'Um $featureName nutzen zu können, benötigst du einen Pro Account.',
-        ),
+        content: Text('$featureName ist ein Premium-Feature.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Verzichten'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Upgrade'),
+            child: const Text('OK'),
           ),
         ],
       ),
     );
-
-    if (wantsUpgrade != true) return false;
-    if (planController.isLoading) return false;
-    if (planController.planCards.isEmpty) {
-      await planController.load(force: true);
-    }
-    if (!mounted) return false;
-
-    final plans = List.of(planController.planCards)
-      ..sort((a, b) {
-        if (a.id == b.id) return 0;
-        if (a.id == 'pro') return -1;
-        if (b.id == 'pro') return 1;
-        return 0;
-      });
-    if (plans.isEmpty) return false;
-    final selected = planController.activePlan?.plan.slug ?? 'basic';
-    final initialPlanId =
-        plans.any((plan) => plan.id == 'pro') ? 'pro' : selected;
-    final choice = await showPlanModal(
-      context: context,
-      plans: plans,
-      selectedPlanId: selected,
-      initialPlanId: initialPlanId,
-      allowDowngrade: planController.canDowngrade,
-    );
-    if (choice != null && choice != selected) {
-      await planController.selectPlan(choice);
-    }
     return false;
   }
 

@@ -1,0 +1,294 @@
+{%- style -%}
+  .ev-about-hero {
+    background: var(--color-dark);
+    padding: var(--space-12) var(--space-5);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-about-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 40%, rgba(239,210,167,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(239,210,167,0.06) 0%, transparent 60%);
+    animation: ev-about-glow 14s ease-in-out infinite alternate;
+  }
+  @keyframes ev-about-glow {
+    0% { transform: translate(-3%, -2%); }
+    100% { transform: translate(3%, 2%); }
+  }
+  .ev-about-hero h1 {
+    font-family: var(--font-heading);
+    font-size: var(--text-3xl);
+    font-weight: 300;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+    margin: 0 0 var(--space-4);
+    letter-spacing: -0.01em;
+  }
+  .ev-about-hero h1 span { color: var(--color-accent); }
+  .ev-about-hero p {
+    color: rgba(255,255,255,0.6);
+    font-size: var(--text-md);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.7;
+    position: relative;
+    z-index: 1;
+  }
+  .ev-about-divider {
+    width: 60px;
+    height: 2px;
+    background: var(--color-accent);
+    margin: var(--space-5) auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Timeline / Story sections */
+  .ev-about-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--space-10) var(--space-5);
+  }
+  .ev-about-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    align-items: center;
+    margin-bottom: var(--space-10);
+  }
+  .ev-about-row.reverse .ev-about-text { order: -1; }
+  .ev-about-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4/3;
+    position: relative;
+    overflow: hidden;
+  }
+  .ev-about-icon-box svg {
+    width: 80px;
+    height: 80px;
+    stroke: var(--color-accent);
+    fill: none;
+    stroke-width: 1;
+    opacity: 0.7;
+  }
+  .ev-about-icon-box .ev-about-badge {
+    position: absolute;
+    bottom: var(--space-4);
+    left: var(--space-4);
+    background: var(--color-dark);
+    color: var(--color-accent);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .ev-about-text h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 400;
+    color: var(--color-text);
+    margin: 0 0 var(--space-4);
+    line-height: 1.2;
+  }
+  .ev-about-text p {
+    color: var(--color-text-light);
+    font-size: 1.05rem;
+    line-height: 1.75;
+    margin: 0 0 var(--space-3);
+  }
+  .ev-about-text .ev-about-highlight {
+    display: inline-block;
+    background: linear-gradient(120deg, rgba(239,210,167,0.2) 0%, rgba(239,210,167,0.05) 100%);
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--color-accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    margin-top: var(--space-3);
+    line-height: 1.6;
+  }
+
+  /* Stats row */
+  .ev-about-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--space-5) var(--space-10);
+  }
+  .ev-about-stat {
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+  }
+  .ev-about-stat-value {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 300;
+    color: var(--color-text);
+  }
+  .ev-about-stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-light);
+    margin-top: var(--space-2);
+  }
+
+  /* Mission CTA */
+  .ev-about-mission {
+    background: var(--color-dark);
+    padding: var(--space-10) var(--space-5);
+    text-align: center;
+  }
+  .ev-about-mission h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-xl);
+    font-weight: 300;
+    color: #fff;
+    margin: 0 0 var(--space-4);
+  }
+  .ev-about-mission p {
+    color: rgba(255,255,255,0.65);
+    font-size: 1.05rem;
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.75;
+  }
+  .ev-about-mission .ev-about-divider { margin: var(--space-4) auto var(--space-5); }
+
+  @media (max-width: 749px) {
+    .ev-about-hero { padding: var(--space-8) var(--space-4) !important; }
+    .ev-about-row { grid-template-columns: 1fr; gap: var(--space-5); }
+    .ev-about-row.reverse .ev-about-text { order: 0; }
+    .ev-about-stats { grid-template-columns: 1fr 1fr; }
+    .ev-about-hero h1 { font-size: var(--text-2xl); }
+    .ev-about-section { padding: var(--space-6) var(--space-4); }
+    .ev-about-mission { padding: var(--space-6) var(--space-4); }
+  }
+  @media (max-width: 449px) {
+    .ev-about-stats { grid-template-columns: 1fr; }
+  }
+{%- endstyle -%}
+
+<!-- Hero -->
+<div class="ev-about-hero">
+  <h1 class="reveal">Über <span>EVERLOXX</span></h1>
+  <div class="ev-about-divider reveal"></div>
+  <p class="reveal">Innovative energieeffiziente Wandbeschichtung und Energiesparfarbe, die Energiekosten senkt, das Raumklima verbessert und modernes Wanddesign ermöglicht.</p>
+</div>
+
+<!-- Story sections -->
+<div class="ev-about-section">
+
+  <!-- Origin / Vision -->
+  <div class="ev-about-row reveal">
+    <div class="ev-about-icon-box">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      <span class="ev-about-badge">Since 2023</span>
+    </div>
+    <div class="ev-about-text">
+      <h2>Die Vision</h2>
+      <p>EVERLOXX steht für eine neue Generation intelligenter Energiesparlösungen für Gebäude und Wohnräume, die Wohnkomfort, nachhaltige Energienutzung und hochwertiges Interior-Design miteinander verbinden.</p>
+      <p>Entwickelt wurde EVERLOXX von Hayri Atsak, Chemiker mit langjähriger Erfahrung in der industriellen Beschichtungsentwicklung. Seine Vision: energieeffiziente Wandfarben und innovative Produkte zu entwickeln, die Heizkosten reduzieren, Wärmeverluste minimieren und gleichzeitig ästhetisch anspruchsvolle Wohnräume schaffen.</p>
+    </div>
+  </div>
+
+  <!-- Partnership -->
+  <div class="ev-about-row reverse reveal">
+    <div class="ev-about-icon-box">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="ev-about-badge">Starke Partner</span>
+    </div>
+    <div class="ev-about-text">
+      <h2>Partnerschaft mit Ralf Dümmel & DS Produkte</h2>
+      <p>Ein entscheidender Meilenstein war der Erfolg in der TV-Show Die Millionenidee. Durch die Zusammenarbeit mit Ralf Dümmel und seinem Unternehmen DS Produkte steht heute eine hochprofessionelle Mannschaft hinter der Weiterentwicklung der EVERLOXX Produktfamilie.</p>
+      <div class="ev-about-highlight">Diese Partnerschaft ermöglicht Zugang zu modernsten Prüflaboren, spezialisierten Entwicklungsstrukturen und professionellen Produktionsprozessen.</div>
+    </div>
+  </div>
+
+  <!-- Quality -->
+  <div class="ev-about-row reveal">
+    <div class="ev-about-icon-box">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      <span class="ev-about-badge">Made in Germany</span>
+    </div>
+    <div class="ev-about-text">
+      <h2>Höchste Qualitätsstandards</h2>
+      <p>Jedes EVERLOXX Produkt durchläuft vor der Markteinführung umfangreiche wissenschaftliche Prüfungen. Die Produktion erfolgt 100% Made in Germany nach DIN EN ISO 9001.</p>
+      <p>Heute vereint EVERLOXX patentierte Pigmenttechnologie, moderne Materialwissenschaft und Designfarben für das Interior zu einem innovativen Gesamtsystem für energieeffizientes Wohnen.</p>
+    </div>
+  </div>
+
+  <!-- More than paint -->
+  <div class="ev-about-row reverse reveal">
+    <div class="ev-about-icon-box">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span class="ev-about-badge">Design & Energie</span>
+    </div>
+    <div class="ev-about-text">
+      <h2>Mehr als nur eine Wandfarbe</h2>
+      <p>EVERLOXX ist bewusst mehr als eine gewöhnliche Wandfarbe. Es ist ein ganzheitliches Energiespar- und Wohnkonzept, das energieeffiziente Beschichtungen, modernes Farbdesign und verbesserten Wohnkomfort vereint.</p>
+      <p>Die speziell entwickelten Designfarben erzeugen lebendige, fein schimmernde Oberflächen mit hochwertiger Raumwirkung – besonders in Gebäuden mit energetischen Schwächen oder schlecht gedämmten Wand- und Deckenflächen.</p>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div class="ev-about-row reveal">
+    <div class="ev-about-icon-box">
+      <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      <span class="ev-about-badge">Digital</span>
+    </div>
+    <div class="ev-about-text">
+      <h2>Die EVERLOXX App</h2>
+      <p>Ein zentraler Bestandteil ist die EVERLOXX App – eine digitale Plattform für Raumgestaltung und technische Beratung mit 24/7 Beratung, digitaler Farbberatung und virtueller Raumgestaltung.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Stats -->
+<div class="ev-about-stats reveal-stagger">
+  <div class="ev-about-stat">
+    <div class="ev-about-stat-value" data-count="100" data-suffix="%">0%</div>
+    <div class="ev-about-stat-label">Made in Germany</div>
+  </div>
+  <div class="ev-about-stat">
+    <div class="ev-about-stat-value">DIN EN ISO 9001</div>
+    <div class="ev-about-stat-label">Zertifizierte Produktion</div>
+  </div>
+  <div class="ev-about-stat">
+    <div class="ev-about-stat-value" data-count="50" data-suffix="%">0%</div>
+    <div class="ev-about-stat-label">Wärmestrahlung reflektiert</div>
+  </div>
+  <div class="ev-about-stat">
+    <div class="ev-about-stat-value">24/7</div>
+    <div class="ev-about-stat-label">Beratung per App</div>
+  </div>
+</div>
+
+<!-- Mission -->
+<div class="ev-about-mission">
+  <h2 class="reveal">Unsere Mission</h2>
+  <div class="ev-about-divider reveal"></div>
+  <p class="reveal">EVERLOXX verfolgt das Ziel, Pionier im Bereich energieeffizienter Beschichtungssysteme zu sein. Durch kontinuierliche Forschung und innovative Materialtechnologien entwickelt EVERLOXX Lösungen, die Heizkosten senken, Energieverluste reduzieren und modernes Interior-Design ermöglichen.</p>
+</div>
+
+{% schema %}
+{
+  "name": "EVERLOXX Über uns",
+  "tag": "section",
+  "class": "section",
+  "settings": []
+}
+{% endschema %}

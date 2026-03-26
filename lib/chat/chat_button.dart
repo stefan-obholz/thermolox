@@ -93,50 +93,16 @@ class _EverloxxChatButtonState extends State<EverloxxChatButton>
                     ),
                   ],
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // 🌈 Rotierender Ring inkl. leichten Glow
-                    RotationTransition(
-                      turns: _rotationCtrl,
-                      child: Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: tokens.rainbowRingGradient,
-                          boxShadow: [
-                            // leichter „Halo“, der mit dem Ring rotiert
-                            BoxShadow(
-                              color: tokens.rainbowRingHaloColor,
-                              blurRadius: tokens.rainbowRingHaloBlur,
-                              spreadRadius: tokens.rainbowRingHaloSpread,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Weißer innerer Kreis (Logo-Hintergrund)
-                    Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: theme.scaffoldBackgroundColor,
-                      ),
-                    ),
-
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: Icon(
-                        Icons.palette,
-                        size: 32,
-                        color: AppTheme.primary,
-                      ),
-                    ),
-                  ],
+                child: Image.asset(
+                  'assets/images/EVERLOXX_ICON.png',
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Icon(
+                    Icons.chat_bubble_outline,
+                    size: 36,
+                    color: AppTheme.accent,
+                  ),
                 ),
               ),
             ),

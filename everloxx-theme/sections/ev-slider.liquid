@@ -1,18 +1,26 @@
+<style>
+@media (max-width: 749px) {
+  .ev-slider-section { padding: 48px 16px !important; }
+  .ev-slider-section .cx-section-sub { margin-bottom: 24px !important; }
+  .ev-slider-tabs button { padding: 8px 16px !important; font-size: 0.9rem !important; }
+  .ev-slider-section .cx-ba-slider { aspect-ratio: 2/3 !important; }
+  .ev-slider-section > div { max-width: 100% !important; }
+}
+</style>
 <!-- ═══════ VORHER/NACHHER SLIDER – 6 RÄUME ═══════ -->
-<section style="background:#f9f9f9;padding:100px 20px;" aria-label="Vorher Nachher">
+<section class="ev-slider-section" style="background:#f9f9f9;padding:100px 20px;" aria-label="Vorher Nachher">
   <div style="max-width:1000px;margin:0 auto;text-align:center;">
     <div class="cx-tag">Inspiration</div>
-    <h2 class="cx-section-heading">So verwandelt Farbe deinen Raum</h2>
+    <h2 class="cx-section-heading reveal">So verwandelt Farbe deinen Raum</h2>
     <p class="cx-section-sub" style="margin-bottom:40px;">Bewege den Slider und erlebe den Unterschied</p>
 
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">
+    <div class="reveal-stagger ev-slider-tabs" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;">
       <button onclick="cxSwitchRoom('living')" id="cx-tab-living" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#404040;color:#fff;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Wohnzimmer</button>
       <button onclick="cxSwitchRoom('bedroom')" id="cx-tab-bedroom" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Schlafzimmer</button>
       <button onclick="cxSwitchRoom('kitchen')" id="cx-tab-kitchen" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Küche</button>
       <button onclick="cxSwitchRoom('hallway')" id="cx-tab-hallway" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Flur</button>
       <button onclick="cxSwitchRoom('nursery')" id="cx-tab-nursery" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Kinderzimmer</button>
       <button onclick="cxSwitchRoom('living2')" id="cx-tab-living2" style="padding:10px 24px;border:1px solid #ddd;border-radius:24px;background:#fff;color:#404040;cursor:pointer;font-size:1.1rem;transition:all 0.3s;">Salon</button>
-
     </div>
 
 

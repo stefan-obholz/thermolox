@@ -1,7 +1,53 @@
 <!-- ═══════ MARQUEE TRUST STRIP ═══════ -->
-<div style="background:#000;padding:16px 0;overflow:hidden;">
-  <div class="cx-marquee" style="color:rgba(255,255,255,0.4);font-size:1.1rem;letter-spacing:4px;text-transform:uppercase;">
-    Premium-Wandfarben &nbsp;·&nbsp; Energiesparend &nbsp;·&nbsp; Lösemittelfrei &nbsp;·&nbsp; Samtmatt &nbsp;·&nbsp; Über 130 Farbtöne &nbsp;·&nbsp; Patentierte Klimatechnologie &nbsp;·&nbsp; Allergikerfreundlich &nbsp;·&nbsp; Made in Germany &nbsp;·&nbsp;
+<style>
+  .ev-marquee-wrap {
+    background: #000;
+    padding: 16px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ev-marquee-track {
+    display: inline-flex;
+    animation: ev-marquee 30s linear infinite;
+  }
+  .ev-marquee-item {
+    color: #efd2a7;
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 0 24px;
+    flex-shrink: 0;
+  }
+  @keyframes ev-marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @media (max-width: 749px) {
+    .ev-marquee-item { font-size: 0.7rem; letter-spacing: 2px; padding: 0 16px; }
+    .ev-marquee-wrap { padding: 12px 0; }
+  }
+</style>
+
+<div class="ev-marquee-wrap">
+  <div class="ev-marquee-track">
+    {%- for i in (1..2) -%}
+      <span class="ev-marquee-item">Premium-Wandfarben</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Energiesparend</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Lösemittelfrei</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Samtmatt</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item" data-ev-count="Über {n} Farbtöne">Über 132 Farbtöne</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Patentierte Klimatechnologie</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Allergikerfreundlich</span>
+      <span class="ev-marquee-item">·</span>
+      <span class="ev-marquee-item">Made in Germany</span>
+      <span class="ev-marquee-item">·</span>
+    {%- endfor -%}
   </div>
 </div>
 

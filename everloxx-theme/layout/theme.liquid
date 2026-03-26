@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ffffff">
   <title>{{ page_title }}{% unless page_title contains shop.name %} – {{ shop.name }}{% endunless %}</title>
   {% if page_description %}<meta name="description" content="{{ page_description | escape }}">{% endif %}
+  <link rel="canonical" href="{{ canonical_url }}">
 
-  {%- if settings.favicon != blank -%}
-    <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
-  {%- endif -%}
+  <link rel="icon" type="image/png" href="{{ 'EVERLOXX_ICON_32.png' | asset_url }}">
 
   {% render 'meta-tags' %}
+  {% render 'json-ld' %}
 
   {%- unless settings.type_header_font.system? and settings.type_body_font.system? -%}
     <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
@@ -29,18 +29,60 @@
 
   <style>
     :root {
+      /* ── Fonts ── */
       --font-body: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
       --font-heading: {{ settings.type_header_font.family }}, {{ settings.type_header_font.fallback_families }};
       --font-body-weight: {{ settings.type_body_font.weight }};
       --font-heading-weight: {{ settings.type_header_font.weight }};
+
+      /* ── Type Scale (Major Third 1.25) ── */
+      --text-xs: 0.8rem;    /* 12.8px — captions, badges */
+      --text-sm: 0.9rem;    /* 14.4px — small text, tags */
+      --text-base: 1rem;    /* 16px — body */
+      --text-md: 1.25rem;   /* 20px — lead text, subheadings */
+      --text-lg: 1.563rem;  /* 25px — h3 */
+      --text-xl: 1.953rem;  /* 31px — h2 */
+      --text-2xl: 2.441rem; /* 39px — h1 */
+      --text-3xl: 3.052rem; /* 49px — hero */
+
+      /* ── Colors (6 core + 4 grays) ── */
       --color-bg: #ffffff;
       --color-text: #2D2926;
-      --color-text-light: #555;
+      --color-text-light: #6B635D;
       --color-accent: #efd2a7;
       --color-dark: #1A1614;
-      --color-border: rgba(0,0,0,0.08);
+      --color-error: #c44;
+
+      --gray-50: #FAFAF9;
+      --gray-100: #F5F4F2;
+      --gray-200: #E8E6E3;
+      --gray-300: #D4D1CC;
+      --gray-400: #A8A29E;
+      --gray-500: #78716C;
+      --gray-600: #57534E;
+
+      --color-border: var(--gray-200);
+
+      /* ── Spacing (8px base) ── */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 24px;
+      --space-6: 32px;
+      --space-7: 40px;
+      --space-8: 48px;
+      --space-9: 64px;
+      --space-10: 80px;
+      --space-11: 100px;
+      --space-12: 120px;
+
+      /* ── Layout ── */
       --page-width: 1400px;
-      --header-height: auto;
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-full: 40px;
     }
   </style>
 </head>
@@ -54,50 +96,85 @@
     {{ content_for_layout }}
   </main>
 
+  {% render 'color-count' %}
+  {% render 'app-banner' %}
   {% section 'footer' %}
 
   {% render 'chatbot-button' %}
+  {% render 'quick-view' %}
+  {% render 'cart-drawer' %}
 
   <script>
-  /* EVERLOXX Scroll Reveal */
   document.addEventListener('DOMContentLoaded', function(){
-    var io = new IntersectionObserver(function(entries){
+
+    /* ═══ 1. SCROLL REVEAL ═══ */
+    var revealIO = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
         if(e.isIntersecting){
           e.target.classList.add('revealed');
-          io.unobserve(e.target);
+          revealIO.unobserve(e.target);
         }
       });
-    },{threshold:0.08, rootMargin:'0px 0px -40px 0px'});
+    },{threshold:0.2, rootMargin:'0px 0px -120px 0px'});
 
-    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+    document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-blur, .line-draw').forEach(function(el){
+      revealIO.observe(el);
+    });
 
-    /* Staggered children */
+    /* ═══ 2. STAGGERED CHILDREN ═══ */
     document.querySelectorAll('.reveal-stagger').forEach(function(parent){
       var children = parent.children;
-      var cio = new IntersectionObserver(function(entries){
+      var sio = new IntersectionObserver(function(entries){
         entries.forEach(function(e){
           if(e.isIntersecting){
             Array.from(children).forEach(function(child, i){
               setTimeout(function(){ child.classList.add('revealed'); }, i * 120);
             });
-            cio.unobserve(e.target);
+            sio.unobserve(e.target);
           }
         });
-      },{threshold:0.08});
-      cio.observe(parent);
+      },{threshold:0.2, rootMargin:'0px 0px -120px 0px'});
+      sio.observe(parent);
     });
 
-    /* Counter animation */
+    /* ═══ 3. AUTO SECTION REVEAL ═══
+       Sections without explicit .reveal classes get auto-animated */
+    var sections = document.querySelectorAll('.ev-section');
+    var secIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add('ev-shown');
+          secIO.unobserve(e.target);
+        }
+      });
+    },{threshold:0.15, rootMargin:'0px 0px -100px 0px'});
+
+    sections.forEach(function(el, i){
+      /* Skip first 3 sections (gradient, urgency, hero) */
+      if(i <= 2) return;
+      /* Only auto-animate if section has no .reveal elements inside */
+      if(!el.querySelector('.reveal, .reveal-left, .reveal-right, .reveal-stagger')){
+        var content = el.querySelector(':scope > div, :scope > section, :scope > style + div, :scope > style + section');
+        if(content && content.tagName !== 'STYLE'){
+          content.classList.add('ev-hidden');
+          secIO.observe(content);
+        }
+      }
+    });
+
+    /* ═══ 4. COUNTER ANIMATION ═══ */
+    /* Count UP */
     document.querySelectorAll('[data-count]').forEach(function(el){
       var cio = new IntersectionObserver(function(entries){
         entries.forEach(function(e){
           if(!e.isIntersecting) return;
           var target = parseInt(el.dataset.count);
+          var suffix = el.dataset.suffix || '';
           var dur = 1800, start = performance.now();
           requestAnimationFrame(function tick(now){
             var p = Math.min((now - start) / dur, 1);
-            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            var ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(target * ease) + suffix;
             if(p < 1) requestAnimationFrame(tick);
           });
           cio.unobserve(el);
@@ -105,6 +182,73 @@
       },{threshold:0.3});
       cio.observe(el);
     });
+
+    /* Count DOWN */
+    document.querySelectorAll('[data-count-down]').forEach(function(el){
+      var cio = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(!e.isIntersecting) return;
+          var from = parseInt(el.dataset.countDown);
+          var suffix = el.dataset.suffix || '';
+          var dur = 2000, start = performance.now();
+          requestAnimationFrame(function tick(now){
+            var p = Math.min((now - start) / dur, 1);
+            var ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(from * (1 - ease)) + suffix;
+            if(p < 1) requestAnimationFrame(tick);
+          });
+          cio.unobserve(el);
+        });
+      },{threshold:0.3});
+      cio.observe(el);
+    });
+
+    /* ═══ 5. PARALLAX ═══ */
+    var parallaxEls = document.querySelectorAll('.parallax-img');
+    if(parallaxEls.length){
+      window.addEventListener('scroll', function(){
+        var scrollY = window.scrollY;
+        parallaxEls.forEach(function(el){
+          var rect = el.getBoundingClientRect();
+          var speed = parseFloat(el.dataset.speed) || 0.15;
+          if(rect.bottom > 0 && rect.top < window.innerHeight){
+            el.style.transform = 'translateY(' + (scrollY * speed) + 'px)';
+          }
+        });
+      }, {passive: true});
+    }
+
+    /* ═══ 6. TYPING EFFECT ═══ */
+    document.querySelectorAll('[data-typing]').forEach(function(el){
+      var text = el.dataset.typing;
+      var speed = parseInt(el.dataset.typingSpeed) || 50;
+      el.textContent = '';
+      var tio = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if(!e.isIntersecting) return;
+          var i = 0;
+          var interval = setInterval(function(){
+            el.textContent += text[i];
+            i++;
+            if(i >= text.length) clearInterval(interval);
+          }, speed);
+          tio.unobserve(el);
+        });
+      },{threshold:0.5});
+      tio.observe(el);
+    });
+
+    /* ═══ 7. SMOOTH ANCHOR SCROLL ═══ */
+    document.querySelectorAll('a[href^="#"]').forEach(function(a){
+      a.addEventListener('click', function(e){
+        var target = document.querySelector(a.getAttribute('href'));
+        if(target){
+          e.preventDefault();
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+        }
+      });
+    });
+
   });
   </script>
 </body>

@@ -75,8 +75,19 @@
   /* SEO Schema */
   
   @media (max-width: 749px) {
+    .ev-product { padding: 24px 16px 0 !important; }
     .ev-product-grid { grid-template-columns: 1fr; gap: 24px; }
     .ev-product-media { position: static; }
+    .ev-product-thumbs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 4px; }
+    .ev-product-thumb { flex-shrink: 0; width: 60px; height: 60px; }
+    .ev-product-title { font-size: 1.6rem !important; }
+    .ev-buy-section { padding: 20px !important; }
+    .ev-calc { padding: 20px !important; }
+    .ev-calc-results { grid-template-columns: 1fr !important; }
+    .ev-calc-field { flex-wrap: wrap; }
+    .ev-calc-field label { min-width: auto; }
+    .ev-product-trust { gap: 12px; }
+    .ev-wall-preview { margin-bottom: 16px; }
   }
 {%- endstyle -%}
 
@@ -118,10 +129,6 @@
         <meta itemprop="availability" content="https://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}">
         <link itemprop="url" href="{{ shop.url }}{{ product.url }}">
       </div>
-      
-      <!-- DEBUG: Test color surface -->
-      <div style="height: 100px; background: red; margin-bottom: 16px; border-radius: 12px;"></div>
-
       <!-- Description -->
       <div class="ev-product-desc" itemprop="description">
         {{ product.description }}
@@ -129,7 +136,9 @@
 
       <!-- Wall Color Preview + AR CTA -->
       <div class="ev-wall-preview" id="ev-wall-preview">
-        <div class="ev-wall-surface" id="ev-wall-surface" style="background: #C9B599; height: 140px;" onclick="document.getElementById('ev-fullscreen-color').style.display='flex';"></div>
+        <div class="ev-wall-surface" id="ev-wall-surface" style="background: #C9B599; height: 140px; cursor: pointer; position: relative;" onclick="document.getElementById('ev-fullscreen-color').style.display='flex';">
+          <span style="position:absolute;bottom:12px;right:16px;font-size:0.8rem;color:rgba(0,0,0,0.35);letter-spacing:0.03em;pointer-events:none;" id="ev-wall-hint">Tippe für Vollbild</span>
+        </div>
         <div class="ev-ar-inline">
           <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           <div class="ev-ar-inline-text">
@@ -145,6 +154,302 @@
         <span class="ev-fullscreen-hint">Tippe zum Schlie&szlig;en</span>
       </div>
       
+      <!-- Verbrauchsrechner -->
+      <div class="ev-calc" id="ev-calc">
+        <style>
+          .ev-calc {
+            background: var(--gray-50, #FAFAF9);
+            border-radius: var(--radius-md, 16px);
+            padding: var(--space-6, 32px);
+            margin-bottom: var(--space-5, 24px);
+          }
+          .ev-calc h3 {
+            font-family: var(--font-heading);
+            font-size: var(--text-lg, 1.563rem);
+            font-weight: 400;
+            color: var(--color-text);
+            margin: 0 0 var(--space-5, 24px);
+          }
+          .ev-calc-toggle {
+            display: flex;
+            gap: 0;
+            margin-bottom: var(--space-5, 24px);
+            background: var(--gray-200, #E8E6E3);
+            border-radius: var(--radius-full, 40px);
+            padding: 3px;
+          }
+          .ev-calc-toggle button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius-full, 40px);
+            background: transparent;
+            color: var(--gray-500, #78716C);
+            font-size: var(--text-sm, 0.9rem);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+          }
+          .ev-calc-toggle button.active {
+            background: #fff;
+            color: var(--color-text);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+          }
+          .ev-calc-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3, 12px);
+            margin-bottom: var(--space-5, 24px);
+          }
+          .ev-calc-field {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3, 12px);
+          }
+          .ev-calc-field label {
+            font-size: var(--text-sm, 0.9rem);
+            color: var(--gray-500, #78716C);
+            min-width: 100px;
+          }
+          .ev-calc-field input {
+            width: 90px;
+            padding: 10px 12px;
+            border: 1px solid var(--gray-200, #E8E6E3);
+            border-radius: var(--radius-sm, 8px);
+            font-size: var(--text-base, 1rem);
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+            -moz-appearance: textfield;
+          }
+          .ev-calc-field input::-webkit-outer-spin-button,
+          .ev-calc-field input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          .ev-calc-field input:focus { border-color: var(--color-accent); }
+          .ev-calc-field .ev-calc-unit {
+            font-size: var(--text-sm, 0.9rem);
+            color: var(--gray-400, #A8A29E);
+          }
+          .ev-calc-results {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: var(--space-3, 12px);
+          }
+          .ev-calc-result {
+            text-align: center;
+            padding: var(--space-4, 16px) var(--space-3, 12px);
+            background: #fff;
+            border-radius: var(--radius-sm, 8px);
+            border: 1px solid var(--gray-100, #F5F4F2);
+          }
+          .ev-calc-result-value {
+            font-size: var(--text-lg, 1.563rem);
+            font-weight: 700;
+            color: var(--color-text);
+            line-height: 1.2;
+          }
+          .ev-calc-result-label {
+            font-size: var(--text-xs, 0.8rem);
+            color: var(--gray-400, #A8A29E);
+            margin-top: var(--space-1, 4px);
+          }
+          .ev-calc-order-btn {
+            width: 100%;
+            margin-top: var(--space-4, 16px);
+            padding: 14px;
+            background: var(--color-accent, #efd2a7);
+            color: var(--color-dark, #1A1614);
+            border: none;
+            border-radius: var(--radius-full, 40px);
+            font-size: var(--text-base, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.03em;
+          }
+          .ev-calc-order-btn:hover {
+            background: var(--color-dark, #1A1614);
+            color: #fff;
+          }
+          .ev-calc-note {
+            font-size: var(--text-xs, 0.8rem);
+            color: var(--gray-400, #A8A29E);
+            margin-top: var(--space-3, 12px);
+            text-align: center;
+          }
+          #ev-calc-room-fields { display: none; }
+          @media (max-width: 549px) {
+            .ev-calc-results { grid-template-columns: 1fr; }
+            .ev-calc-field { flex-wrap: wrap; }
+            .ev-calc-field label { min-width: auto; }
+          }
+        </style>
+        <h3>Wie viel Farbe brauchst du?</h3>
+
+        <div class="ev-calc-toggle">
+          <button class="active" id="ev-calc-mode-wall" onclick="evCalcMode('wall')">Wandfläche direkt</button>
+          <button id="ev-calc-mode-room" onclick="evCalcMode('room')">Raum berechnen</button>
+        </div>
+
+        <div class="ev-calc-inputs">
+          <!-- Wandfläche direkt -->
+          <div id="ev-calc-wall-fields">
+            <div class="ev-calc-field">
+              <label>Wandfläche</label>
+              <input type="number" id="ev-calc-area" min="1" max="9999" placeholder="z.B. 40" oninput="evCalcRun()">
+              <span class="ev-calc-unit">m²</span>
+            </div>
+          </div>
+
+          <!-- Raum berechnen -->
+          <div id="ev-calc-room-fields">
+            <div class="ev-calc-field">
+              <label>Bodenfläche</label>
+              <input type="number" id="ev-calc-floor" min="1" max="9999" placeholder="z.B. 20" oninput="evCalcRoom()">
+              <span class="ev-calc-unit">m²</span>
+            </div>
+            <div class="ev-calc-field">
+              <label>Deckenhöhe</label>
+              <input type="number" id="ev-calc-height" min="1" max="10" step="0.1" placeholder="2,5" value="2.5" oninput="evCalcRoom()">
+              <span class="ev-calc-unit">m</span>
+            </div>
+            <div class="ev-calc-field">
+              <label>Türen</label>
+              <input type="number" id="ev-calc-doors" min="0" max="20" placeholder="1" value="1" oninput="evCalcRoom()">
+              <span class="ev-calc-unit">Stk.</span>
+            </div>
+            <div class="ev-calc-field">
+              <label>Fenster</label>
+              <input type="number" id="ev-calc-windows" min="0" max="20" placeholder="2" value="2" oninput="evCalcRoom()">
+              <span class="ev-calc-unit">Stk.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ev-calc-results">
+          <div class="ev-calc-result">
+            <div class="ev-calc-result-value" id="ev-calc-liters">–</div>
+            <div class="ev-calc-result-label">Liter benötigt</div>
+          </div>
+          <div class="ev-calc-result">
+            <div class="ev-calc-result-value" id="ev-calc-cans">–</div>
+            <div class="ev-calc-result-label">Gebinde (4,5 L)</div>
+          </div>
+          <div class="ev-calc-result">
+            <div class="ev-calc-result-value" id="ev-calc-price">–</div>
+            <div class="ev-calc-result-label">Gesamtpreis</div>
+          </div>
+        </div>
+        <button type="button" class="ev-calc-order-btn" id="ev-calc-order-btn" style="display:none;">
+          <span id="ev-calc-order-text">Errechnete Menge bestellen</span>
+        </button>
+        <div class="ev-calc-note">Deckkraft: ca. 4 m²/L · 2 Anstriche empfohlen · Gebinde: 4,5 L · Tür ≈ 1,8 m² · Fenster ≈ 1,4 m²</div>
+
+        <script>
+        (function(){
+          var priceInCents = {{ product.price }};
+          var pricePerCan = priceInCents / 100;
+          var variantId = {{ product.selected_or_first_available_variant.id | json }};
+          var litersEl = document.getElementById('ev-calc-liters');
+          var cansEl = document.getElementById('ev-calc-cans');
+          var priceEl = document.getElementById('ev-calc-price');
+          var orderBtn = document.getElementById('ev-calc-order-btn');
+          var orderText = document.getElementById('ev-calc-order-text');
+          var currentCans = 0;
+
+          function update(wallArea) {
+            if(!wallArea || wallArea <= 0) {
+              litersEl.textContent = '–';
+              cansEl.textContent = '–';
+              priceEl.textContent = '–';
+              orderBtn.style.display = 'none';
+              currentCans = 0;
+              return;
+            }
+            /* 4 m²/L Deckkraft, 2 Anstriche = effektiv 2 m²/L */
+            var liters = (wallArea / 4) * 2;
+            var cans = Math.ceil(liters / 4.5);
+            var total = cans * pricePerCan;
+            currentCans = cans;
+            litersEl.textContent = liters.toFixed(1) + ' L';
+            cansEl.textContent = cans + '×';
+            priceEl.textContent = '€' + total.toFixed(2).replace('.', ',');
+            orderBtn.style.display = 'block';
+            orderText.textContent = cans + '× Gebinde bestellen — €' + total.toFixed(2).replace('.', ',');
+          }
+
+          if(orderBtn) {
+            orderBtn.addEventListener('click', function(){
+              if(!currentCans) return;
+              orderBtn.disabled = true;
+              orderText.textContent = 'Wird hinzugefügt...';
+              fetch('/cart/add.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: variantId, quantity: currentCans })
+              })
+              .then(function(r){ return r.json(); })
+              .then(function(){
+                orderText.textContent = currentCans + '× hinzugefügt ✓';
+                setTimeout(function(){ orderBtn.disabled = false; orderText.textContent = currentCans + '× Gebinde bestellen — €' + (currentCans * pricePerCan).toFixed(2).replace('.', ','); }, 2000);
+              })
+              .catch(function(){
+                orderText.textContent = 'Fehler — erneut versuchen';
+                orderBtn.disabled = false;
+              });
+            });
+          }
+
+          window.evCalcRun = function() {
+            var area = parseFloat(document.getElementById('ev-calc-area').value);
+            update(area);
+          };
+
+          window.evCalcRoom = function() {
+            var floor = parseFloat(document.getElementById('ev-calc-floor').value) || 0;
+            var height = parseFloat(document.getElementById('ev-calc-height').value) || 2.5;
+            var doors = parseInt(document.getElementById('ev-calc-doors').value) || 0;
+            var windows = parseInt(document.getElementById('ev-calc-windows').value) || 0;
+
+            /* Berechnung: Umfang × Deckenhöhe - Türen - Fenster */
+            /* Umfang aus Bodenfläche: Annahme quadratischer Raum */
+            var side = Math.sqrt(floor);
+            var perimeter = side * 4;
+            var wallArea = Math.max(0, (perimeter * height) - (doors * 1.8) - (windows * 1.4));
+            if(wallArea < 0) wallArea = 0;
+
+            update(wallArea);
+          };
+
+          window.evCalcMode = function(mode) {
+            var wallFields = document.getElementById('ev-calc-wall-fields');
+            var roomFields = document.getElementById('ev-calc-room-fields');
+            var btnWall = document.getElementById('ev-calc-mode-wall');
+            var btnRoom = document.getElementById('ev-calc-mode-room');
+
+            if(mode === 'wall') {
+              wallFields.style.display = 'block';
+              roomFields.style.display = 'none';
+              btnWall.classList.add('active');
+              btnRoom.classList.remove('active');
+              evCalcRun();
+            } else {
+              wallFields.style.display = 'none';
+              roomFields.style.display = 'flex';
+              roomFields.style.flexDirection = 'column';
+              roomFields.style.gap = '12px';
+              btnRoom.classList.add('active');
+              btnWall.classList.remove('active');
+              evCalcRoom();
+            }
+          };
+        })();
+        </script>
+      </div>
+
       <!-- Buy section -->
       <div class="ev-buy-section">
         {%- form 'product', product -%}
@@ -155,7 +460,9 @@
               <input type="number" name="quantity" value="1" min="1" max="99">
               <button type="button" onclick="var i=this.previousElementSibling;i.value=Math.min(99,parseInt(i.value)+1);">+</button>
             </div>
-            <span style="font-size:1.1rem;color:#999;">{{ product.selected_or_first_available_variant.title }}</span>
+            {%- unless product.has_only_default_variant -%}
+              <span style="font-size:1.1rem;color:#999;">{{ product.selected_or_first_available_variant.title }}</span>
+            {%- endunless -%}
           </div>
           <button type="submit" class="ev-add-to-cart" {% unless product.available %}disabled{% endunless %}>
             {% if product.available %}In den Warenkorb{% else %}Ausverkauft{% endif %}
@@ -257,9 +564,11 @@
         if (f) f.style.backgroundColor = h;
         if (l) l.textContent = n;
         var lum = parseInt(h.slice(1,3),16)*0.299 + parseInt(h.slice(3,5),16)*0.587 + parseInt(h.slice(5,7),16)*0.114;
-        var tc = lum > 150 ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)';
+        var tc = lum > 150 ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
         if (l) l.style.color = tc;
         if (l && l.nextElementSibling) l.nextElementSibling.style.color = tc;
+        var hint = document.getElementById('ev-wall-hint');
+        if (hint) hint.style.color = lum > 150 ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.4)';
       }
     }).catch(function(){});
 })();
