@@ -23,6 +23,8 @@ import '../widgets/settings_auth_panel.dart';
 import '../widgets/everloxx_secondary_tabs.dart';
 import '../widgets/everloxx_segmented_tabs.dart';
 import '../chat/chat_bot.dart';
+import '../services/legal_service.dart';
+import '../widgets/html_content_view.dart';
 import 'auth_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -344,7 +346,7 @@ class _ProfileTabState extends State<ProfileTab> {
         0,
         tokens.gapMd,
         0,
-        tokens.gapLg,
+        MediaQuery.of(context).viewPadding.bottom + 56 + 70,
       ),
       children: [
         if (_loadingProfile)
@@ -615,7 +617,7 @@ class PlanTab extends StatelessWidget {
         0,
         tokens.gapMd,
         0,
-        tokens.gapLg,
+        MediaQuery.of(context).viewPadding.bottom + 56 + 70,
       ),
       children: [
         Text(
@@ -658,106 +660,95 @@ class PlanTab extends StatelessWidget {
   }
 }
 
-class LegalTab extends StatelessWidget {
+class LegalTab extends StatefulWidget {
   final int initialTabIndex;
 
   const LegalTab({super.key, this.initialTabIndex = 0});
 
   @override
-  Widget build(BuildContext context) {
-    final tokens = context.everloxxTokens;
-    const labels = [
-      'Impressum',
-      'AGB',
-      'Datenschutz',
-      'Widerrufsrecht',
-    ];
+  State<LegalTab> createState() => _LegalTabState();
+}
 
-    return DefaultTabController(
-      length: labels.length,
-      initialIndex:
-          initialTabIndex.clamp(0, labels.length - 1).toInt(),
-      child: Column(
-        children: [
-          const EverloxxSecondaryTabs(
-            labels: labels,
-            padding: EdgeInsets.zero,
+class _LegalTabState extends State<LegalTab> {
+  late Future<List<LegalPage>> _pagesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _pagesFuture = LegalService.fetchPages();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<LegalPage>>(
+      future: _pagesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final pages = snapshot.data ?? [];
+        if (pages.isEmpty) {
+          return const Center(child: Text('Keine Inhalte verfügbar.'));
+        }
+
+        // Insert Datenschutz (with consent switches) at the right spot
+        final labels = <String>[];
+        final tabWidgets = <Widget>[];
+
+        for (final page in pages) {
+          labels.add(page.title);
+          if (page.slug == 'datenschutz') {
+            tabWidgets.add(_PrivacySection(introHtml: page.bodyHtml));
+          } else {
+            tabWidgets.add(_LegalSection(bodyHtml: page.bodyHtml));
+          }
+        }
+
+        return DefaultTabController(
+          length: labels.length,
+          initialIndex:
+              widget.initialTabIndex.clamp(0, labels.length - 1).toInt(),
+          child: Column(
+            children: [
+              EverloxxSecondaryTabs(
+                labels: labels,
+                padding: EdgeInsets.zero,
+              ),
+              Expanded(child: TabBarView(children: tabWidgets)),
+            ],
           ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _LegalSection(
-                  title: 'Impressum',
-                  body: 'EVERLOXX GmbH\n'
-                      'Geschäftsführer: Stefano Bholz\n\n'
-                      'Kontakt: info@everloxx.com\n'
-                      'Web: https://everloxx.com\n\n'
-                      'Vollständiges Impressum unter:\nhttps://everloxx.com/policies/legal-notice',
-                  padding: tokens.gapMd,
-                ),
-                _LegalSection(
-                  title: 'AGB',
-                  body: 'Die vollständigen Allgemeinen Geschäftsbedingungen findest du unter:\nhttps://everloxx.com/policies/terms-of-service',
-                  padding: tokens.gapMd,
-                ),
-                const _PrivacySection(),
-                _LegalSection(
-                  title: 'Widerrufsrecht',
-                  body: 'Die vollständige Widerrufsbelehrung findest du unter:\nhttps://everloxx.com/policies/refund-policy',
-                  padding: tokens.gapMd,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _LegalSection extends StatelessWidget {
-  final String title;
-  final String body;
-  final double padding;
+  final String bodyHtml;
 
-  const _LegalSection({
-    required this.title,
-    required this.body,
-    required this.padding,
-  });
+  const _LegalSection({required this.bodyHtml});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final tokens = context.everloxxTokens;
-
     return ListView(
       padding: EdgeInsets.fromLTRB(
         0,
-        padding,
+        context.everloxxTokens.gapMd,
         0,
-        tokens.gapLg,
+        MediaQuery.of(context).viewPadding.bottom + 56 + 70,
       ),
       children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          body,
-          style: theme.textTheme.bodyMedium,
-        ),
+        HtmlContentView(html: bodyHtml),
       ],
     );
   }
 }
 
 class _PrivacySection extends StatefulWidget {
-  const _PrivacySection();
+  final String introHtml;
+
+  const _PrivacySection({required this.introHtml});
 
   @override
   State<_PrivacySection> createState() => _PrivacySectionState();
@@ -782,20 +773,10 @@ class _PrivacySectionState extends State<_PrivacySection> {
         0,
         tokens.gapMd,
         0,
-        tokens.gapLg,
+        MediaQuery.of(context).viewPadding.bottom + 56 + 70,
       ),
       children: [
-        Text(
-          'Datenschutz',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Die vollständige Datenschutzerklärung findest du unter:\nhttps://everloxx.com/policies/privacy-policy',
-          style: theme.textTheme.bodyMedium,
-        ),
+        HtmlContentView(html: widget.introHtml),
         SizedBox(height: tokens.gapMd),
         Text(
           'Einwilligungen (optional)',

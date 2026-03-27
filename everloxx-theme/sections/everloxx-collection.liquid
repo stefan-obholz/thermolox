@@ -212,20 +212,9 @@
   {%- endif -%}
 </div>
 
-<!-- Color Filters -->
-<div class="ev-coll-filter reveal-stagger">
+<!-- Color Filters (loaded from Supabase color_groups) -->
+<div class="ev-coll-filter reveal-stagger" id="ev-coll-filter">
   <button class="ev-filter-btn active" onclick="evFilterColor('all', this)"><span class="ev-filter-dot ev-filter-dot--gradient"></span> Alle</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('rose', this)"><span class="ev-filter-dot" style="background:#C4A8AD;"></span> Rosé</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('red', this)"><span class="ev-filter-dot" style="background:#A85A3A;"></span> Rot</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('sun', this)"><span class="ev-filter-dot" style="background:#C8A854;"></span> Gelb</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('botanical', this)"><span class="ev-filter-dot" style="background:#7A8A78;"></span> Grün</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('sky', this)"><span class="ev-filter-dot" style="background:#5A7A98;"></span> Blau</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('ocean', this)"><span class="ev-filter-dot" style="background:#1A5A68;"></span> Petrol</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('velvet', this)"><span class="ev-filter-dot" style="background:#5A3060;"></span> Violett</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('natural', this)"><span class="ev-filter-dot" style="background:#EDE4D6;"></span> Beige</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('earth', this)"><span class="ev-filter-dot" style="background:#8B5E3C;"></span> Braun</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('urban', this)"><span class="ev-filter-dot" style="background:#A09890;"></span> Grau</button>
-  <button class="ev-filter-btn" onclick="evFilterColor('black', this)"><span class="ev-filter-dot" style="background:#1C2028;"></span> Schwarz</button>
 </div>
 
 <!-- Products Grid (loaded from Supabase) -->
@@ -235,18 +224,31 @@
 <script>
 (function(){
   var grid = document.getElementById('ev-coll-grid');
+  var filterBar = document.getElementById('ev-coll-filter');
   var loading = document.getElementById('ev-coll-loading');
   var allProducts = [];
-  var currentFilter = 'all';
-  var supaUrl = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1/palette_colors';
+  var supaBase = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1';
   var supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';
+  var headers = { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey };
 
-  fetch(supaUrl + '?select=name,hex,group_name,image_url_1,price_eur,shopify_product_id&status=eq.active&order=sort_order', {
-    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    allProducts = data;
+  // 1. Fetch color groups + products in parallel
+  Promise.all([
+    fetch(supaBase + '/color_groups?select=name,slug,hex&order=sort_order', { headers: headers }).then(function(r){ return r.json(); }),
+    fetch(supaBase + '/palette_colors?select=name,hex,group_name,image_url_1,price_eur,shopify_product_id&status=eq.active&order=sort_order', { headers: headers }).then(function(r){ return r.json(); })
+  ])
+  .then(function(results){
+    var groups = results[0];
+    allProducts = results[1];
+
+    // Build filter buttons from Supabase
+    groups.forEach(function(g){
+      var btn = document.createElement('button');
+      btn.className = 'ev-filter-btn';
+      btn.onclick = function(){ evFilterColor(g.name, btn); };
+      btn.innerHTML = '<span class="ev-filter-dot" style="background:' + g.hex + ';"></span> ' + g.name;
+      filterBar.appendChild(btn);
+    });
+
     loading.style.display = 'none';
     renderProducts('all');
   })
@@ -254,17 +256,16 @@
     loading.textContent = 'Fehler beim Laden. Bitte Seite neu laden.';
   });
 
-  window.evFilterColor = function(color, btn) {
+  window.evFilterColor = function(groupName, btn) {
     document.querySelectorAll('.ev-filter-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    currentFilter = color;
-    renderProducts(color);
+    renderProducts(groupName);
   };
 
   function renderProducts(filter) {
     var filtered = filter === 'all'
       ? allProducts
-      : allProducts.filter(function(p){ return p.group_name && p.group_name.toLowerCase() === filter; });
+      : allProducts.filter(function(p){ return p.group_name === filter; });
 
     var html = '';
     filtered.forEach(function(p){

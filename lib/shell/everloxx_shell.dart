@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../pages/home_page.dart';
@@ -62,68 +64,96 @@ class _EverloxxShellState extends State<EverloxxShell>
       child: Scaffold(
         body: Stack(
           children: [
-            // Pages
-            IndexedStack(index: _currentIndex, children: _pages),
+            // Pages – inflate bottom viewPadding so Scaffold/ListView
+            // automatically keeps content above the custom nav bar + ring.
+            MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                viewPadding: MediaQuery.of(context).viewPadding.copyWith(
+                  bottom: bottomPad + 56 + 70,
+                ),
+              ),
+              child: IndexedStack(index: _currentIndex, children: _pages),
+            ),
 
-            // Bottom nav bar + center button
+            // Nav bar with circular cutout
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Center ring button (overlaps above the bar)
-                  GestureDetector(
-                    onTap: () => setState(() => _currentIndex = 2),
-                    child: ScaleTransition(
-                      scale: _pulseAnim,
-                      child: SizedBox(
-                        width: 140,
-                        height: 140,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Gold fill
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFFefd2a7),
-                              ),
-                            ),
-                            // Ring on top
-                            Image.asset(
-                              'assets/images/EVERLOXX_ICON.png',
-                              width: 140,
-                              height: 140,
-                              fit: BoxFit.contain,
-                            ),
-                          ],
+              child: ClipPath(
+                clipper: _NavBarClipper(
+                  ringDiameter: 90,
+                  barHeight: 56 + bottomPad,
+                ),
+                child: Container(
+                  color: const Color(0xFF1A1614),
+                  padding: EdgeInsets.only(bottom: bottomPad),
+                  child: SizedBox(
+                    height: 56,
+                    child: Row(
+                      children: [
+                        _navItem(Icons.person_outline, Icons.person, 'Konto', 0),
+                        _navItem(Icons.folder_outlined, Icons.folder, 'Projekte', 1),
+                        const Spacer(),
+                        _navItem(Icons.palette_outlined, Icons.palette, 'Produkte', 3),
+                        _navItem(Icons.home_outlined, Icons.home, 'Home', 4),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Frosted glass circle in the cutout
+            Positioned(
+              bottom: bottomPad + 56 - 45, // center of cutout
+              left: 0,
+              right: 0,
+              child: Center(
+                child: ClipOval(
+                  child: SizedBox(
+                    width: 90,
+                    height: 90,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1614).withValues(alpha: 0.12),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.15),
+                              Colors.white.withValues(alpha: 0.0),
+                              Colors.white.withValues(alpha: 0.08),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
+                ),
+              ),
+            ),
 
-                  // Nav bar
-                  Container(
-                    color: const Color(0xFF1A1614),
-                    padding: EdgeInsets.only(bottom: bottomPad),
-                    child: SizedBox(
-                      height: 56,
-                      child: Row(
-                        children: [
-                          _navItem(Icons.person_outline, Icons.person, 'Konto', 0),
-                          _navItem(Icons.folder_outlined, Icons.folder, 'Projekte', 1),
-                          const Spacer(),
-                          _navItem(Icons.palette_outlined, Icons.palette, 'Produkte', 3),
-                          _navItem(Icons.home_outlined, Icons.home, 'Home', 4),
-                        ],
-                      ),
+            // Center ring button – centered on top edge of nav bar
+            Positioned(
+              bottom: bottomPad + 56 - 70, // nav bar top minus half ring height
+              left: 0,
+              right: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () => setState(() => _currentIndex = 2),
+                  child: ScaleTransition(
+                    scale: _pulseAnim,
+                    child: Image.asset(
+                      'assets/images/EVERLOXX_ICON.png',
+                      width: 140,
+                      height: 140,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -156,4 +186,27 @@ class _EverloxxShellState extends State<EverloxxShell>
       ),
     );
   }
+}
+
+class _NavBarClipper extends CustomClipper<Path> {
+  final double ringDiameter;
+  final double barHeight;
+
+  _NavBarClipper({required this.ringDiameter, required this.barHeight});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final centerX = size.width / 2;
+    final radius = ringDiameter / 2;
+
+    path.addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    path.addOval(Rect.fromCircle(center: Offset(centerX, 0), radius: radius));
+    path.fillType = PathFillType.evenOdd;
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant _NavBarClipper oldClipper) =>
+      ringDiameter != oldClipper.ringDiameter || barHeight != oldClipper.barHeight;
 }

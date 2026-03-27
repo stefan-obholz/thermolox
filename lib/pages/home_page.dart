@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:video_player/video_player.dart';
 import '../widgets/cart_icon_button.dart';
 import '../theme/app_theme.dart';
@@ -45,20 +46,26 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: _warmBg,
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
-          'EVERLOXX',
-          style: TextStyle(
-            fontFamily: AppTheme.fontFamilyHeading,
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-            color: theme.textTheme.headlineLarge?.color,
+        toolbarHeight: 44,
+        title: SizedBox(
+          height: 44,
+          child: ClipRect(
+            child: OverflowBox(
+              maxHeight: 120,
+              child: SvgPicture.asset(
+                'assets/brand/EVERLOXX_LOGO.svg',
+                height: 120,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         ),
         actions: const [CartIconButton()],
       ),
       body: ListView(
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewPadding.bottom + 56 + 70,
+        ),
         children: [
           const _HeroVideoSection(),
           const _UspStrip(),
@@ -67,7 +74,6 @@ class _HomePageState extends State<HomePage> {
           const _TrustStatsBar(),
           const _AppBannerSection(),
           _BlogTeaserSection(articlesFuture: _articlesFuture),
-          const SizedBox(height: 40),
         ],
       ),
     );

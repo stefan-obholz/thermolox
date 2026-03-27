@@ -1,7 +1,8 @@
 const ALLOWED_ORIGINS = [
+  'https://everloxx.de',
+  'https://www.everloxx.de',
   'https://climalox.de',
   'https://www.climalox.de',
-  'https://thermolox.de',
   'https://thermolox.de',
   'https://www.thermolox.de',
   'https://thermolox.myshopify.com',
@@ -94,7 +95,7 @@ function getPlatform(request) {
   const platform = request.headers.get('X-Platform');
   if (platform) return platform;
   const origin = request.headers.get('Origin') || '';
-  if (origin.includes('myshopify.com') || origin.includes('climalox') || origin.includes('thermolox')) return 'web';
+  if (origin.includes('myshopify.com') || origin.includes('climalox') || origin.includes('thermolox') || origin.includes('everloxx')) return 'web';
   return 'app';
 }
 

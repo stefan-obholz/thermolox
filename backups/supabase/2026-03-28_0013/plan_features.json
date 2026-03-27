@@ -1,0 +1,9 @@
+[{"id":"6dc9af49-bced-4338-957b-8457e6cbe54f","plan_id":"f59485d7-8883-4cec-9e3e-4556d7972a68","feature_key":"chatbot","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"7516ad78-3758-4ec8-8b2a-a103eaf78d61","plan_id":"f59485d7-8883-4cec-9e3e-4556d7972a68","feature_key":"color_advice","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"c22cad3b-4546-4053-82ef-c0974380d1ed","plan_id":"f59485d7-8883-4cec-9e3e-4556d7972a68","feature_key":"project_folder","is_enabled":false,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"7651ff53-3f6f-4cfe-9364-43ff2c2a6cee","plan_id":"f59485d7-8883-4cec-9e3e-4556d7972a68","feature_key":"project_consulting","is_enabled":false,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"f5380142-7e2b-4744-a71a-8e587aa53c74","plan_id":"527daf32-16ec-477d-9804-304d61e26f7f","feature_key":"chatbot","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"bb952214-7991-4425-91bb-f62c51bac6d2","plan_id":"527daf32-16ec-477d-9804-304d61e26f7f","feature_key":"color_advice","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"3e6a78d9-1572-453b-b8d3-8dbc3feb3cdd","plan_id":"527daf32-16ec-477d-9804-304d61e26f7f","feature_key":"project_folder","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"7272d497-daf3-4054-b285-9ad2eeabc568","plan_id":"527daf32-16ec-477d-9804-304d61e26f7f","feature_key":"project_consulting","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}, 
+ {"id":"5107ae57-a1cb-4152-9ecf-99b391888a76","plan_id":"527daf32-16ec-477d-9804-304d61e26f7f","feature_key":"virtual_room","is_enabled":true,"monthly_limit":null,"created_at":"2025-12-21T19:03:43.480159+00:00"}]

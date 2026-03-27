@@ -213,7 +213,7 @@ class _ProjectsPageState extends State<ProjectsPage> {
                 0,
                 tokens.screenPadding,
                 0,
-                100,
+                MediaQuery.of(context).viewPadding.bottom + 56 + 70,
               ),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,

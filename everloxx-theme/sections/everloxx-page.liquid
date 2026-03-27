@@ -1,11 +1,37 @@
 <section class="section" data-section-id="{{ section.id }}">
   <div class="page-width">
-    <h1>{{ page.title }}</h1>
-    <div class="page__content">
+    <h1 id="ev-page-title">{{ page.title }}</h1>
+    <div class="page__content" id="ev-page-content">
       {{ page.content }}
     </div>
   </div>
 </section>
+
+<script>
+(function(){
+  // Try to load content from Supabase legal_pages if slug matches
+  var slug = window.location.pathname.replace(/^\/pages\//, '').replace(/\/$/, '').toLowerCase();
+  var legalSlugs = ['impressum', 'agb', 'datenschutz', 'widerruf'];
+  if (legalSlugs.indexOf(slug) === -1) return; // Not a legal page, keep Shopify content
+
+  var supaBase = 'https://xivtfgyvpqckfwwyloub.supabase.co/rest/v1';
+  var supaKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdnRmZ3l2cHFja2Z3d3lsb3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMwODQsImV4cCI6MjA4MTgxOTA4NH0.WzyDxlU_CnpLaTkKwv8ixgW5IwzC8mEcH6jZmfU27AU';
+
+  fetch(supaBase + '/legal_pages?slug=eq.' + slug + '&select=title,body_html', {
+    headers: { 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && data.length > 0) {
+      var page = data[0];
+      document.getElementById('ev-page-title').textContent = page.title;
+      document.getElementById('ev-page-content').innerHTML = page.body_html;
+    }
+    // If Supabase fails or returns empty, Shopify content stays as fallback
+  })
+  .catch(function(){ /* Keep Shopify content as fallback */ });
+})();
+</script>
 
 {% schema %}
 {
